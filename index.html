@@ -1353,10 +1353,15 @@
                             polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1]);
 
                             if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
+                                let labelText = ent.isAnnexed ? ent.annexedByName : ent.name;
+                                if (ent.isColony && ent.colonyOfName) {
+                                    labelText += `\n(อาณานิคมของ ${ent.colonyOfName})`;
+                                }
+
                                 viewer.entities.add({
                                     position: polyEnt.centerPosition,
                                     label: {
-                                        text: ent.isAnnexed ? ent.annexedByName : ent.name,
+                                        text: labelText,
                                         font: 'bold 14px "Mali", sans-serif',
                                         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
                                         fillColor: Cesium.Color.fromCssColorString(ent.labelColor || '#4E342E'),
@@ -1427,7 +1432,19 @@
                             l.options.entityId = ent.id;
                             if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
                                 const center = l.getBounds().getCenter();
-                                drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${ent.isAnnexed ? ent.annexedByName : ent.name}</span>`, iconSize: [100, 20], iconAnchor: [50, 10] }) }));
+                                let labelText = ent.isAnnexed ? ent.annexedByName : ent.name;
+                                let subLabel = '';
+                                if (ent.isColony && ent.colonyOfName) {
+                                    subLabel = `<br><span class="text-[8px] font-normal opacity-90">(อาณานิคมของ ${ent.colonyOfName})</span>`;
+                                }
+                                drawnItems.addLayer(L.marker(center, { 
+                                    icon: L.divIcon({ 
+                                        className: 'text-center pointer-events-none', 
+                                        html: `<div class="flex flex-col items-center justify-center"><span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelText}</span>${subLabel}</div>`, 
+                                        iconSize: [120, 40], 
+                                        iconAnchor: [60, 20] 
+                                    }) 
+                                }));
                             }
                             l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext));
                         }
@@ -1483,13 +1500,22 @@
             const flag = ent.flag || 'https://cdn-icons-png.flaticon.com/512/1458/1458514.png';
             let statusBadge = '<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full border border-emerald-200">รัฐอิสระ</span>';
             if (ent.isAnnexed) statusBadge = '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-200">ถูกผนวก</span>';
-            if (ent.isWater) statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">น่านน้ำ</span>';
+            if (ent.isVassal) statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
+            if (ent.isColony) statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200 font-bold">🏳️ อาณานิคม</span>';
+            if (ent.isWater) statusBadge = '<span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">น่านน้ำ</span>';
 
             let colorDesc = "สีประจำเขต";
             if(colorContext.type === 'religion') colorDesc = `☸️ ศาสนา: ${colorContext.value}`;
             else if(colorContext.type === 'gov') colorDesc = `⚖️ ปกครอง: ${colorContext.value}`;
             else if(colorContext.type === 'rank') colorDesc = `👑 ศักดิ์: ${getHierarchyName(ent.level)}`;
             else if(colorContext.type === 'water') colorDesc = `🌊 พื้นที่: น่านน้ำ`;
+            
+            // Override display logic for colony label in popup
+            let displayName = ent.isAnnexed ? ent.annexedByName : ent.name;
+            let subText = "";
+            if (ent.isColony && ent.colonyOfName) {
+                subText = `<div class="text-[10px] text-gray-500">(อาณานิคมของ ${ent.colonyOfName})</div>`;
+            }
 
             // Hierarchy Trace
             const ancestors = getAncestors(ent);
@@ -1507,7 +1533,8 @@
                     <div class="h-16 bg-gradient-to-r from-[#FFF3E0] to-white rounded-t-2xl"></div>
                     <img src="${flag}" class="absolute top-4 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full border-4 border-white shadow-md object-cover bg-white">
                     <div class="pt-6 px-5 pb-5 text-center">
-                        <h3 class="text-xl font-bold text-[#5D4037] leading-tight cute-font mt-1">${ent.isAnnexed ? ent.annexedByName : ent.name}</h3>
+                        <h3 class="text-xl font-bold text-[#5D4037] leading-tight cute-font mt-1">${displayName}</h3>
+                        ${subText}
                         <div class="mt-2 mb-3 flex flex-col justify-center gap-2 items-center">
                             ${statusBadge}
                             <div class="color-tag" title="Color Meaning"><span class="swatch-circle" style="background-color:${displayColor}"></span> ${colorDesc}</div>
@@ -1536,7 +1563,7 @@
                              <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition"><span class="material-icons-round text-sm">edit</span></button>
                             <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition"><span class="material-icons-round text-sm">delete</span></button>
                             ${(!ent.isColony && !ent.isVassal && !ent.isAnnexed && !ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-sm">⚔️ ยุทธการ</button>` : ''}
-                            ${(ent.isAnnexed || ent.isVassal) ? `<button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-sm">🚩 กู้เอกราช</button>` : ''}
+                            ${(ent.isAnnexed || ent.isVassal || ent.isColony) ? `<button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-sm">🚩 กู้เอกราช</button>` : ''}
                         </div>
                     </div>
                 </div>
@@ -1690,8 +1717,21 @@
             const aid = document.getElementById('war-attacker-select').value;
             const attacker = entities.find(e => e.id === aid);
             
-            const updates = { isAnnexed: type==='annex', isVassal: type==='vassal', isColony: type==='colony' };
-            if(type === 'annex') { updates.color = attacker.color; updates.annexedByName = attacker.name; updates.ruler = attacker.ruler; }
+            const updates = { 
+                isAnnexed: type==='annex', 
+                isVassal: type==='vassal', 
+                isColony: type==='colony' 
+            };
+
+            if(type === 'annex') { 
+                updates.color = attacker.color; 
+                updates.annexedByName = attacker.name; 
+                updates.ruler = attacker.ruler; 
+            } else if (type === 'vassal') {
+                updates.vassalOfName = attacker.name;
+            } else if (type === 'colony') {
+                updates.colonyOfName = attacker.name;
+            }
             
             await setDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', tid), updates, {merge: true});
             closeModal('modal-war');
