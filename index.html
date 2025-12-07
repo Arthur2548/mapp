@@ -1360,6 +1360,12 @@
         // --- Cesium Rendering Logic ---
         function renderCesium() {
             if(!viewer) return;
+            
+            // FIX: Deselect entity before removing to prevent Cesium crash "reading positions of null"
+            // แก้ไข: ยกเลิกการเลือกวัตถุก่อนลบ เพื่อป้องกัน Error จอแดง
+            viewer.selectedEntity = undefined;
+            viewer.trackedEntity = undefined;
+            
             viewer.entities.removeAll();
             
             const { visibleEntities } = filterEntities();
@@ -1374,8 +1380,15 @@
                     if (ent.type === 'road') {
                         if(!showRoads) return;
                         const flatCoords = [];
-                        geoJson.geometry.coordinates.forEach(pt => { flatCoords.push(pt[0], pt[1]); });
                         
+                        // Safety Check: Ensure coordinates exist
+                        if (!geoJson.geometry || !geoJson.geometry.coordinates) return;
+                        
+                        geoJson.geometry.coordinates.forEach(pt => { if(pt.length >= 2) flatCoords.push(pt[0], pt[1]); });
+                        
+                        // Safety Check: Need at least 2 points for a line
+                        if (flatCoords.length < 4) return; 
+
                         const roadEnt = viewer.entities.add({
                             polyline: {
                                 positions: Cesium.Cartesian3.fromDegreesArray(flatCoords),
@@ -1423,41 +1436,73 @@
                     }
 
                     if(geoJson.geometry.type === 'Polygon' || geoJson.geometry.type === 'MultiPolygon') {
-                         const polyEnt = viewer.entities.add({
-                             name: ent.name,
-                             polygon: {
-                                 hierarchy: Cesium.GeoJsonDataSource.crsNames['EPSG:4326'] ? null : undefined 
-                             }
-                         });
-                         // Manual simple polygon handling for Cesium is complex, simplified here:
-                         // For better complex polygon support in Cesium, we usually use GeoJsonDataSource directly.
-                         // However, to keep code style consistent with user, let's skip complex implementation here 
-                         // and rely on a basic shape or use the datasource method if needed.
-                         // But for now, we will just use the Cesium GeoJson loader for entities if possible,
-                         // OR, just render simpler logic. 
-                         // *Fixing the manual polygon loop for MultiPolygon support is tricky in raw API*
-                         // Let's use a simpler approach: Just load the datasource for this single feature if needed, 
-                         // OR assume simple polygons for now as per original code structure.
-                         
-                         // Reverting to simple Polygon logic from original code, but ensuring it works for simple cases
                          if(geoJson.geometry.type === 'Polygon') {
                              const flat = [];
-                             geoJson.geometry.coordinates[0].forEach(pt => { flat.push(pt[0], pt[1]); });
+                             // Safety Check
+                             if (!geoJson.geometry.coordinates || !geoJson.geometry.coordinates[0]) return;
                              
+                             geoJson.geometry.coordinates[0].forEach(pt => { if(pt.length >= 2) flat.push(pt[0], pt[1]); });
+                             
+                             // Safety Check: Need at least 3 points for a polygon (6 coords)
+                             if (flat.length < 6) return;
+
                              let outlineColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
                              if (ent.isAnnexed) outlineColor = visuals.fillColor; 
     
-                             viewer.entities.add({
+                             const hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
+
+                             const polyEnt = viewer.entities.add({
                                 polygon: {
-                                    hierarchy: Cesium.Cartesian3.fromDegreesArray(flat),
+                                    hierarchy: hierarchy,
                                     material: Cesium.Color.fromCssColorString(visuals.fillColor).withAlpha(ent.isWater ? 0.5 : globalOpacity),
                                     outline: !ent.isColony,
                                     outlineColor: Cesium.Color.fromCssColorString(outlineColor),
                                     outlineWidth: 2
                                 },
-                                name: ent.name,
-                                entityDataId: ent.id
+                                name: ent.name
                              });
+                             polyEnt.entityDataId = ent.id;
+
+                             // Colony Dashed Line Fix
+                             if (ent.isColony) {
+                                 viewer.entities.add({
+                                     polyline: {
+                                         positions: hierarchy, 
+                                         width: 2,
+                                         material: new Cesium.PolylineDashMaterialProperty({
+                                             color: Cesium.Color.fromCssColorString(globalStrokeColor),
+                                             dashLength: 16.0
+                                         }),
+                                         clampToGround: true
+                                     }
+                                 });
+                             }
+                             
+                             // Center Label Logic
+                             try {
+                                const center = turf.centerOfMass(geoJson);
+                                polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1]);
+
+                                if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
+                                    let labelText = ent.name;
+                                    if (ent.isAnnexed) labelText = ent.annexedByName; // Main name becomes conqueror
+                                    if (ent.isColony) labelText += ` (อาณานิคมของ ${ent.annexedByName})`;
+                                    
+                                    viewer.entities.add({
+                                        position: polyEnt.centerPosition,
+                                        label: {
+                                            text: labelText,
+                                            font: 'bold 14px "Mali", sans-serif',
+                                            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                            fillColor: Cesium.Color.fromCssColorString(ent.labelColor || '#4E342E'),
+                                            outlineColor: Cesium.Color.WHITE,
+                                            outlineWidth: 3,
+                                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2000000)
+                                        }
+                                    });
+                                }
+                             } catch(e) {}
                          }
                     }
                 } catch(e) { console.error("Cesium render error", e); }
