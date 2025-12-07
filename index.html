@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Map Creator: Ancient Realm</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS/JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Leaflet.Draw -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    
+    <!-- Turf.js -->
+    <script src='https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js'></script>
+
+    <!-- Google Fonts: Mali (Cute/Handwritten) and Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons (Rounded) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        /* Custom Theme: Ancient Cute Minimal */
+        :root {
+            --paper-bg: #FDF6E3; /* Solarized Base3 - Parchment look */
+            --wood-dark: #5D4037;
+            --wood-light: #8D6E63;
+            --gold-accent: #D4AF37;
+            --text-main: #4E342E;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--paper-bg);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        h1, h2, h3, .fantasy-font, .btn-ancient {
+            font-family: 'Mali', cursive;
+        }
+
+        /* Map Container */
+        #map {
+            height: 100vh;
+            width: 100%;
+            z-index: 0;
+            background-color: #A5D6F5; /* Default Water Color */
+        }
+
+        /* UI Containers */
+        .sidebar-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 300px; /* Reduced width slightly */
+            background: rgba(253, 246, 227, 0.98);
+            backdrop-filter: blur(10px);
+            border-right: 3px solid var(--wood-light);
+            z-index: 1000;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-collapsed {
+            transform: translateX(-300px);
+        }
+
+        .toggle-sidebar-btn {
+            position: absolute;
+            top: 20px;
+            right: -36px;
+            background: var(--wood-light);
+            color: #fff;
+            width: 36px;
+            height: 48px;
+            border-radius: 0 12px 12px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 4px 2px 8px rgba(0,0,0,0.15);
+            font-family: 'Mali', cursive;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+        .toggle-sidebar-btn:hover { background: var(--wood-dark); }
+
+        /* Modern Toolbar (Vertical, Top Right) */
+        .toolbar-vertical {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        .tool-btn {
+            width: 44px;
+            height: 44px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: var(--wood-dark);
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .tool-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            color: var(--wood-light);
+            border-color: var(--wood-light);
+        }
+        .tool-btn:active { transform: scale(0.95); }
+        .tool-btn span { font-size: 24px; }
+
+        /* Leaflet Draw Customization */
+        .leaflet-draw { display: none !important; } 
+        
+        /* Modal Styling */
+        .modal-overlay {
+            background-color: rgba(93, 64, 55, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        .modal-paper {
+            background-color: #FFFDF5;
+            border: 3px solid var(--wood-light);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D7CCC8; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #BCAAA4; }
+
+        /* Map Label Styling */
+        .map-label-container { text-align: center; pointer-events: none; }
+        .map-label-text {
+            font-family: 'Mali', cursive;
+            text-shadow: 
+                -1.5px -1.5px 0 #fff,  
+                 1.5px -1.5px 0 #fff,
+                -1.5px  1.5px 0 #fff,
+                 1.5px  1.5px 0 #fff;
+            font-weight: 700;
+            display: inline-block;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+        .map-label-sub {
+            font-size: 0.75em;
+            color: #d63031;
+            margin-top: -4px;
+            display: block;
+            text-shadow: 1px 1px 0 #fff;
+            font-weight: 600;
+        }
+
+        /* Form Elements */
+        .input-ancient {
+            background: #fff;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            padding: 8px 12px;
+            width: 100%;
+            outline: none;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .input-ancient:focus {
+            border-color: var(--gold-accent);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .btn-ancient {
+            background: var(--wood-dark);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #3E2723;
+        }
+        .btn-ancient:hover {
+            background: var(--wood-light);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #3E2723;
+        }
+        .btn-ancient:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #3E2723;
+        }
+        
+        .flag-circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        /* Cute Popup Styling */
+        .leaflet-popup-content-wrapper {
+            border-radius: 16px;
+            padding: 0;
+            overflow: visible; /* Allow image to pop out */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .leaflet-popup-content {
+            margin: 0 !important;
+            width: 280px !important;
+        }
+        .leaflet-popup-tip { background: white; }
+        .popup-header-bg {
+            height: 60px;
+            background: linear-gradient(135deg, #FFEFBA 0%, #FFFFFF 100%);
+            border-radius: 16px 16px 0 0;
+            position: relative;
+        }
+        .popup-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: -30px; /* Pop out */
+            background-color: #fff;
+            object-fit: cover;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Left Sidebar -->
+    <div id="sidebar-left" class="sidebar-left p-5">
+        <div class="toggle-sidebar-btn" id="toggle-sidebar">◀</div>
+        
+        <!-- Header -->
+        <div class="text-center mb-6 border-b-2 border-dotted border-[#8D6E63] pb-4">
+            <h1 class="text-2xl font-bold text-[#5D4037] drop-shadow-sm">📜 แผนที่แฟนตาซี</h1>
+            <p id="user-id-display" class="text-xs text-gray-500 mt-1 font-mono">Guest Mode</p>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
+            
+            <!-- Layer Control -->
+            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm">
+                <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2">
+                    <span class="material-icons-round text-sm">layers</span> พื้นหลัง & แสดงผล
+                </h3>
+                <div class="flex gap-2 mb-3">
+                    <button id="btn-map-fantasy" class="flex-1 text-xs py-2 rounded-lg bg-[#5D4037] text-white hover:bg-[#4E342E] transition">แฟนตาซี</button>
+                    <button id="btn-map-sat" class="flex-1 text-xs py-2 rounded-lg bg-[#A1887F] text-white hover:bg-[#8D6E63] transition">ดาวเทียม</button>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="toggle-original-labels" class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
+                        <label for="toggle-original-labels" class="text-sm cursor-pointer select-none">ชื่อสถานที่ดั้งเดิม</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="toggle-created-labels" checked class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
+                        <label for="toggle-created-labels" class="text-sm cursor-pointer select-none">ชื่อเขตที่สร้าง</label>
+                    </div>
+                </div>
+                
+                <!-- Opacity Slider -->
+                <div class="mt-4 pt-3 border-t border-gray-200">
+                    <div class="flex justify-between text-xs font-bold text-[#5D4037] mb-1">
+                        <span>ความเข้มพื้นที่</span>
+                        <span id="opacity-val">60%</span>
+                    </div>
+                    <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="0.6" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#5D4037]">
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm">
+                <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2">
+                    <span class="material-icons-round text-sm">filter_alt</span> กรองข้อมูล
+                </h3>
+                <div class="relative mb-3">
+                    <span class="material-icons-round absolute left-2 top-2 text-gray-400 text-sm">search</span>
+                    <input type="text" id="search-input" placeholder="ค้นหาชื่อ..." class="input-ancient pl-8 text-sm">
+                </div>
+
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <div class="font-bold text-[#5D4037] text-xs mb-1">ระดับศักดิ์</div>
+                        <div id="filter-levels-container" class="grid grid-cols-2 gap-x-2 gap-y-1 max-h-24 overflow-y-auto custom-scrollbar">
+                            <!-- JS Will Populate -->
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="font-bold text-[#5D4037] text-xs mb-1">สถานะ</div>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-1">
+                            <label class="flex items-center cursor-pointer hover:bg-white/50 rounded px-1 -ml-1"><input type="checkbox" checked class="filter-status accent-[#5D4037] mr-1.5" value="all"> ทั้งหมด</label>
+                            <label class="flex items-center cursor-pointer hover:bg-white/50 rounded px-1 -ml-1"><input type="checkbox" class="filter-status accent-[#5D4037] mr-1.5" value="independent"> รัฐอิสระ</label>
+                            <label class="flex items-center cursor-pointer hover:bg-white/50 rounded px-1 -ml-1"><input type="checkbox" class="filter-status accent-[#5D4037] mr-1.5" value="colony"> อาณานิคม</label>
+                            <label class="flex items-center cursor-pointer hover:bg-white/50 rounded px-1 -ml-1"><input type="checkbox" class="filter-status accent-[#5D4037] mr-1.5" value="vassal"> ประเทศราช</label>
+                            <label class="flex items-center cursor-pointer hover:bg-white/50 rounded px-1 -ml-1"><input type="checkbox" class="filter-status accent-[#5D4037] mr-1.5" value="annexed"> ถูกผนวก</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Mode -->
+            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm">
+                <h3 class="font-bold text-[#5D4037] mb-2 flex items-center gap-2">
+                    <span class="material-icons-round text-sm">palette</span> โหมดสี
+                </h3>
+                <select id="color-mode-select" class="input-ancient text-sm cursor-pointer">
+                    <option value="entity">สีประจำเขตพื้นที่</option>
+                    <option value="religion">ตามศาสนา</option>
+                    <option value="government">ตามระบอบปกครอง</option>
+                </select>
+            </div>
+            
+             <!-- War Room -->
+             <div class="bg-red-50 p-4 rounded-2xl border border-red-100 shadow-sm">
+                <h3 class="font-bold text-red-800 mb-2 flex items-center gap-2">
+                    <span class="material-icons-round text-sm">sports_kabaddi</span> ห้องยุทธการ
+                </h3>
+                <div id="war-room-content" class="text-xs text-gray-500 italic text-center py-2">
+                    เลือกเขตพื้นที่ในแผนที่เพื่อเริ่ม...
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- New Vertical Toolbar (Top Right) -->
+    <div class="toolbar-vertical">
+        <div class="tool-btn" onclick="startDrawPolygon()" title="สร้างเขตพื้นที่">
+            <span class="material-icons-round text-green-600">terrain</span>
+        </div>
+        <div class="tool-btn" onclick="startDrawPolyline()" title="สร้างเส้นทาง">
+            <span class="material-icons-round text-amber-700">alt_route</span>
+        </div>
+        <div class="tool-btn" onclick="startDrawMarker()" title="ปักหมุด">
+            <span class="material-icons-round text-red-500">place</span>
+        </div>
+        <div class="h-px bg-gray-300 mx-2 my-1"></div>
+        <div class="tool-btn" onclick="toggleFullScreen()" title="เต็มจอ">
+            <span class="material-icons-round">fullscreen</span>
+        </div>
+    </div>
+
+    <!-- Map Area -->
+    <div id="map"></div>
+
+    <!-- Modal: Create/Edit Area -->
+    <div id="modal-area" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
+        <div class="modal-paper w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('modal-area')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
+                <span class="material-icons-round text-2xl">close</span>
+            </button>
+            
+            <h2 class="text-2xl text-[#5D4037] font-bold mb-6 flex items-center gap-2 border-b border-dashed border-[#D7CCC8] pb-3">
+                <span class="material-icons-round text-3xl text-[#D4AF37]">edit_location_alt</span>
+                <span id="modal-title">สร้างเขตปกครอง</span>
+            </h2>
+
+            <form id="form-area" class="space-y-5">
+                <input type="hidden" id="area-id">
+                
+                <div class="flex gap-6 items-start">
+                    <!-- Flag Upload -->
+                    <div class="flex-shrink-0 flex flex-col items-center w-28">
+                        <div class="relative group cursor-pointer" onclick="document.getElementById('inp-flag').click()">
+                            <img id="preview-flag" src="" class="flag-circle hidden transition group-hover:brightness-90">
+                            <div id="preview-flag-placeholder" class="flag-circle flex items-center justify-center bg-gray-100 text-gray-300 group-hover:bg-gray-200 transition">
+                                <span class="material-icons-round text-4xl">add_photo_alternate</span>
+                            </div>
+                            <div class="absolute bottom-0 right-0 bg-[#5D4037] text-white rounded-full p-1 shadow-md">
+                                <span class="material-icons-round text-xs block">edit</span>
+                            </div>
+                        </div>
+                        <input type="file" id="inp-flag" class="hidden" accept="image/*">
+                        <span class="text-[10px] text-gray-500 mt-2">คลิกเพื่อเปลี่ยนตรา</span>
+                    </div>
+
+                    <!-- Main Info -->
+                    <div class="flex-grow space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">ชื่อเขตปกครอง</label>
+                                <input type="text" id="inp-name" class="input-ancient font-bold text-[#5D4037]" required placeholder="เช่น นครดราก้อน">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">ระดับศักดิ์</label>
+                                <select id="inp-level" class="input-ancient font-bold text-[#5D4037] bg-white cursor-pointer"></select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">ผู้ปกครอง</label>
+                                <div class="relative">
+                                    <span class="material-icons-round absolute left-2 top-2 text-gray-400 text-sm">person</span>
+                                    <input type="text" id="inp-ruler" class="input-ancient pl-8" required>
+                                </div>
+                            </div>
+                             <div>
+                                <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">เขตปกครองแม่ (ถ้ามี)</label>
+                                <select id="inp-parent" class="input-ancient text-sm bg-white cursor-pointer">
+                                    <option value="">-- เป็นอิสระ / สูงสุด --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 pt-2">
+                    <div>
+                        <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ศาสนา</label>
+                        <select id="inp-religion" class="input-ancient text-sm bg-white">
+                            <option>พุทธ</option><option>คริสต์</option><option>อิสลาม</option>
+                            <option>พราหมณ์ฮินดู</option><option>ศาสนาดั้งเดิม</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ระบอบปกครอง</label>
+                        <select id="inp-gov" class="input-ancient text-sm bg-white">
+                            <option>สมบูรณาญาสิทธิราชย์</option><option>ประชาธิปไตย</option>
+                            <option>คอมมิวนิสต์</option><option>ปริมิตาญาสิทธิราชย์</option>
+                        </select>
+                    </div>
+                    <div>
+                         <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ประเภทพื้นที่</label>
+                         <div class="flex gap-2 mt-1.5 bg-white p-1 rounded-lg border border-gray-200">
+                             <label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-1 rounded hover:bg-gray-50">
+                                 <input type="radio" name="areaType" value="land" checked class="accent-[#5D4037]"> <span class="text-xs">ดิน</span>
+                             </label>
+                             <label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-1 rounded hover:bg-gray-50">
+                                 <input type="radio" name="areaType" value="water" class="accent-[#2980B9]"> <span class="text-xs">น้ำ</span>
+                             </label>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="pt-2 grid grid-cols-2 gap-4 border-t border-dashed border-[#D7CCC8]">
+                    <div class="pt-2">
+                        <label class="text-xs font-bold text-[#8D6E63] mb-1 block">สีประจำเขต</label>
+                        <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200">
+                            <input type="color" id="inp-color" class="w-10 h-8 border-0 rounded cursor-pointer bg-transparent">
+                            <span class="text-xs text-gray-500">ใช้แบ่งแยกพื้นที่</span>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <label class="text-xs font-bold text-[#8D6E63] mb-1 block">สีตัวอักษร</label>
+                        <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200">
+                            <input type="color" id="inp-label-color" class="w-10 h-8 border-0 rounded cursor-pointer bg-transparent" value="#4E342E">
+                            <span class="text-xs text-gray-500">ชื่อบนแผนที่</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-6 pt-4">
+                    <button type="button" onclick="cancelDraw()" class="px-4 py-2 text-gray-500 hover:text-gray-700 font-bold font-sans text-sm">ยกเลิก</button>
+                    <button type="submit" class="btn-ancient shadow-lg transform active:scale-95 transition flex items-center gap-2">
+                        <span class="material-icons-round text-sm">save</span> บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Road Details -->
+    <div id="modal-road" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
+        <div class="modal-paper w-96 p-6">
+            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2">
+                <span class="material-icons-round">add_road</span> สร้างเส้นทาง
+            </h3>
+            <div class="space-y-4">
+                <input type="hidden" id="road-id">
+                <input type="text" id="road-name" placeholder="ชื่อถนน / ทางหลวง..." class="input-ancient">
+                
+                <div>
+                    <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ประเภท</label>
+                    <select id="road-type" class="input-ancient bg-white">
+                        <option value="trade">ถนนการค้า (เส้นทึบ)</option>
+                        <option value="army">เส้นทางเดินทัพ (เส้นประ)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-[#8D6E63] mb-1 block">สีเส้นทาง</label>
+                    <input type="color" id="road-color" value="#5D4037" class="w-full h-10 rounded cursor-pointer">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="cancelDraw()" class="px-4 py-2 text-gray-500 text-sm">ยกเลิก</button>
+                <button onclick="saveRoad()" class="btn-ancient text-sm">สร้างเส้นทาง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, query, onSnapshot, runTransaction, deleteDoc, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "", 
+            authDomain: "map2-d18dc.firebaseapp.com",
+            projectId: "map2-d18dc",
+            storageBucket: "map2-d18dc.firebasestorage.app",
+            appId: "1:993020770694:web:281b572e2170f7f1209407"
+        };
+        const appId = firebaseConfig.projectId || "map2-d18dc";
+
+        // Globals
+        let db, auth, userId, map, drawnItems;
+        let entities = []; 
+        let currentDrawLayer = null;
+        let mapLayers = {};
+        let globalOpacity = 0.6; 
+
+        // Hierarchy
+        const HIERARCHY = [
+            { id: 'mahaAnachak', name: 'มหาอาณาจักร', rank: 9, defaultColor: '#884A51' },
+            { id: 'anachak', name: 'อาณาจักร', rank: 8, defaultColor: '#AD8B73' },
+            { id: 'prathet', name: 'ประเทศ/ราชรัฐ', rank: 7, defaultColor: '#CEAB93' },
+            { id: 'monrath', name: 'มณรัฐ (ภาค)', rank: 6, defaultColor: '#E3CAA5' },
+            { id: 'monthon', name: 'มณฑล', rank: 5, defaultColor: '#BB9981' },
+            { id: 'jangwat', name: 'จังหวัด/นคร/มหานคร', rank: 4, defaultColor: '#7E6B5A' },
+            { id: 'amphoe', name: 'อำเภอ/อาเขต', rank: 3, defaultColor: '#56423A' },
+            { id: 'tambon', name: 'ตำบล/เขต', rank: 2, defaultColor: '#3A2E39' },
+            { id: 'muban', name: 'หมู่บ้าน/แขวง', rank: 1, defaultColor: '#251E3E' }
+        ];
+
+        const COLORS = {
+            religion: { 'พุทธ': '#F1C40F', 'คริสต์': '#3498DB', 'อิสลาม': '#2ECC71', 'พราหมณ์ฮินดู': '#E91E63', 'ศาสนาดั้งเดิม': '#95A5A6' },
+            gov: { 'ประชาธิปไตย': '#2ECC71', 'คอมมิวนิสต์': '#E74C3C', 'สมบูรณาญาสิทธิราชย์': '#8E44AD', 'ปริมิตาญาสิทธิราชย์': '#F39C12' }
+        };
+
+        // --- Init ---
+        window.onload = async () => {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+                    else await signInAnonymously(auth);
+                } else {
+                    userId = user.uid;
+                    document.getElementById('user-id-display').innerText = `Lord ID: ${userId.substring(0,6)}`;
+                    initMap();
+                }
+            });
+
+            setupUI();
+        };
+
+        // --- Map Init ---
+        function initMap() {
+            if (map) return; 
+            
+            const fantasyLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', { attribution: 'CartoDB', subdomains: 'abcd', maxZoom: 19 });
+            const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' });
+            const labelLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', { attribution: 'CartoDB', maxZoom: 19, opacity: 0.7 });
+
+            map = L.map('map', {
+                center: [13.7563, 100.5018],
+                zoom: 6,
+                zoomControl: false, 
+                layers: [fantasyLayer] 
+            });
+
+            mapLayers = { fantasy: fantasyLayer, sat: satLayer, labels: labelLayer };
+            drawnItems = L.featureGroup().addTo(map);
+
+            map.addControl(new L.Control.Draw({
+                edit: { featureGroup: drawnItems },
+                draw: { polygon: true, polyline: true, marker: true, rectangle: false, circle: false, circlemarker: false }
+            }));
+
+            map.on(L.Draw.Event.CREATED, onDrawCreated);
+            map.on(L.Draw.Event.EDITED, onDrawEdited);
+            map.on(L.Draw.Event.DELETED, onDrawDeleted);
+
+            const areasRef = collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires');
+            onSnapshot(areasRef, (snap) => {
+                entities = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderMap();
+            });
+        }
+
+        // --- UI Setup ---
+        function setupUI() {
+            document.getElementById('toggle-sidebar').onclick = () => {
+                const sidebar = document.getElementById('sidebar-left');
+                sidebar.classList.toggle('sidebar-collapsed');
+                document.getElementById('toggle-sidebar').innerText = sidebar.classList.contains('sidebar-collapsed') ? '▶' : '◀';
+            };
+
+            document.getElementById('btn-map-fantasy').onclick = () => { map.removeLayer(mapLayers.sat); map.addLayer(mapLayers.fantasy); };
+            document.getElementById('btn-map-sat').onclick = () => { map.removeLayer(mapLayers.fantasy); map.addLayer(mapLayers.sat); };
+            
+            document.getElementById('toggle-original-labels').onchange = (e) => {
+                if(e.target.checked) map.addLayer(mapLayers.labels); else map.removeLayer(mapLayers.labels);
+            };
+            
+            // New toggle for created labels
+            document.getElementById('toggle-created-labels').addEventListener('change', renderMap);
+
+            document.getElementById('opacity-slider').addEventListener('input', (e) => {
+                globalOpacity = parseFloat(e.target.value);
+                document.getElementById('opacity-val').innerText = Math.round(globalOpacity*100) + '%';
+                renderMap();
+            });
+
+            const filterContainer = document.getElementById('filter-levels-container');
+            HIERARCHY.forEach(h => {
+                const div = document.createElement('div');
+                div.innerHTML = `<label class="flex items-center text-xs cursor-pointer"><input type="checkbox" checked class="filter-level accent-[#5D4037] mr-1" value="${h.id}"> ${h.name}</label>`;
+                filterContainer.appendChild(div);
+            });
+
+            const levelSelect = document.getElementById('inp-level');
+            HIERARCHY.forEach(h => {
+                const opt = document.createElement('option');
+                opt.value = h.id;
+                opt.text = h.name;
+                levelSelect.appendChild(opt);
+            });
+            
+            levelSelect.onchange = (e) => {
+                const lvl = HIERARCHY.find(h => h.id === e.target.value);
+                if(lvl) document.getElementById('inp-color').value = lvl.defaultColor;
+                updateParentSelect(lvl ? lvl.rank : 0);
+            };
+
+            document.getElementById('inp-flag').onchange = (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        document.getElementById('preview-flag').src = evt.target.result;
+                        document.getElementById('preview-flag').classList.remove('hidden');
+                        document.getElementById('preview-flag-placeholder').classList.add('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            document.getElementById('form-area').onsubmit = saveArea;
+
+            document.querySelectorAll('.filter-level, .filter-status, #search-input, #color-mode-select').forEach(el => {
+                el.addEventListener('change', renderMap);
+                if(el.id === 'search-input') el.addEventListener('keyup', renderMap);
+            });
+        }
+
+        // --- Render Map ---
+        function renderMap() {
+            drawnItems.clearLayers();
+            const colorMode = document.getElementById('color-mode-select').value;
+            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+            const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
+            const selectedStatus = Array.from(document.querySelectorAll('.filter-status:checked')).map(cb => cb.value);
+            const showCreatedLabels = document.getElementById('toggle-created-labels').checked;
+
+            const sortedEntities = [...entities].sort((a, b) => getRank(b.level) - getRank(a.level)); // Big first
+
+            sortedEntities.forEach(ent => {
+                if (!selectedLevels.includes(ent.level) && ent.type === 'area') return;
+                if (searchTxt && !ent.name.toLowerCase().includes(searchTxt)) return;
+                
+                // Status Filter Logic
+                let status = 'independent';
+                if (ent.isColony) status = 'colony';
+                else if (ent.isVassal) status = 'vassal';
+                else if (ent.isAnnexed) status = 'annexed';
+                
+                if (!selectedStatus.includes('all') && !selectedStatus.includes(status)) return;
+
+                try {
+                    const geoJson = JSON.parse(ent.geoJson);
+                    
+                    if (ent.type === 'road') {
+                        const line = L.geoJSON(geoJson, {
+                            style: { color: ent.color, weight: 4, dashArray: ent.roadType === 'army' ? '10, 10' : null, opacity: 0.9 }
+                        }).bindPopup(`<b>${ent.name}</b><br>${ent.roadType==='army'?'เดินทัพ':'การค้า'}`);
+                        drawnItems.addLayer(line);
+                        return;
+                    }
+                    
+                    if (ent.type === 'marker') {
+                        const icon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="font-size:24px; text-shadow:2px 2px 0 #fff;">${ent.icon}</div>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        });
+                        const marker = L.geoJSON(geoJson, {
+                            pointToLayer: (feature, latlng) => L.marker(latlng, {icon: icon})
+                        }).bindPopup(`<b>${ent.name}</b>`);
+                        drawnItems.addLayer(marker);
+                        return;
+                    }
+
+                    // Polygon
+                    let fillColor = ent.color;
+                    if (colorMode === 'religion') fillColor = COLORS.religion[ent.religion] || '#ccc';
+                    if (colorMode === 'government') fillColor = COLORS.gov[ent.government] || '#ccc';
+                    if (ent.isWater) fillColor = '#85C1E9'; 
+                    else if (colorMode === 'entity' && (ent.isAnnexed || ent.isVassal)) fillColor = ent.color;
+
+                    const layer = L.geoJSON(geoJson, {
+                        style: {
+                            color: ent.isWater ? '#2980B9' : '#5D4037',
+                            weight: ent.isWater ? 1 : (ent.isAnnexed ? 1 : 1.5),
+                            dashArray: ent.isWater || ent.isColony ? '6, 6' : null, 
+                            fillColor: fillColor,
+                            fillOpacity: ent.isWater ? 0.4 : globalOpacity
+                        },
+                        onEachFeature: (f, l) => {
+                            l.options.entityId = ent.id;
+                            
+                            // Label Logic (Only if toggled ON)
+                            if (showCreatedLabels && !ent.isWater && getRank(ent.level) >= 1) {
+                                const center = l.getBounds().getCenter();
+                                const subLabel = ent.isColony ? `<span class="text-[8px] bg-white/90 px-1 rounded text-red-600 whitespace-nowrap border border-red-200">(อาณานิคมของ ${ent.colonyOfName})</span>` : '';
+                                const labelColor = ent.labelColor || '#4E342E';
+                                const labelText = ent.isAnnexed ? ent.annexedByName : ent.name;
+
+                                const labelMarker = L.marker(center, {
+                                    icon: L.divIcon({
+                                        className: 'map-label-container',
+                                        html: `<div class="map-label-text" style="color:${labelColor}">${labelText}</div><br>${subLabel}`,
+                                        iconSize: [120, 40],
+                                        iconAnchor: [60, 20]
+                                    })
+                                });
+                                drawnItems.addLayer(labelMarker);
+                            }
+                            
+                            l.bindPopup(createPopupContent(ent));
+                        }
+                    });
+                    drawnItems.addLayer(layer);
+
+                } catch (e) { console.error(e); }
+            });
+        }
+
+        // --- Enhanced Popup ---
+        function createPopupContent(ent) {
+            const flag = ent.flag || 'https://cdn-icons-png.flaticon.com/512/1458/1458514.png'; // Fallback icon
+            
+            let statusBadge = '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full border border-green-200">รัฐอิสระ</span>';
+            let extraInfo = '';
+            let displayName = ent.name;
+            let parentName = ent.parentId ? (entities.find(e => e.id === ent.parentId)?.name || 'Unknown') : '-';
+
+            if (ent.isAnnexed) {
+                statusBadge = '<span class="bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5 rounded-full border border-orange-200">ถูกผนวก</span>';
+                displayName = ent.annexedByName;
+                extraInfo = `<div class="text-[10px] text-red-500 mt-1 flex items-center justify-center gap-1"><span class="material-icons-round text-[10px]">history</span> เดิม: ${ent.originalName || ent.name}</div>`;
+            } else if (ent.isVassal) {
+                statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
+                extraInfo = `<div class="text-[10px] text-purple-500 mt-1">(ของ ${ent.vassalOfName})</div>`;
+            } else if (ent.isColony) {
+                statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">อาณานิคม</span>';
+                extraInfo = `<div class="text-[10px] text-blue-500 mt-1">(ของ ${ent.colonyOfName})</div>`;
+            }
+
+            // Expose global functions for buttons
+            window.editEntity = (id) => openEditModal(id);
+            window.deleteEntity = (id) => confirmDelete(id);
+
+            return `
+                <div class="font-sans relative">
+                    <!-- Header with Curved Bottom -->
+                    <div class="popup-header-bg"></div>
+                    
+                    <!-- Avatar Pop-out -->
+                    <img src="${flag}" class="popup-avatar">
+                    
+                    <div class="pt-8 px-4 pb-4 text-center">
+                        <div class="mb-1">
+                             <span class="text-[10px] font-mono text-gray-400 bg-gray-100 px-1 rounded">#${ent.id.substring(0,4)}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-[#5D4037] leading-tight fantasy-font">${displayName}</h3>
+                        ${extraInfo}
+                        <div class="mt-2 mb-3">${statusBadge}</div>
+                        
+                        <div class="grid grid-cols-2 gap-2 text-left text-xs bg-[#FFFDF5] p-2 rounded-lg border border-[#EFEBE9]">
+                            <div class="col-span-2 flex justify-between border-b border-dashed border-gray-200 pb-1 mb-1">
+                                <span class="text-gray-400">ระดับศักดิ์</span>
+                                <span class="font-bold text-[#5D4037]">${getHierarchyName(ent.level)}</span>
+                            </div>
+                            <div class="col-span-2 flex justify-between border-b border-dashed border-gray-200 pb-1 mb-1">
+                                <span class="text-gray-400">ศักดิ์ใหญ่กว่า</span>
+                                <span class="text-[#5D4037] truncate max-w-[120px]">${parentName}</span>
+                            </div>
+                            <div class="col-span-2 mb-1">
+                                <span class="text-gray-400 block mb-0.5">ผู้ปกครอง</span>
+                                <span class="font-bold text-[#8D6E63] flex items-center gap-1">
+                                    <span class="material-icons-round text-sm">person</span> ${ent.ruler}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1 text-gray-600">
+                                <span class="material-icons-round text-sm text-yellow-600">self_improvement</span> ${ent.religion}
+                            </div>
+                             <div class="flex items-center gap-1 text-gray-600">
+                                <span class="material-icons-round text-sm text-blue-600">gavel</span> ${ent.government}
+                            </div>
+                        </div>
+
+                        <!-- Action Bar -->
+                        <div class="mt-3 flex gap-2 justify-center pt-2 border-t border-gray-100">
+                             <button onclick="window.editEntity('${ent.id}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition" title="แก้ไขข้อมูล">
+                                <span class="material-icons-round text-sm">edit</span>
+                            </button>
+                            <button onclick="window.deleteEntity('${ent.id}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition" title="ลบพื้นที่">
+                                <span class="material-icons-round text-sm">delete</span>
+                            </button>
+                            ${(!ent.isColony && !ent.isVassal && !ent.isAnnexed) ? 
+                                `<button onclick="window.prepareWar('${ent.id}')" class="h-8 px-3 rounded-full bg-[#5D4037] text-white text-xs hover:bg-[#4E342E] transition flex items-center gap-1">
+                                    <span class="material-icons-round text-sm">sports_kabaddi</span> ยุทธการ
+                                 </button>` : 
+                                `<button onclick="window.declareIndependence('${ent.id}')" class="h-8 px-3 rounded-full bg-green-600 text-white text-xs hover:bg-green-700 transition flex items-center gap-1">
+                                    <span class="material-icons-round text-sm">flag</span> กู้เอกราช
+                                 </button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Entity Management (Edit/Delete) ---
+        window.openEditModal = async (id) => {
+            const ent = entities.find(e => e.id === id);
+            if (!ent) return;
+
+            document.getElementById('modal-area').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = "แก้ไขเขตปกครอง";
+            
+            // Fill Form
+            document.getElementById('area-id').value = ent.id;
+            document.getElementById('inp-name').value = ent.name;
+            document.getElementById('inp-level').value = ent.level;
+            
+            // Wait for updateParentSelect to finish
+            updateParentSelect(getRank(ent.level));
+            document.getElementById('inp-parent').value = ent.parentId || "";
+            
+            document.getElementById('inp-ruler').value = ent.ruler;
+            document.getElementById('inp-religion').value = ent.religion;
+            document.getElementById('inp-gov').value = ent.government;
+            document.getElementById('inp-color').value = ent.color;
+            document.getElementById('inp-label-color').value = ent.labelColor || '#4E342E';
+            
+            if (ent.flag) {
+                document.getElementById('preview-flag').src = ent.flag;
+                document.getElementById('preview-flag').classList.remove('hidden');
+                document.getElementById('preview-flag-placeholder').classList.add('hidden');
+            } else {
+                 document.getElementById('preview-flag').classList.add('hidden');
+                 document.getElementById('preview-flag-placeholder').classList.remove('hidden');
+            }
+
+            // Radio button for type
+            const typeRadios = document.getElementsByName('areaType');
+            for(let r of typeRadios) { r.checked = (r.value === (ent.isWater ? 'water' : 'land')); }
+            
+            // Important: Set current layer to null or find it to allow shape edit?
+            // Simple edit mode: Only Data. Shape edit via Leaflet.Draw toolbar separately if needed.
+            // But we need to keep the geoJson.
+        }
+
+        window.confirmDelete = async (id) => {
+            if(confirm("ยืนยันการลบเขตพื้นที่นี้? การกระทำนี้ไม่สามารถย้อนกลับได้")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id));
+                    // Leaflet snapshot listener will handle UI removal
+                } catch(e) { alert("ลบไม่สำเร็จ: " + e.message); }
+            }
+        }
+
+        // --- Drawing Handlers ---
+        window.startDrawPolygon = () => new L.Draw.Polygon(map).enable();
+        window.startDrawPolyline = () => new L.Draw.Polyline(map).enable();
+        window.startDrawMarker = () => new L.Draw.Marker(map).enable();
+        
+        window.toggleFullScreen = async () => {
+            try {
+                if (!document.fullscreenElement) {
+                    if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+                } else {
+                    if (document.exitFullscreen) await document.exitFullscreen();
+                }
+            } catch (err) { console.warn("Fullscreen error", err); }
+        };
+
+        function onDrawCreated(e) {
+            currentDrawLayer = e.layer;
+            drawnItems.addLayer(currentDrawLayer); 
+            if (e.layerType === 'polygon') {
+                document.getElementById('modal-area').classList.remove('hidden');
+                document.getElementById('modal-title').innerText = "สร้างเขตปกครอง";
+                document.getElementById('form-area').reset();
+                document.getElementById('area-id').value = ''; 
+                document.getElementById('preview-flag').classList.add('hidden');
+                document.getElementById('preview-flag-placeholder').classList.remove('hidden');
+                document.getElementById('inp-level').dispatchEvent(new Event('change')); 
+            } else if (e.layerType === 'polyline') {
+                document.getElementById('modal-road').classList.remove('hidden');
+            } else if (e.layerType === 'marker') {
+                saveMarker(); 
+            }
+        }
+
+        window.cancelDraw = () => {
+            if (currentDrawLayer && !document.getElementById('area-id').value) {
+                // Only remove layer if cancelling a NEW creation
+                drawnItems.removeLayer(currentDrawLayer);
+            }
+            closeModal('modal-area');
+            closeModal('modal-road');
+            currentDrawLayer = null;
+        };
+
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+
+        // --- Saving Logic (Updated for Edit) ---
+        async function saveArea(e) {
+            e.preventDefault();
+            const id = document.getElementById('area-id').value;
+            const levelId = document.getElementById('inp-level').value;
+            
+            const data = {
+                name: document.getElementById('inp-name').value,
+                level: levelId,
+                parentId: document.getElementById('inp-parent').value || null,
+                ruler: document.getElementById('inp-ruler').value,
+                religion: document.getElementById('inp-religion').value,
+                government: document.getElementById('inp-gov').value,
+                color: document.getElementById('inp-color').value,
+                labelColor: document.getElementById('inp-label-color').value,
+                isWater: document.querySelector('input[name="areaType"]:checked').value === 'water',
+                flag: document.getElementById('preview-flag').src.includes('data:') ? document.getElementById('preview-flag').src : null,
+                type: 'area'
+            };
+
+            // If new creation, add geoJson and create props
+            if (!id) {
+                data.geoJson = JSON.stringify(currentDrawLayer.toGeoJSON());
+                data.createdAt = new Date().toISOString();
+                data.originalName = data.name;
+                data.originalRuler = data.ruler;
+                data.originalColor = data.color;
+                await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
+            } else {
+                // Edit mode: Merge data, keep existing geoJson unless redrawn (handling redraw is complex, assume data edit here)
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), data, { merge: true });
+            }
+            
+            closeModal('modal-area');
+            currentDrawLayer = null;
+        }
+        
+        async function saveRoad() {
+            const data = {
+                name: document.getElementById('road-name').value || 'เส้นทางไร้ชื่อ',
+                roadType: document.getElementById('road-type').value,
+                color: document.getElementById('road-color').value,
+                geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
+                type: 'road',
+                level: 'road'
+            };
+            await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
+            closeModal('modal-road');
+            currentDrawLayer = null;
+        }
+
+        async function saveMarker() {
+            const name = prompt("ชื่อสถานที่:", "จุดสำคัญ");
+            if(!name) { 
+                drawnItems.removeLayer(currentDrawLayer); 
+                currentDrawLayer = null;
+                return; 
+            }
+            
+            const data = {
+                name: name,
+                icon: '📍', 
+                geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
+                type: 'marker',
+                level: 'marker',
+                color: '#fff'
+            };
+            await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
+            currentDrawLayer = null;
+        }
+
+        // --- War Logic ---
+        window.prepareWar = (targetId) => {
+            const target = entities.find(e => e.id === targetId);
+            const warRoom = document.getElementById('war-room-content');
+            
+            const myEmpires = entities.filter(e => getRank(e.level) >= 7 && e.id !== targetId && !e.isWater);
+            
+            if (myEmpires.length === 0) {
+                warRoom.innerHTML = `<p class="text-xs text-red-600">ต้องสร้างประเทศ/อาณาจักรก่อนทำสงคราม</p>`;
+                return;
+            }
+
+            let html = `
+                <div class="text-sm space-y-2 mt-2 bg-white/50 p-2 rounded">
+                    <div class="font-bold text-[#5D4037]">เป้าหมาย: ${target.name}</div>
+                    <select id="war-attacker" class="input-ancient text-xs">
+                        ${myEmpires.map(e => `<option value="${e.id}">${e.name} (${e.ruler})</option>`).join('')}
+                    </select>
+                    <div class="grid grid-cols-3 gap-1">
+                        <button onclick="executeWar('${targetId}', 'annex')" class="bg-red-700 text-white rounded py-1 text-[10px] hover:bg-red-800">ผนวก</button>
+                        <button onclick="executeWar('${targetId}', 'vassal')" class="bg-purple-700 text-white rounded py-1 text-[10px] hover:bg-purple-800">ประเทศราช</button>
+                        <button onclick="executeWar('${targetId}', 'colony')" class="bg-blue-600 text-white rounded py-1 text-[10px] hover:bg-blue-700">อาณานิคม</button>
+                    </div>
+                </div>
+            `;
+            warRoom.innerHTML = html;
+        };
+
+        window.executeWar = async (targetId, type) => {
+            const attackerId = document.getElementById('war-attacker').value;
+            const attacker = entities.find(e => e.id === attackerId);
+            const target = entities.find(e => e.id === targetId);
+            if(!attacker || !target) return;
+
+            const updateData = {};
+            if (!target.originalColor) updateData.originalColor = target.color;
+            if (!target.originalName) updateData.originalName = target.name;
+            if (!target.originalRuler) updateData.originalRuler = target.ruler;
+
+            if (type === 'annex') {
+                updateData.color = attacker.color;
+                updateData.ruler = attacker.ruler;
+                updateData.isAnnexed = true;
+                updateData.annexedByName = attacker.name;
+            } else if (type === 'vassal') {
+                updateData.color = attacker.color;
+                updateData.isVassal = true;
+                updateData.vassalOfName = attacker.name;
+            } else if (type === 'colony') {
+                updateData.isColony = true;
+                updateData.colonyOfName = attacker.name;
+            }
+
+            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', targetId), updateData, { merge: true });
+            document.getElementById('war-room-content').innerHTML = `<p class="text-green-600 text-xs font-bold text-center">ยึดครองสำเร็จ!</p>`;
+        };
+
+        window.declareIndependence = async (id) => {
+            if(!confirm("ต้องการประกาศเอกราช?")) return;
+            const ent = entities.find(e => e.id === id);
+            
+            const updateData = {
+                color: ent.originalColor || ent.color,
+                ruler: ent.originalRuler || ent.ruler,
+                isAnnexed: false, isVassal: false, isColony: false,
+                annexedByName: null, vassalOfName: null, colonyOfName: null
+            };
+            
+            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), updateData, { merge: true });
+        };
+
+        function onDrawEdited(e) {
+            e.layers.eachLayer(async (layer) => {
+                const id = layer.options.entityId;
+                if(id) {
+                    const geoJson = JSON.stringify(layer.toGeoJSON());
+                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), { geoJson }, { merge: true });
+                }
+            });
+        }
+        function onDrawDeleted(e) { /* Handled by UI delete btn mostly, but this catches toolbar deletes */ }
+
+        // --- Helpers ---
+        function updateParentSelect(currentRank) {
+            const parentSelect = document.getElementById('inp-parent');
+            parentSelect.innerHTML = '<option value="">-- เป็นอิสระ / สูงสุด --</option>';
+            const potentialParents = entities.filter(e => getRank(e.level) > currentRank && !e.isWater);
+            potentialParents.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.text = `${p.name} (${getHierarchyName(p.level)})`;
+                parentSelect.appendChild(opt);
+            });
+        }
+
+        function getRank(levelId) { return HIERARCHY.find(x => x.id === levelId)?.rank || 0; }
+        function getHierarchyName(id) { return HIERARCHY.find(x => x.id === id)?.name || id; }
+
+    </script>
+</body>
+</html>
