@@ -786,14 +786,14 @@
 
         const HIERARCHY = [
             { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51' },
-            { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#AD8B73' },
-            { id: 'prathet', name: 'ประเทศ/ราชรัฐ (State)', rank: 7, defaultColor: '#CEAB93' },
-            { id: 'monrath', name: 'มณรัฐ (Region)', rank: 6, defaultColor: '#E3CAA5' },
-            { id: 'monthon', name: 'มณฑล (Province)', rank: 5, defaultColor: '#BB9981' },
-            { id: 'jangwat', name: 'จังหวัด/นคร (City)', rank: 4, defaultColor: '#7E6B5A' },
-            { id: 'amphoe', name: 'อำเภอ (District)', rank: 3, defaultColor: '#56423A' },
-            { id: 'tambon', name: 'ตำบล (Sub-district)', rank: 2, defaultColor: '#3A2E39' },
-            { id: 'muban', name: 'หมู่บ้าน (Village)', rank: 1, defaultColor: '#251E3E' }
+            { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#F1C40F' },
+            { id: 'prathet', name: 'ประเทศ/ราชรัฐ (State)', rank: 7, defaultColor: '#E74C3C' },
+            { id: 'monrath', name: 'มณรัฐ (Region)', rank: 6, defaultColor: '#F39C12' },
+            { id: 'monthon', name: 'มณฑล (Province)', rank: 5, defaultColor: '#E91E63' },
+            { id: 'jangwat', name: 'จังหวัด/นคร (City)', rank: 4, defaultColor: '#2ECC71' },
+            { id: 'amphoe', name: 'อำเภอ (District)', rank: 3, defaultColor: '#8E44AD' },
+            { id: 'tambon', name: 'ตำบล (Sub-district)', rank: 2, defaultColor: '#95A5A6' },
+            { id: 'muban', name: 'หมู่บ้าน (Village)', rank: 1, defaultColor: '#3498DB' }
         ];
 
         const RANK_COLORS = {};
@@ -1333,6 +1333,7 @@
 
                             if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
                                 let labelText = ent.name;
+                                if (ent.isAnnexed) labelText = ent.annexedByName; // Main name becomes conqueror
                                 if (ent.isColony) labelText += ` (อาณานิคมของ ${ent.annexedByName})`;
                                 
                                 viewer.entities.add({
@@ -1414,13 +1415,18 @@
                             if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
                                 const center = l.getBounds().getCenter();
                                 let labelHtml = ent.name;
+                                
+                                // NEW LOGIC: Override name if annexed
+                                if (ent.isAnnexed) {
+                                    labelHtml = ent.annexedByName;
+                                }
+
                                 if (ent.isColony) {
-                                    // UPDATED: Red and Bold for Colony text
                                     labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(อาณานิคมของ ${ent.annexedByName})</div>`;
                                 } else if (ent.isVassal) {
-                                    // UPDATED: Red and Bold for Vassal text
                                     labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${ent.annexedByName})</div>`;
-                                }
+                                } 
+                                // REMOVED: Subtitle for Annexed
 
                                 drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
                             }
@@ -1477,11 +1483,9 @@
                 subStatus = `<div class="text-[10px] text-gray-500 mt-1">ผนวกดินแดนจาก ${ent.originalName || ent.name}</div>`;
             } else if (ent.isVassal) {
                 statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
-                // UPDATED: Red and Bold
                 subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(ประเทศราชของ ${ent.annexedByName})</div>`;
             } else if (ent.isColony) {
                 statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">อาณานิคม</span>';
-                // UPDATED: Red and Bold
                 subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(อาณานิคมของ ${ent.annexedByName})</div>`;
             } else if (ent.isWater) {
                 statusBadge = '<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full border border-blue-100">น่านน้ำ</span>';
@@ -1505,7 +1509,6 @@
 
             return `
                 <div class="relative font-sans overflow-visible group">
-                    <!-- Sparkles for Magical Feel -->
                     <span class="sparkle-icon s1">✨</span>
                     <span class="sparkle-icon s2">✨</span>
                     <span class="sparkle-icon s3">✦</span>
@@ -1549,7 +1552,6 @@
                                 <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm hover:scale-110"><span class="material-icons-round text-sm">delete</span></button>
                             ` : ''}
 
-                            <!-- Logic Update: Show War button even if Annexed/Vassal/Colony to allow re-conquest -->
                             ${(!ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">⚔️ ยุทธการ</button>` : ''}
                             
                             ${(ent.isAnnexed || ent.isVassal || ent.isColony) ? `
