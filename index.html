@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Map Creator: Ancient Realm</title>
+    <title>Fantasy Map Creator: Enchanted Realm</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Leaflet CSS/JS -->
+    <!-- Leaflet CSS/JS (2D Map) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -19,20 +19,26 @@
     <!-- Turf.js -->
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
+    <!-- CesiumJS (3D Globe) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.105.0/Cesium.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.105.0/Widgets/widgets.css" rel="stylesheet">
+
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
     <style>
-        /* Custom Theme: Ancient Cute Minimal */
+        /* Custom Theme: Cute Fantasy */
         :root {
-            --paper-bg: #FDF6E3;
-            --wood-dark: #5D4037;
-            --wood-light: #8D6E63;
-            --gold-accent: #D4AF37;
+            --paper-bg: #FFFBF0;
+            --wood-dark: #6D4C41;
+            --wood-light: #A1887F;
+            --gold-accent: #FFB74D;
             --text-main: #4E342E;
+            --cute-pink: #FFAB91;
+            --cute-blue: #81D4FA;
         }
 
         body {
@@ -40,19 +46,48 @@
             background-color: var(--paper-bg);
             color: var(--text-main);
             overflow: hidden;
+            margin: 0; padding: 0;
         }
 
-        h1, h2, h3, .fantasy-font, .btn-ancient {
+        h1, h2, h3, h4, .fantasy-font, .btn-ancient, .cute-font {
             font-family: 'Mali', cursive;
         }
 
         /* Map Container */
-        #map {
+        #map-container {
+            position: relative;
+            width: 100%;
             height: 100vh;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+            background-color: #B3E5FC;
+            position: absolute;
+            top: 0; left: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #cesiumContainer {
+            height: 100%;
             width: 100%;
             z-index: 0;
-            background-color: #A5D6F5;
+            position: absolute;
+            top: 0; left: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
         }
+
+        /* Active/Inactive States */
+        .mode-2d #map { z-index: 10; opacity: 1; pointer-events: auto; }
+        .mode-2d #cesiumContainer { z-index: 0; opacity: 0; pointer-events: none; }
+        
+        .mode-3d #map { z-index: 0; opacity: 0; pointer-events: none; }
+        .mode-3d #cesiumContainer { z-index: 10; opacity: 1; pointer-events: auto; }
 
         /* UI Containers */
         .sidebar-left {
@@ -60,40 +95,42 @@
             top: 0;
             left: 0;
             height: 100%;
-            width: 300px;
-            background: rgba(253, 246, 227, 0.98);
-            backdrop-filter: blur(10px);
-            border-right: 3px solid var(--wood-light);
+            width: 320px;
+            background: rgba(255, 251, 240, 0.95);
+            backdrop-filter: blur(12px);
+            border-right: 2px dashed var(--wood-light);
             z-index: 1000;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 4px 0 25px rgba(93, 64, 55, 0.1);
             display: flex;
             flex-direction: column;
         }
 
         .sidebar-collapsed {
-            transform: translateX(-300px);
+            transform: translateX(-320px);
         }
 
         .toggle-sidebar-btn {
             position: absolute;
             top: 20px;
-            right: -36px;
-            background: var(--wood-light);
-            color: #fff;
-            width: 36px;
+            right: -40px;
+            background: #fff;
+            color: var(--wood-dark);
+            width: 40px;
             height: 48px;
-            border-radius: 0 12px 12px 0;
+            border-radius: 0 16px 16px 0;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 4px 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 4px 2px 10px rgba(0,0,0,0.1);
             font-family: 'Mali', cursive;
             font-size: 1.2rem;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            border: 2px solid var(--wood-light);
+            border-left: none;
         }
-        .toggle-sidebar-btn:hover { background: var(--wood-dark); }
+        .toggle-sidebar-btn:hover { background: var(--wood-dark); color: #fff; }
 
         /* Modern Toolbar (Vertical, Top Right) */
         .toolbar-vertical {
@@ -102,294 +139,353 @@
             right: 20px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             z-index: 1000;
         }
 
         .tool-btn {
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(93, 64, 55, 0.15);
             color: var(--wood-dark);
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 2px solid white;
             cursor: pointer;
         }
         .tool-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transform: scale(1.1) rotate(-5deg);
             color: var(--wood-light);
-            border-color: var(--wood-light);
+            border-color: var(--gold-accent);
         }
-        .tool-btn:active { transform: scale(0.95); }
-        .tool-btn span { font-size: 24px; }
+        .tool-btn span { font-size: 26px; }
+
+        /* Compass */
+        .compass-container {
+            position: absolute;
+            top: 20px;
+            right: 80px; /* Left of toolbar */
+            width: 60px;
+            height: 60px;
+            z-index: 950;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .compass-container:hover {
+            transform: scale(1.1);
+        }
+        .compass-img {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+            transition: transform 0.1s;
+        }
+        .hidden-compass { opacity: 0; pointer-events: none; }
+        
+        .compass-tooltip {
+            position: absolute;
+            top: 70px;
+            right: 80px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .compass-container:hover + .compass-tooltip { opacity: 1; }
+
+        /* Globe Toggle Button (Bottom Right) */
+        .globe-toggle-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid var(--wood-dark);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+        .globe-toggle-btn:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+        .globe-toggle-btn img { width: 100%; height: 100%; object-fit: cover; }
+        .globe-tooltip {
+            position: absolute;
+            bottom: 100px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--wood-dark);
+            font-weight: bold;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .globe-toggle-btn:hover + .globe-tooltip { opacity: 1; }
 
         .leaflet-draw { display: none !important; } 
         
-        /* Modal Styling */
+        /* Modal Styling - Cute & Beautiful */
         .modal-overlay {
-            background-color: rgba(93, 64, 55, 0.6);
-            backdrop-filter: blur(4px);
+            background-color: rgba(78, 52, 46, 0.4);
+            backdrop-filter: blur(8px);
+            transition: opacity 0.3s;
         }
+        
         .modal-paper {
-            background-color: #FFFDF5;
-            border: 3px solid var(--wood-light);
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            background: #FFFBF0;
+            border-radius: 30px;
+            box-shadow: 0 25px 60px rgba(93, 64, 55, 0.25);
+            border: 4px solid white;
+            outline: 2px dashed #E0E0E0;
+            animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #D7CCC8; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #BCAAA4; }
-
-        /* Map Label Styling */
-        .map-label-container { text-align: center; pointer-events: none; }
-        .map-label-text {
-            font-family: 'Mali', cursive;
-            text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
-            font-weight: 700;
-            display: inline-block;
-            white-space: nowrap;
-            letter-spacing: 0.5px;
+        .modal-paper-auth {
+            background: linear-gradient(135deg, #FFFBF0 0%, #FFF3E0 100%);
+            border: none;
+            outline: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            position: relative;
         }
 
-        /* Form Elements */
-        .input-ancient {
+        /* Decorative blobs for auth */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: 0;
+            opacity: 0.6;
+        }
+        .blob-1 { top: -50px; left: -50px; width: 150px; height: 150px; background: #FFCCBC; }
+        .blob-2 { bottom: -30px; right: -30px; width: 120px; height: 120px; background: #B3E5FC; }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* Input Styling - Cute */
+        .input-cute {
             background: #fff;
-            border: 2px solid #E0E0E0;
-            border-radius: 10px;
-            padding: 8px 12px;
+            border: 2px solid #EEE;
+            border-radius: 16px;
+            padding: 12px 16px;
             width: 100%;
             outline: none;
             transition: all 0.2s;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            color: #5D4037;
+            font-family: 'Sarabun', sans-serif;
         }
-        .input-ancient:focus {
-            border-color: var(--gold-accent);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        .input-cute:focus {
+            border-color: var(--cute-pink);
+            box-shadow: 0 4px 12px rgba(255, 171, 145, 0.2);
+            transform: translateY(-1px);
         }
+        
+        .input-group { position: relative; z-index: 1; }
+        .input-group .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #BCAAA4;
+            transition: color 0.2s;
+        }
+        .input-group:focus-within .icon { color: var(--cute-pink); }
+        .input-group input { padding-left: 44px; }
 
-        .btn-ancient {
-            background: var(--wood-dark);
-            color: #fff;
+        /* Buttons */
+        .btn-cute {
+            background: linear-gradient(to right, #6D4C41, #5D4037);
+            color: white;
             border: none;
-            border-radius: 10px;
-            padding: 8px 20px;
+            border-radius: 16px;
+            padding: 12px 24px;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 0 #3E2723;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(93, 64, 55, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn-ancient:hover {
-            background: var(--wood-light);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #3E2723;
+        .btn-cute:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(93, 64, 55, 0.3);
+            filter: brightness(1.1);
         }
-        .btn-ancient:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #3E2723;
+        .btn-cute:active { transform: translateY(1px); }
+
+        .btn-cute-outline {
+            background: white;
+            color: #6D4C41;
+            border: 2px solid #EEE;
         }
-        .btn-ancient:disabled {
-            background: #BCAAA4;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+        .btn-cute-outline:hover {
+            border-color: #6D4C41;
+            background: #FFF8E1;
         }
 
+        /* Map Popup Customization */
+        .leaflet-popup-content-wrapper {
+            border-radius: 20px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        .leaflet-popup-content { margin: 0 !important; width: 300px !important; }
+        .leaflet-popup-tip { background: white; }
+        
         /* Icon Grid */
         .icon-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
             gap: 8px;
         }
         .icon-option {
-            font-size: 24px;
-            padding: 8px;
-            border: 2px solid #eee;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .icon-option:hover { background-color: #f0f0f0; }
-        .icon-option.selected {
-            border-color: var(--wood-dark);
-            background-color: #FFE0B2;
-            transform: scale(1.1);
-        }
-        
-        /* Popup Styling */
-        .leaflet-popup-content-wrapper {
-            border-radius: 16px;
-            padding: 0;
-            overflow: visible;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-        .leaflet-popup-content { margin: 0 !important; width: 280px !important; }
-        .leaflet-popup-tip { background: white; }
-        .popup-header-bg {
-            height: 60px;
-            background: linear-gradient(135deg, #FFEFBA 0%, #FFFFFF 100%);
-            border-radius: 16px 16px 0 0;
-            position: relative;
-        }
-        .popup-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 4px solid white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: -30px;
-            background-color: #fff;
-            object-fit: cover;
-            z-index: 10;
-        }
-
-        /* Legend Box */
-        .legend-box {
-            position: absolute;
-            bottom: 30px;
-            right: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            z-index: 900;
-            border: 2px solid var(--wood-light);
-            max-width: 250px;
-            max-height: 300px;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease-out;
-        }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        /* Hierarchy Tree Style */
-        .hierarchy-box {
-            background: linear-gradient(to bottom, #fffdf5, #f5f0e1);
-            border: 1px solid #e6dcc8;
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin-top: 8px;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-        .hierarchy-title {
-            font-size: 10px;
-            font-weight: bold;
-            color: #a1887f;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px dashed #d7ccc8;
-            padding-bottom: 2px;
-        }
-        .h-item {
+            width: 40px; 
+            height: 40px;
             display: flex;
             align-items: center;
-            position: relative;
-            padding-left: 12px;
-            margin-bottom: 2px;
+            justify-content: center;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
         }
-        .h-line {
-            position: absolute;
-            left: 3px;
-            top: 12px;
-            bottom: -8px;
-            width: 1px;
-            background-color: #d7ccc8;
+        .icon-option img { width: 24px; height: 24px; object-fit: contain; }
+        .icon-option:hover { background-color: #FFF3E0; border-color: #FFCC80; }
+        .icon-option.selected {
+            border-color: #6D4C41;
+            background-color: #FFE0B2;
+            transform: scale(1.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .h-item:last-child .h-line { display: none; }
-        .h-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background-color: #d7ccc8;
-            margin-right: 8px;
-            z-index: 1;
-            flex-shrink: 0;
-        }
-        .h-item.active .h-dot {
-            background-color: #5D4037;
-            border: 2px solid #D4AF37; /* Gold border */
-            width: 9px;
-            height: 9px;
-            left: -1px;
-            position: relative;
-        }
-        .h-info {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.1;
-        }
-        .h-rank {
-            font-size: 8px;
-            color: #9e9e9e;
-        }
-        .h-name {
+        
+        /* Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #D7CCC8; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #BCAAA4; }
+
+        /* Color Swatch in Popup */
+        .color-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            background: #F5F5F5;
+            border-radius: 12px;
             font-size: 11px;
+            color: #616161;
+            border: 1px solid #EEEEEE;
             font-weight: 600;
-            color: #5d4037;
         }
-        .h-item.active .h-name {
-            color: #d32f2f;
-            font-weight: 700;
+        .swatch-circle {
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+            display: inline-block;
         }
+
+        /* Cesium Widget Cleanups */
+        .cesium-widget-credits { display: none !important; }
+        .cesium-viewer-toolbar { display: none !important; }
+        .cesium-viewer-animationContainer { display: none !important; }
+        .cesium-viewer-timelineContainer { display: none !important; }
+
     </style>
 </head>
-<body>
+<body class="mode-2d">
 
     <!-- Left Sidebar -->
     <div id="sidebar-left" class="sidebar-left p-5">
         <div class="toggle-sidebar-btn" id="toggle-sidebar">◀</div>
         
         <!-- Header -->
-        <div class="text-center mb-6 border-b-2 border-dotted border-[#8D6E63] pb-4">
-            <h1 class="text-2xl font-bold text-[#5D4037] drop-shadow-sm">📜 แผนที่แฟนตาซี</h1>
-            <p id="user-id-display" class="text-xs text-gray-500 mt-1 font-mono">Guest Mode</p>
+        <div class="text-center mb-6 pb-4 border-b-2 border-dashed border-[#E0E0E0]">
+            <h1 class="text-2xl font-bold text-[#5D4037] drop-shadow-sm mb-2 flex justify-center items-center gap-2">
+                <span class="text-3xl">🗺️</span> จักรวรรดินฤมิตร์
+            </h1>
+            
+            <!-- Auth Status -->
+            <div id="auth-container">
+                <!-- Logged In -->
+                <div id="logged-in-view" class="hidden animate-fade-in">
+                    <div class="bg-white/50 rounded-2xl p-3 border border-white shadow-sm mb-2">
+                         <p id="user-display-name" class="text-sm font-bold text-[#5D4037]">Lord ...</p>
+                         <p id="user-id-display" class="text-[10px] text-gray-500 font-mono">ID: ...</p>
+                    </div>
+                    <button onclick="window.logoutUser()" class="text-xs text-red-400 hover:text-red-600 font-bold bg-red-50 px-3 py-1 rounded-full transition">ออกจากระบบ</button>
+                </div>
+
+                <!-- Logged Out -->
+                <div id="logged-out-view" class="space-y-2 px-2">
+                    <button onclick="document.getElementById('modal-login').classList.remove('hidden')" class="btn-cute w-full text-sm py-2">
+                        <span class="material-icons-round text-sm">login</span> เข้าสู่ระบบ
+                    </button>
+                    <button onclick="document.getElementById('modal-register').classList.remove('hidden')" class="btn-cute btn-cute-outline w-full text-sm py-2">
+                        <span class="material-icons-round text-sm">person_add</span> สมัครสมาชิก
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
+        <!-- Tools / Filters -->
+        <div class="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             
             <!-- Layer Control -->
-            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm">
-                <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2">
-                    <span class="material-icons-round text-sm">layers</span> พื้นหลัง & แสดงผล
+            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md">
+                <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2 text-sm">
+                    <span class="material-icons-round text-amber-500">layers</span> พื้นหลัง & แสดงผล
                 </h3>
-                <div class="flex gap-2 mb-3">
-                    <button id="btn-map-nolabels" class="flex-1 text-xs py-2 rounded-lg bg-[#5D4037] text-white hover:bg-[#4E342E] transition">สะอาด</button>
-                    <!-- Removed OSM Button -->
-                    <button id="btn-map-sat" class="flex-1 text-xs py-2 rounded-lg bg-[#8D6E63] text-white hover:bg-[#5D4037] transition">ดาวเทียม</button>
+                <div class="flex gap-2 mb-3 bg-gray-100 p-1 rounded-xl">
+                    <button id="btn-map-nolabels" class="flex-1 text-xs py-1.5 rounded-lg bg-white text-[#5D4037] shadow-sm font-bold">สะอาด</button>
+                    <button id="btn-map-sat" class="flex-1 text-xs py-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition">ดาวเทียม</button>
                 </div>
                 
-                <div class="space-y-2">
-                    <div class="flex items-center">
-                        <input type="checkbox" id="toggle-original-labels" class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
-                        <label for="toggle-original-labels" class="text-sm cursor-pointer select-none">ชื่อสถานที่ดั้งเดิม (เฉพาะโหมดสะอาด)</label>
+                <div class="space-y-2 pl-1">
+                     <div class="flex items-center">
+                        <input type="checkbox" id="toggle-roads" checked class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
+                        <label for="toggle-roads" class="text-sm cursor-pointer select-none text-[#5D4037] font-medium">แสดงเส้นทาง/ถนน</label>
                     </div>
                     <div class="flex items-center">
                         <input type="checkbox" id="toggle-created-labels" checked class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
-                        <label for="toggle-created-labels" class="text-sm cursor-pointer select-none">ชื่อเขตที่สร้าง</label>
+                        <label for="toggle-created-labels" class="text-sm cursor-pointer select-none text-gray-600">ชื่อเขตที่สร้าง</label>
                     </div>
-                     <!-- NEW: Toggle Roads -->
                     <div class="flex items-center">
-                        <input type="checkbox" id="toggle-roads" checked class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
-                        <label for="toggle-roads" class="text-sm cursor-pointer select-none font-bold text-[#8D6E63]">แสดงเส้นทาง/ถนน</label>
+                        <input type="checkbox" id="toggle-compass" checked class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
+                        <label for="toggle-compass" class="text-sm cursor-pointer select-none text-gray-600">แสดงเข็มทิศ</label>
                     </div>
                 </div>
                 
-                <!-- Opacity Slider -->
-                <div class="mt-4 pt-3 border-t border-gray-200">
-                    <div class="flex justify-between text-xs font-bold text-[#5D4037] mb-1">
+                <div class="mt-4 border-t border-gray-100 pt-3">
+                    <div class="flex justify-between text-xs font-bold text-gray-400 mb-1">
                         <span>ความเข้มพื้นที่</span>
                         <span id="opacity-val">60%</span>
                     </div>
@@ -399,7 +495,7 @@
                 <!-- Global Stroke Color -->
                 <div class="mt-3">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-[#5D4037]">สีเส้นขอบพื้นที่</span>
+                        <span class="text-xs font-bold text-[#5D4037]">สีเส้นขอบ (ทั้งหมด)</span>
                         <div class="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200">
                             <input type="color" id="global-stroke-color" value="#5D4037" class="w-6 h-6 border-0 p-0 rounded cursor-pointer bg-transparent">
                         </div>
@@ -407,91 +503,179 @@
                 </div>
             </div>
             
-            <!-- Filter -->
-            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm">
-                <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2">
-                    <span class="material-icons-round text-sm">filter_alt</span> ค้นหา & กรอง
+            <!-- Filters -->
+            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md">
+                <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2 text-sm">
+                    <span class="material-icons-round text-blue-400">filter_alt</span> ค้นหา & กรอง
                 </h3>
-                <div class="relative mb-3">
-                    <span class="material-icons-round absolute left-2 top-2 text-gray-400 text-sm">search</span>
-                    <input type="text" id="search-input" placeholder="ค้นหาชื่อ..." class="input-ancient pl-8 text-sm">
+                <div class="input-group mb-3">
+                    <span class="material-icons-round icon">search</span>
+                    <input type="text" id="search-input" placeholder="ค้นหาชื่อ..." class="input-cute py-2 text-sm">
                 </div>
                 
-                <!-- NEW: Level Filter -->
                 <div class="mb-3">
-                     <div class="font-bold text-[#5D4037] text-xs mb-1">กรองตามศักดิ์</div>
-                     <div id="filter-levels-container" class="grid grid-cols-2 gap-x-2 gap-y-1 max-h-24 overflow-y-auto custom-scrollbar">
-                         <!-- JS Will Populate -->
+                     <div class="font-bold text-[#8D6E63] text-[11px] uppercase tracking-wider mb-2">กรองตามศักดิ์ปกครอง</div>
+                     <div id="filter-levels-container" class="grid grid-cols-1 gap-1 max-h-32 overflow-y-auto custom-scrollbar pl-1">
+                         <!-- JS Populates this -->
                      </div>
-                </div>
-
-                <div class="text-xs font-bold text-[#5D4037] mb-1">สถานะ</div>
-                <div class="grid grid-cols-2 gap-y-1 text-sm">
-                    <label class="flex items-center cursor-pointer"><input type="checkbox" checked class="filter-status accent-[#5D4037] mr-1" value="all"> ทั้งหมด</label>
-                    <label class="flex items-center cursor-pointer"><input type="checkbox" checked class="filter-status accent-[#5D4037] mr-1" value="independent"> รัฐอิสระ</label>
-                    <label class="flex items-center cursor-pointer"><input type="checkbox" checked class="filter-status accent-[#5D4037] mr-1" value="annexed"> ถูกผนวก</label>
-                    <label class="flex items-center cursor-pointer"><input type="checkbox" class="filter-status accent-[#5D4037] mr-1" value="vassal"> ประเทศราช</label>
-                    <label class="flex items-center cursor-pointer"><input type="checkbox" class="filter-status accent-[#5D4037] mr-1" value="colony"> อาณานิคม</label>
                 </div>
             </div>
 
-            <!-- Color Mode -->
-            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm">
-                <h3 class="font-bold text-[#5D4037] mb-2 flex items-center gap-2">
-                    <span class="material-icons-round text-sm">palette</span> โหมดสี
+            <!-- Color Modes -->
+            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md">
+                <h3 class="font-bold text-[#5D4037] mb-2 flex items-center gap-2 text-sm">
+                    <span class="material-icons-round text-pink-400">palette</span> โหมดสีแผนที่
                 </h3>
-                <select id="color-mode-select" class="input-ancient text-sm cursor-pointer">
-                    <option value="entity">สีประจำเขตพื้นที่</option>
-                    <option value="religion">ตามศาสนา</option>
-                    <option value="government">ตามระบอบปกครอง</option>
+                <select id="color-mode-select" class="input-cute text-sm cursor-pointer py-2">
+                    <option value="entity">สีตามเขตพื้นที่ (ปกติ)</option>
+                    <option value="religion">แยกตามศาสนา</option>
+                    <option value="government">แยกตามระบอบปกครอง</option>
+                    <option value="rank">แยกตามศักดิ์ (ระดับชั้น)</option>
                 </select>
-                <div id="color-mode-hint" class="hidden text-[10px] text-gray-500 mt-2 text-center bg-yellow-50 p-1 rounded">
-                    <span class="material-icons-round text-[10px] align-middle">info</span> ดูคำอธิบายสีที่มุมขวาล่าง
-                </div>
             </div>
         </div>
     </div>
+
+    <!-- Compass UI -->
+    <div id="compass" class="compass-container" title="คลิกเพื่อรีเซ็ตทิศเหนือ">
+        <img src="https://api.iconify.design/noto:compass.svg" class="compass-img" id="compass-icon">
+    </div>
+    <div class="compass-tooltip">คลิกเพื่อ Reset ทิศ</div>
 
     <!-- Vertical Toolbar -->
     <div class="toolbar-vertical">
-        <div class="tool-btn" onclick="startDrawPolygon()" title="สร้างเขตพื้นที่">
-            <span class="material-icons-round text-green-600">terrain</span>
+        <div class="tool-btn" onclick="checkModeAndDraw('polygon')" title="สร้างเขตพื้นที่">
+            <span class="material-icons-round text-emerald-500">terrain</span>
         </div>
-        <div class="tool-btn" onclick="startDrawPolyline()" title="สร้างเส้นทาง">
+        <div class="tool-btn" onclick="checkModeAndDraw('polyline')" title="สร้างเส้นทาง">
             <span class="material-icons-round text-amber-700">alt_route</span>
         </div>
-        <div class="tool-btn" onclick="startDrawMarker()" title="ปักหมุด">
-            <span class="material-icons-round text-red-500">place</span>
+        <div class="tool-btn" onclick="checkModeAndDraw('marker')" title="ปักหมุด">
+            <span class="material-icons-round text-rose-500">place</span>
         </div>
-        <div class="h-px bg-gray-300 mx-2 my-1"></div>
+        <div class="h-px bg-white/50 mx-2 my-1"></div>
         <div class="tool-btn" onclick="toggleFullScreen()" title="เต็มจอ">
-            <span class="material-icons-round">fullscreen</span>
+            <span class="material-icons-round text-gray-600">fullscreen</span>
         </div>
     </div>
 
-    <!-- Map Area -->
-    <div id="map"></div>
-
-    <!-- Dynamic Legend Box -->
-    <div id="legend-box" class="legend-box hidden">
-        <div class="flex justify-between items-center mb-2 border-b border-gray-200 pb-1">
-            <h4 class="font-bold text-[#5D4037] text-sm" id="legend-title">คำอธิบายสี</h4>
-            <button onclick="document.getElementById('legend-box').classList.add('hidden')" class="text-gray-400 hover:text-red-500">
-                <span class="material-icons-round text-sm">close</span>
-            </button>
-        </div>
-        <div id="legend-content" class="space-y-2 text-xs"></div>
+    <!-- Map Area (Leaflet + Cesium) -->
+    <div id="map-container">
+        <div id="map"></div>
+        <div id="cesiumContainer"></div>
     </div>
 
-    <!-- Modal: Create/Edit Area -->
+    <!-- Globe Toggle Button -->
+    <div class="globe-toggle-btn" onclick="toggleGlobeMode()">
+        <img src="https://api.iconify.design/noto:globe-showing-asia-australia.svg" id="globe-btn-icon">
+    </div>
+    <div class="globe-tooltip">สลับ 2D / 3D</div>
+
+    <!-- Legend Box -->
+    <div id="legend-box" class="fixed bottom-6 right-32 bg-white/90 backdrop-blur p-4 rounded-2xl shadow-xl z-[900] hidden border border-white max-w-[200px] animate-fade-up">
+        <div class="flex justify-between items-center mb-2 border-b border-gray-100 pb-2">
+            <h4 class="font-bold text-[#5D4037] text-xs" id="legend-title">คำอธิบายสี</h4>
+            <button onclick="document.getElementById('legend-box').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><span class="material-icons-round text-sm">close</span></button>
+        </div>
+        <div id="legend-content" class="space-y-1.5 text-[11px]"></div>
+    </div>
+
+    <!-- Modal: Login (CUTE VERSION) -->
+    <div id="modal-login" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
+        <div class="modal-paper modal-paper-auth w-[380px] p-8">
+            <button onclick="closeModal('modal-login')" class="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition z-10"><span class="material-icons-round">close</span></button>
+            
+            <!-- Decorative Blobs -->
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            
+            <div class="relative z-10 text-center">
+                <div class="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg border-4 border-[#FFF3E0]">
+                    <span class="material-icons-round text-4xl text-[#5D4037]">lock_open</span>
+                </div>
+                <h2 class="text-2xl text-[#5D4037] font-bold mb-1 cute-font">ยินดีต้อนรับกลับมา!</h2>
+                <p class="text-gray-500 text-xs mb-6">เข้าสู่ดินแดนแห่งจินตนาการของคุณ</p>
+
+                <form id="form-login" class="space-y-4">
+                    <div class="input-group">
+                        <span class="material-icons-round icon">person</span>
+                        <input type="text" id="login-username" class="input-cute" required placeholder="ชื่อผู้ใช้">
+                    </div>
+                    <div class="input-group">
+                         <span class="material-icons-round icon">vpn_key</span>
+                        <input type="password" id="login-password" class="input-cute" required placeholder="รหัสผ่าน">
+                    </div>
+                    <button type="submit" class="btn-cute w-full mt-2 shadow-lg hover:shadow-xl">เปิดประตูมิติ</button>
+                </form>
+                
+                <div class="text-center mt-6 pt-4 border-t border-dashed border-[#D7CCC8]">
+                    <p class="text-xs text-gray-500 mb-2">ยังไม่มีบัญชี?</p>
+                    <button onclick="closeModal('modal-login'); document.getElementById('modal-register').classList.remove('hidden')" class="text-sm font-bold text-[#8D6E63] hover:text-[#5D4037] underline decoration-dashed">สร้างบัญชีใหม่</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Register (CUTE VERSION) -->
+    <div id="modal-register" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
+        <div class="modal-paper modal-paper-auth w-[420px] p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button onclick="closeModal('modal-register')" class="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition z-10"><span class="material-icons-round">close</span></button>
+            
+            <div class="blob blob-1" style="background:#E1BEE7;"></div>
+            <div class="blob blob-2" style="background:#C5CAE9;"></div>
+
+            <div class="relative z-10">
+                <h2 class="text-2xl text-[#5D4037] font-bold mb-6 text-center cute-font">สร้างตัวตนใหม่</h2>
+                <form id="form-register" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อ</label>
+                            <input type="text" id="reg-firstname" class="input-cute" required>
+                        </div>
+                        <div>
+                             <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">นามสกุล</label>
+                             <input type="text" id="reg-lastname" class="input-cute" required>
+                        </div>
+                    </div>
+                    <div>
+                         <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">อีเมล</label>
+                         <div class="input-group">
+                            <span class="material-icons-round icon">email</span>
+                            <input type="email" id="reg-email" class="input-cute" required placeholder="hello@example.com">
+                         </div>
+                    </div>
+                    <div>
+                         <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อผู้ใช้ (Username)</label>
+                         <div class="input-group">
+                            <span class="material-icons-round icon">face</span>
+                            <input type="text" id="reg-username" class="input-cute" required placeholder="Display Name">
+                         </div>
+                    </div>
+                    <div>
+                         <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">รหัสผ่าน</label>
+                         <div class="input-group">
+                            <span class="material-icons-round icon">lock</span>
+                            <input type="password" id="reg-password" class="input-cute" required placeholder="******">
+                         </div>
+                    </div>
+                    <button type="submit" class="btn-cute w-full mt-4 bg-gradient-to-r from-emerald-600 to-teal-600">ลงทะเบียน</button>
+                </form>
+                 <div class="text-center mt-4 relative z-10">
+                    <button onclick="closeModal('modal-register'); document.getElementById('modal-login').classList.remove('hidden')" class="text-xs text-gray-500 hover:text-[#5D4037] underline">มีบัญชีแล้ว? เข้าสู่ระบบ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create/Edit Area (Same but styled) -->
     <div id="modal-area" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
         <div class="modal-paper w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('modal-area')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
                 <span class="material-icons-round text-2xl">close</span>
             </button>
             
-            <h2 class="text-2xl text-[#5D4037] font-bold mb-6 flex items-center gap-2 border-b border-dashed border-[#D7CCC8] pb-3">
-                <span class="material-icons-round text-3xl text-[#D4AF37]">edit_location_alt</span>
+            <h2 class="text-2xl text-[#5D4037] font-bold mb-6 flex items-center gap-2 border-b border-dashed border-[#E0E0E0] pb-3 cute-font">
+                <span class="material-icons-round text-3xl text-amber-400">edit_location_alt</span>
                 <span id="modal-title">สร้างเขตปกครอง</span>
             </h2>
 
@@ -501,230 +685,251 @@
                 <div class="flex gap-6 items-start">
                     <!-- Flag Upload -->
                     <div class="flex-shrink-0 flex flex-col items-center w-28">
-                        <div class="relative group cursor-pointer" onclick="document.getElementById('inp-flag').click()">
-                            <img id="preview-flag" src="" class="flag-circle hidden transition group-hover:brightness-90">
-                            <div id="preview-flag-placeholder" class="flag-circle flex items-center justify-center bg-gray-100 text-gray-300 group-hover:bg-gray-200 transition">
-                                <span class="material-icons-round text-4xl">add_photo_alternate</span>
+                        <div class="relative group cursor-pointer w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-50" onclick="document.getElementById('inp-flag').click()">
+                            <img id="preview-flag" src="" class="w-full h-full object-cover hidden transition group-hover:brightness-90">
+                            <div id="preview-flag-placeholder" class="w-full h-full flex flex-col items-center justify-center text-gray-300 group-hover:bg-gray-100 transition">
+                                <span class="material-icons-round text-3xl">add_photo_alternate</span>
+                                <span class="text-[10px] mt-1">รูปธง/ตรา</span>
                             </div>
                         </div>
                         <input type="file" id="inp-flag" class="hidden" accept="image/*">
-                        <span class="text-[10px] text-gray-500 mt-2">คลิกเพื่อเปลี่ยนตรา</span>
                     </div>
 
                     <!-- Main Info -->
                     <div class="flex-grow space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">ชื่อเขตปกครอง</label>
-                                <input type="text" id="inp-name" class="input-ancient font-bold text-[#5D4037]" required placeholder="เช่น นครดราก้อน">
+                                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อเขตปกครอง</label>
+                                <input type="text" id="inp-name" class="input-cute font-bold text-[#5D4037]" required placeholder="เช่น นครดราก้อน">
                             </div>
                             <div>
-                                <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">เลขประจำพื้นที่ (ID)</label>
-                                <input type="text" id="inp-custom-id" class="input-ancient font-mono text-sm" placeholder="เช่น ZONE-01">
+                                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">รหัส (ID)</label>
+                                <input type="text" id="inp-custom-id" class="input-cute font-mono text-sm" placeholder="เช่น ZONE-01">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">ระดับศักดิ์</label>
-                                <select id="inp-level" class="input-ancient font-bold text-[#5D4037] bg-white cursor-pointer"></select>
+                                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระดับศักดิ์</label>
+                                <select id="inp-level" class="input-cute cursor-pointer"></select>
                             </div>
                              <div>
-                                <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">เขตปกครองแม่</label>
-                                <select id="inp-parent" class="input-ancient text-sm bg-white cursor-pointer">
+                                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">เขตปกครองแม่</label>
+                                <select id="inp-parent" class="input-cute text-sm cursor-pointer">
                                     <option value="">-- เป็นอิสระ / สูงสุด --</option>
                                 </select>
                             </div>
                         </div>
                          <div>
-                             <label class="text-xs font-bold text-[#8D6E63] uppercase tracking-wider mb-1 block">ผู้ปกครอง</label>
-                             <input type="text" id="inp-ruler" class="input-ancient" required>
+                             <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ผู้ปกครอง</label>
+                             <input type="text" id="inp-ruler" class="input-cute" required>
                          </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-4 pt-2">
                     <div>
-                        <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ศาสนา</label>
-                        <select id="inp-religion" class="input-ancient text-sm bg-white">
+                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ศาสนา</label>
+                        <select id="inp-religion" class="input-cute text-sm">
                             <option>พุทธ</option><option>คริสต์</option><option>อิสลาม</option>
                             <option>พราหมณ์ฮินดู</option><option>ศาสนาดั้งเดิม</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ระบอบปกครอง</label>
-                        <select id="inp-gov" class="input-ancient text-sm bg-white">
+                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระบอบปกครอง</label>
+                        <select id="inp-gov" class="input-cute text-sm">
                             <option>สมบูรณาญาสิทธิราชย์</option><option>ประชาธิปไตย</option>
                             <option>คอมมิวนิสต์</option><option>ปริมิตาญาสิทธิราชย์</option>
                         </select>
                     </div>
                     <div>
-                         <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ประเภทพื้นที่</label>
-                         <div class="flex gap-2 mt-1.5 bg-white p-1 rounded-lg border border-gray-200">
-                             <label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-1 rounded hover:bg-gray-50">
-                                 <input type="radio" name="areaType" value="land" checked class="accent-[#5D4037]"> <span class="text-xs">ดิน</span>
+                         <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ประเภทพื้นที่</label>
+                         <div class="flex gap-2 mt-1">
+                             <label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-2 rounded-xl border border-gray-200 bg-white hover:bg-amber-50 transition">
+                                 <input type="radio" name="areaType" value="land" checked class="accent-[#5D4037]"> <span class="text-xs font-bold">ดินแดน</span>
                              </label>
-                             <label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-1 rounded hover:bg-gray-50">
-                                 <input type="radio" name="areaType" value="water" class="accent-[#2980B9]"> <span class="text-xs">น้ำ</span>
+                             <label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-2 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 transition">
+                                 <input type="radio" name="areaType" value="water" class="accent-[#2980B9]"> <span class="text-xs font-bold text-blue-600">น่านน้ำ</span>
                              </label>
                          </div>
                     </div>
                 </div>
 
-                <div class="pt-2 grid grid-cols-2 gap-4 border-t border-dashed border-[#D7CCC8]">
-                    <div class="pt-2">
-                        <label class="text-xs font-bold text-[#8D6E63] mb-1 block">สีประจำเขต</label>
-                        <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200">
+                <div class="pt-4 grid grid-cols-2 gap-4 border-t border-dashed border-[#E0E0E0] mt-4">
+                    <div>
+                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีประจำเขต</label>
+                        <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200">
                             <input type="color" id="inp-color" class="w-10 h-8 border-0 rounded cursor-pointer bg-transparent">
                             <span class="text-xs text-gray-500">ใช้แบ่งแยกพื้นที่</span>
                         </div>
                     </div>
-                    <div class="pt-2">
-                        <label class="text-xs font-bold text-[#8D6E63] mb-1 block">สีตัวอักษร</label>
-                        <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200">
+                    <div>
+                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีตัวอักษร</label>
+                        <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200">
                             <input type="color" id="inp-label-color" class="w-10 h-8 border-0 rounded cursor-pointer bg-transparent" value="#4E342E">
                             <span class="text-xs text-gray-500">ชื่อบนแผนที่</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center mt-6 pt-4">
-                    <button type="button" onclick="cancelDraw()" class="px-4 py-2 text-gray-500 hover:text-gray-700 font-bold font-sans text-sm">ยกเลิก</button>
-                    <button type="submit" class="btn-ancient shadow-lg transform active:scale-95 transition flex items-center gap-2">
+                <div class="flex justify-end items-center mt-6 gap-3">
+                    <button type="button" onclick="cancelDraw()" class="px-5 py-2 text-gray-500 hover:text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition">ยกเลิก</button>
+                    <button type="submit" class="btn-cute">
                         <span class="material-icons-round text-sm">save</span> บันทึกข้อมูล
                     </button>
                 </div>
             </form>
         </div>
     </div>
+    
+    <!-- Modal: Road (Updated with Weight Slider) -->
+    <div id="modal-road" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
+        <div class="modal-paper w-96 p-6 relative">
+            <button onclick="closeModal('modal-road')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
+                <span class="material-icons-round">close</span>
+            </button>
+            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font">
+                <span class="material-icons-round text-amber-700">add_road</span> สร้างเส้นทาง
+            </h3>
+            <div class="space-y-3">
+                <input type="hidden" id="road-id-hidden">
+                <div>
+                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อเส้นทาง</label>
+                    <input type="text" id="road-name" placeholder="ชื่อถนน / ทางหลวง..." class="input-cute">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ประเภท</label>
+                    <select id="road-type" class="input-cute bg-white">
+                        <option value="trade">ถนนการค้า (เส้นทึบ)</option>
+                        <option value="army">เส้นทางเดินทัพ (เส้นประ)</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีเส้นทาง</label>
+                        <input type="color" id="road-color" value="#5D4037" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ความหนา: <span id="road-weight-val">4</span></label>
+                        <input type="range" id="road-weight" min="1" max="15" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#5D4037] mt-2">
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="cancelDraw()" class="px-4 py-2 text-gray-500 text-sm font-bold">ยกเลิก</button>
+                <button onclick="saveRoad()" class="btn-cute text-sm px-6">บันทึก</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Modal Marker (Updated with Iconify Search) -->
+    <div id="modal-marker" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
+        <div class="modal-paper w-[450px] p-6 relative">
+            <button onclick="closeModal('modal-marker')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
+                <span class="material-icons-round">close</span>
+            </button>
+            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font">
+                <span class="material-icons-round text-rose-500">place</span> ปักหมุดสถานที่
+            </h3>
+            <div class="space-y-4">
+                <div class="input-group">
+                    <span class="material-icons-round icon">edit</span>
+                    <input type="text" id="marker-name" placeholder="ชื่อสถานที่..." class="input-cute font-bold text-[#5D4037]">
+                </div>
+                
+                <!-- Iconify Search Section -->
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <label class="text-xs font-bold text-[#8D6E63] ml-1 mb-2 block">เลือกไอคอน (ค้นหาภาษาอังกฤษ)</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="icon-search-query" placeholder="เช่น castle, sword, tree..." class="input-cute text-sm py-1.5 px-3">
+                        <button onclick="searchIcons()" class="bg-[#5D4037] text-white rounded-xl px-3 hover:bg-[#4E342E]"><span class="material-icons-round">search</span></button>
+                    </div>
+                    
+                    <div id="icon-results" class="icon-grid h-32 overflow-y-auto custom-scrollbar p-1">
+                        <div class="col-span-full text-center text-gray-400 text-xs py-4">พิมพ์ค้นหาหรือเลือกจากด้านล่าง</div>
+                    </div>
+                    
+                    <!-- Common Icons Quick Select -->
+                    <div class="mt-2 pt-2 border-t border-gray-200">
+                        <label class="text-[10px] text-gray-400 mb-1 block">ยอดนิยม</label>
+                        <div class="flex gap-2 overflow-x-auto pb-1 custom-scrollbar" id="common-icons-container">
+                             <!-- JS Populates -->
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีหมุด</label>
+                    <input type="color" id="marker-color" value="#E53935" class="w-full h-8 rounded-lg cursor-pointer border-2 border-white shadow-sm">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="cancelDraw()" class="px-4 py-2 text-gray-500 text-sm font-bold">ยกเลิก</button>
+                <button onclick="saveMarker()" class="btn-cute text-sm px-6">ปักหมุด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="modal-confirm" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
+        <div class="modal-paper w-80 p-6 text-center transform scale-100 transition-all">
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span class="material-icons-round text-2xl">priority_high</span>
+            </div>
+            <h3 class="text-lg font-bold text-[#5D4037] mb-2 cute-font" id="confirm-title">ยืนยัน</h3>
+            <p class="text-sm text-gray-600 mb-6" id="confirm-msg">...</p>
+            <div class="flex gap-2 justify-center">
+                <button class="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-bold hover:bg-gray-200 transition">ยกเลิก</button>
+                <button onclick="executePendingConfirm()" class="px-4 py-2 rounded-xl bg-[#5D4037] text-white text-sm font-bold hover:bg-[#4E342E] shadow-lg transition">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- War Room Modal -->
     <div id="modal-war" class="fixed inset-0 modal-overlay hidden z-[2100] flex items-center justify-center">
         <div class="modal-paper w-96 p-6 relative">
             <button onclick="closeModal('modal-war')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
                 <span class="material-icons-round">close</span>
             </button>
-            <h3 class="text-xl font-bold text-red-800 mb-4 flex items-center gap-2 border-b border-red-200 pb-2">
+            <h3 class="text-xl font-bold text-red-800 mb-4 flex items-center gap-2 border-b border-red-200 pb-2 cute-font">
                 <span class="material-icons-round">sports_kabaddi</span> ประกาศสงคราม
             </h3>
             <div class="space-y-4">
-                <div class="bg-red-50 p-3 rounded-lg border border-red-100">
-                    <label class="text-xs font-bold text-red-700 block mb-1">พื้นที่เป้าหมาย</label>
+                <div class="bg-red-50 p-3 rounded-xl border border-red-100">
+                    <label class="text-xs font-bold text-red-700 block mb-1">เป้าหมาย</label>
                     <div id="war-target-name" class="font-bold text-gray-800 text-lg">---</div>
                     <input type="hidden" id="war-target-id">
                 </div>
-                <div class="text-center text-gray-400 font-bold text-xl my-1">VS</div>
+                <div class="text-center text-gray-300 font-bold text-xl my-1">VS</div>
                 <div>
-                    <label class="text-xs font-bold text-[#5D4037] block mb-1">ฝ่ายรุก</label>
-                    <select id="war-attacker-select" class="input-ancient w-full bg-white cursor-pointer"></select>
+                    <label class="text-xs font-bold text-[#5D4037] block mb-1 ml-2">ฝ่ายรุก (เลือกดินแดนของคุณ)</label>
+                    <select id="war-attacker-select" class="input-cute w-full bg-white cursor-pointer"></select>
                 </div>
             </div>
             <div class="mt-6">
                 <label class="text-xs font-bold text-gray-500 block mb-2 text-center">ผลลัพธ์</label>
                 <div class="grid grid-cols-3 gap-2">
-                    <button onclick="confirmWarAction('annex')" class="py-2 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 shadow flex flex-col items-center">
+                    <button onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1">
                         <span class="material-icons-round text-base">flag</span> ผนวก
                     </button>
-                    <button onclick="confirmWarAction('vassal')" class="py-2 rounded-lg bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 shadow flex flex-col items-center">
+                    <button onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1">
                         <span class="material-icons-round text-base">security</span> ประเทศราช
                     </button>
-                    <button onclick="confirmWarAction('colony')" class="py-2 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 shadow flex flex-col items-center">
+                    <button onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1">
                         <span class="material-icons-round text-base">public</span> อาณานิคม
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Modal: Road -->
-    <div id="modal-road" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
-        <div class="modal-paper w-96 p-6 relative">
-            <button onclick="closeModal('modal-road')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
-                <span class="material-icons-round">close</span>
-            </button>
-            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2">
-                <span class="material-icons-round">add_road</span> สร้างเส้นทาง
-            </h3>
-            <div class="space-y-3">
-                <input type="hidden" id="road-id-hidden">
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] mb-1 block">หมายเลขถนน</label>
-                    <input type="text" id="road-custom-id" placeholder="เช่น R-01" class="input-ancient">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ชื่อเส้นทาง</label>
-                    <input type="text" id="road-name" placeholder="ชื่อถนน / ทางหลวง..." class="input-ancient">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] mb-1 block">ประเภท</label>
-                    <select id="road-type" class="input-ancient bg-white">
-                        <option value="trade">ถนนการค้า (เส้นทึบ)</option>
-                        <option value="army">เส้นทางเดินทัพ (เส้นประ)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] mb-1 block">สีเส้นทาง</label>
-                    <input type="color" id="road-color" value="#5D4037" class="w-full h-10 rounded cursor-pointer">
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 mt-6">
-                <button onclick="cancelDraw()" class="px-4 py-2 text-gray-500 text-sm">ยกเลิก</button>
-                <button onclick="saveRoad()" class="btn-ancient text-sm">บันทึกเส้นทาง</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal Marker -->
-    <div id="modal-marker" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
-        <div class="modal-paper w-96 p-6 relative">
-            <button onclick="closeModal('modal-marker')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
-                <span class="material-icons-round">close</span>
-            </button>
-            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2">
-                <span class="material-icons-round">place</span> ปักหมุดสถานที่
-            </h3>
-            <div class="space-y-4">
-                <input type="text" id="marker-name" placeholder="ชื่อสถานที่..." class="input-ancient font-bold text-[#5D4037]">
-                
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] mb-1 block">เลือกสัญลักษณ์</label>
-                    <div id="marker-icon-grid" class="icon-grid bg-white p-2 rounded-lg border border-gray-200 h-32 overflow-y-auto custom-scrollbar">
-                        <!-- Icons populated by JS -->
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] mb-1 block">สีหมุด</label>
-                    <input type="color" id="marker-color" value="#D32F2F" class="w-full h-8 rounded cursor-pointer">
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 mt-6">
-                <button onclick="cancelDraw()" class="px-4 py-2 text-gray-500 text-sm">ยกเลิก</button>
-                <button onclick="saveMarker()" class="btn-ancient text-sm">ปักหมุด</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- NEW: Confirmation Modal -->
-    <div id="modal-confirm" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
-        <div class="modal-paper w-80 p-6 text-center transform scale-100 transition-all">
-            <h3 class="text-xl font-bold text-[#5D4037] mb-2" id="confirm-title">ยืนยันการกระทำ</h3>
-            <p class="text-sm text-gray-600 mb-6" id="confirm-msg">คุณแน่ใจหรือไม่?</p>
-            <div class="flex gap-2 justify-center">
-                <button onclick="closeModal('modal-confirm')" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-bold hover:bg-gray-300">ยกเลิก</button>
-                <button onclick="executePendingConfirm()" class="px-4 py-2 rounded-lg bg-[#5D4037] text-white text-sm font-bold hover:bg-[#4E342E] shadow-lg">ยืนยัน</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, query, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // IMPORTANT: If hosting externally, you MUST replace this with your own Firebase Config!
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyAaHROgav2BOEsqTZRNhTVdJPSKZoYoIVI", 
+            apiKey: "AIzaSyAaHROgav2BOEsqTZRNhTVdJPSKZoYoIVI",
             authDomain: "map2-d18dc.firebaseapp.com",
             projectId: "map2-d18dc",
             storageBucket: "map2-d18dc.firebasestorage.app",
@@ -733,42 +938,55 @@
         const appId = firebaseConfig.projectId || "map2-d18dc";
 
         // Globals
-        let db, auth, userId, map, drawnItems;
+        let db, auth, userId;
+        let map, drawnItems; // Leaflet
+        let viewer; // Cesium
         let entities = []; 
         let currentDrawLayer = null;
         let mapLayers = {};
         let globalOpacity = 0.6;
         let globalStrokeColor = '#5D4037';
-        let selectedMarkerIcon = '📍';
+        let selectedMarkerIconUrl = 'https://api.iconify.design/twemoji/round-pushpin.svg';
         let pendingConfirmAction = null; 
+        let is3DMode = false;
 
-        // Constants
+        // Data Models
         const HIERARCHY = [
-            { id: 'mahaAnachak', name: 'มหาอาณาจักร', rank: 9, defaultColor: '#884A51' },
-            { id: 'anachak', name: 'อาณาจักร', rank: 8, defaultColor: '#AD8B73' },
-            { id: 'prathet', name: 'ประเทศ/ราชรัฐ', rank: 7, defaultColor: '#CEAB93' },
-            { id: 'monrath', name: 'มณรัฐ (ภาค)', rank: 6, defaultColor: '#E3CAA5' },
-            { id: 'monthon', name: 'มณฑล', rank: 5, defaultColor: '#BB9981' },
-            { id: 'jangwat', name: 'จังหวัด/นคร/มหานคร', rank: 4, defaultColor: '#7E6B5A' },
-            { id: 'amphoe', name: 'อำเภอ/อาเขต', rank: 3, defaultColor: '#56423A' },
-            { id: 'tambon', name: 'ตำบล/เขต', rank: 2, defaultColor: '#3A2E39' },
-            { id: 'muban', name: 'หมู่บ้าน/แขวง', rank: 1, defaultColor: '#251E3E' }
+            { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51' },
+            { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#AD8B73' },
+            { id: 'prathet', name: 'ประเทศ/ราชรัฐ (State)', rank: 7, defaultColor: '#CEAB93' },
+            { id: 'monrath', name: 'มณรัฐ (Region)', rank: 6, defaultColor: '#E3CAA5' },
+            { id: 'monthon', name: 'มณฑล (Province)', rank: 5, defaultColor: '#BB9981' },
+            { id: 'jangwat', name: 'จังหวัด/นคร (City)', rank: 4, defaultColor: '#7E6B5A' },
+            { id: 'amphoe', name: 'อำเภอ (District)', rank: 3, defaultColor: '#56423A' },
+            { id: 'tambon', name: 'ตำบล (Sub-district)', rank: 2, defaultColor: '#3A2E39' },
+            { id: 'muban', name: 'หมู่บ้าน (Village)', rank: 1, defaultColor: '#251E3E' }
         ];
 
-        const MARKER_ICONS = ['📍','🏠','🌲','⛰️','🏰','⛺','🏙️','👑','💀','🛕','⚓','⚔️','💎','🌾','🩸'];
+        const RANK_COLORS = {};
+        HIERARCHY.forEach(h => RANK_COLORS[h.id] = h.defaultColor);
 
         const COLORS = {
             religion: { 'พุทธ': '#F1C40F', 'คริสต์': '#3498DB', 'อิสลาม': '#2ECC71', 'พราหมณ์ฮินดู': '#E91E63', 'ศาสนาดั้งเดิม': '#95A5A6' },
-            gov: { 'ประชาธิปไตย': '#2ECC71', 'คอมมิวนิสต์': '#E74C3C', 'สมบูรณาญาสิทธิราชย์': '#8E44AD', 'ปริมิตาญาสิทธิราชย์': '#F39C12' }
+            gov: { 'ประชาธิปไตย': '#2ECC71', 'คอมมิวนิสต์': '#E74C3C', 'สมบูรณาญาสิทธิราชย์': '#8E44AD', 'ปริมิตาญาสิทธิราชย์': '#F39C12' },
+            rank: RANK_COLORS
         };
 
-        // --- Init ---
+        const COMMON_ICONS = [
+            'twemoji:round-pushpin', 'twemoji:house', 'twemoji:castle', 'twemoji:deciduous-tree', 
+            'twemoji:crossed-swords', 'twemoji:skull-and-crossbones', 'twemoji:crown', 'twemoji:gem-stone',
+            'twemoji:sailboat', 'twemoji:volcano', 'twemoji:tent', 'twemoji:cityscape'
+        ];
+
+        // --- Initialization ---
         window.onload = async () => {
-            // SAFE MODE: Run setupUI first to ensure UI is ready regardless of network
-            try {
-                initMap();
-                setupUI();
-            } catch(e) { console.error("UI/Map Init error:", e); }
+            initMap();
+            setupUI();
+            
+            if (location.hostname !== 'localhost' && !firebaseConfig.apiKey) {
+                 showConfirmModal("การตั้งค่าไม่สมบูรณ์", "กรุณาใส่ API Key ในโค้ด", null, true);
+                 return;
+            }
 
             try {
                 const app = initializeApp(firebaseConfig);
@@ -776,51 +994,61 @@
                 auth = getAuth(app);
 
                 onAuthStateChanged(auth, async (user) => {
-                    if (!user) {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-                        else await signInAnonymously(auth);
-                    } else {
-                        userId = user.uid;
-                        document.getElementById('user-id-display').innerText = `Lord ID: ${userId.substring(0,6)}`;
-                        
-                        // Hook up Firestore listener
-                        const areasRef = collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires');
+                    toggleAuthUI(user);
+                    if (user) {
+                        window.userId = user.uid;
+                        document.getElementById('user-display-name').innerText = `Lord ${user.displayName || user.email}`;
+                        document.getElementById('user-id-display').innerText = `ID: ${window.userId.substring(0,6)}`;
+
+                        const areasRef = collection(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires');
                         onSnapshot(areasRef, (snap) => {
                             entities = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                            renderMap();
-                        }, (error) => console.error(error));
+                            renderMap(); // 2D
+                            if(is3DMode) renderCesium(); // 3D
+                        });
                     }
                 });
-            } catch (err) {
-                console.error("Firebase connection failed:", err);
-            }
+            } catch (err) { console.error("Firebase connection failed:", err); }
         };
 
+        function toggleAuthUI(user) {
+            const loggedInView = document.getElementById('logged-in-view');
+            const loggedOutView = document.getElementById('logged-out-view');
+            if(user) {
+                loggedInView.classList.remove('hidden');
+                loggedOutView.classList.add('hidden');
+            } else {
+                loggedInView.classList.add('hidden');
+                loggedOutView.classList.remove('hidden');
+            }
+        }
+
+        // --- Map Setup (2D) ---
         function initMap() {
-            if (map) return; 
+            if (map) return;
             
-            // 1. Clean Map (No Labels) - Using CartoDB Voyager No Labels
             const noLabelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
                 subdomains: 'abcd',
                 maxZoom: 19
             });
-
-            // 3. Satellite
             const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' });
 
-            // 4. Labels Overlay (Only Labels) - to be used with Clean Map
-            const labelsOnlyLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 19,
-                opacity: 0.7
+            const corner1 = L.latLng(-85, -180);
+            const corner2 = L.latLng(85, 180);
+            const bounds = L.latLngBounds(corner1, corner2);
+
+            map = L.map('map', { 
+                center: [13.7563, 100.5018], 
+                zoom: 6, 
+                zoomControl: false, 
+                layers: [noLabelsLayer],
+                maxBounds: bounds,
+                maxBoundsViscosity: 1.0,
+                minZoom: 3
             });
 
-            // Set default to No Labels (Clean)
-            map = L.map('map', { center: [13.7563, 100.5018], zoom: 6, zoomControl: false, layers: [noLabelsLayer] });
-
-            mapLayers = { nolabels: noLabelsLayer, sat: satLayer, labels: labelsOnlyLayer };
+            mapLayers = { nolabels: noLabelsLayer, sat: satLayer };
             drawnItems = L.featureGroup().addTo(map);
 
             map.addControl(new L.Control.Draw({
@@ -832,81 +1060,170 @@
             map.on(L.Draw.Event.EDITED, onDrawEdited);
         }
 
+        // --- Cesium Setup (3D) ---
+        function initCesium() {
+            if(viewer) return;
+
+            // Updated Imagery Provider for Satellite View (ArcGIS World Imagery)
+            viewer = new Cesium.Viewer('cesiumContainer', {
+                animation: false,
+                baseLayerPicker: false,
+                fullscreenButton: false,
+                vrButton: false,
+                geocoder: false,
+                homeButton: false,
+                infoBox: false,
+                sceneModePicker: false,
+                selectionIndicator: false,
+                timeline: false,
+                navigationHelpButton: false,
+                imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+                    url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+                })
+            });
+
+            viewer.scene.globe.enableLighting = true;
+            viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+            
+            // Sync Camera on start
+            syncCameraTo2D();
+        }
+
+        function syncCameraTo2D() {
+            if(!map || !viewer) return;
+            const center = map.getCenter();
+            viewer.camera.flyTo({
+                destination : Cesium.Cartesian3.fromDegrees(center.lng, center.lat, 5000000),
+                duration: 1.5
+            });
+        }
+
+        window.toggleGlobeMode = () => {
+            is3DMode = !is3DMode;
+            const body = document.body;
+            const btnIcon = document.getElementById('globe-btn-icon');
+            
+            if(is3DMode) {
+                // Switch to 3D
+                body.classList.remove('mode-2d'); body.classList.add('mode-3d');
+                btnIcon.src = "https://api.iconify.design/noto:map-of-japan.svg"; // Show map icon to go back
+                if(!viewer) initCesium();
+                renderCesium();
+                // Sync Compass Rotation
+                viewer.scene.postRender.addEventListener(updateCompass3D);
+            } else {
+                // Switch to 2D
+                body.classList.remove('mode-3d'); body.classList.add('mode-2d');
+                btnIcon.src = "https://api.iconify.design/noto:globe-showing-asia-australia.svg";
+                if(viewer) viewer.scene.postRender.removeEventListener(updateCompass3D);
+                document.getElementById('compass-icon').style.transform = 'rotate(0deg)'; // Reset compass
+            }
+        }
+
+        function updateCompass3D() {
+            if(!viewer) return;
+            const heading = viewer.camera.heading;
+            const deg = Cesium.Math.toDegrees(heading);
+            document.getElementById('compass-icon').style.transform = `rotate(${-deg}deg)`;
+        }
+
+        // --- UI Setup ---
         function setupUI() {
             const toggleBtn = document.getElementById('toggle-sidebar');
             if(toggleBtn) toggleBtn.onclick = () => {
-                document.getElementById('sidebar-left').classList.toggle('sidebar-collapsed');
-                toggleBtn.innerText = document.getElementById('sidebar-left').classList.contains('sidebar-collapsed') ? '▶' : '◀';
+                const sb = document.getElementById('sidebar-left');
+                sb.classList.toggle('sidebar-collapsed');
+                toggleBtn.innerText = sb.classList.contains('sidebar-collapsed') ? '▶' : '◀';
             };
 
-            // Map Layer Buttons
-            document.getElementById('btn-map-nolabels').onclick = () => { 
-                map.removeLayer(mapLayers.sat); 
-                map.addLayer(mapLayers.nolabels); 
-                // Restore label preference
-                if(document.getElementById('toggle-original-labels').checked) map.addLayer(mapLayers.labels);
+            // Map Layer Toggles
+            document.getElementById('btn-map-nolabels').onclick = (e) => { 
+                map.removeLayer(mapLayers.sat); map.addLayer(mapLayers.nolabels);
+                updateLayerBtnStyle(e.target, document.getElementById('btn-map-sat'));
             };
-            
-            
-            document.getElementById('btn-map-sat').onclick = () => { 
-                map.removeLayer(mapLayers.nolabels); 
-                map.removeLayer(mapLayers.labels);
-                map.addLayer(mapLayers.sat); 
-            };
-            
-            // Toggle Original Labels (Only works effectively on Clean Map / Sat)
-            document.getElementById('toggle-original-labels').onchange = (e) => {
-                if(e.target.checked) map.addLayer(mapLayers.labels); 
-                else map.removeLayer(mapLayers.labels);
+            document.getElementById('btn-map-sat').onclick = (e) => { 
+                map.removeLayer(mapLayers.nolabels); map.addLayer(mapLayers.sat); 
+                updateLayerBtnStyle(e.target, document.getElementById('btn-map-nolabels'));
             };
 
-            // Filters & Toggles
-            document.getElementById('toggle-created-labels')?.addEventListener('change', renderMap);
-            document.getElementById('toggle-roads')?.addEventListener('change', renderMap);
-            
-            // Populate Hierarchy Filter (SAFE)
-            const filterContainer = document.getElementById('filter-levels-container');
-            if(filterContainer && HIERARCHY) {
-                filterContainer.innerHTML = ''; // clear
-                HIERARCHY.forEach(h => {
-                    const div = document.createElement('div');
-                    div.innerHTML = `<label class="flex items-center text-xs cursor-pointer"><input type="checkbox" checked class="filter-level accent-[#5D4037] mr-1" value="${h.id}"> ${h.name}</label>`;
-                    filterContainer.appendChild(div);
-                });
+            function updateLayerBtnStyle(active, inactive) {
+                active.className = "flex-1 text-xs py-1.5 rounded-lg bg-white text-[#5D4037] shadow-sm font-bold";
+                inactive.className = "flex-1 text-xs py-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition";
             }
 
-            // Sliders & Colors
+            // Filters & Events
+            document.getElementById('toggle-created-labels')?.addEventListener('change', renderMap);
+            document.getElementById('toggle-roads')?.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); });
+            document.getElementById('toggle-compass')?.addEventListener('change', (e) => {
+                const compass = document.getElementById('compass');
+                if(e.target.checked) compass.classList.remove('hidden-compass');
+                else compass.classList.add('hidden-compass');
+            });
+            
+            // Add click event to compass to reset view in 3D
+            document.getElementById('compass').onclick = () => {
+                if(is3DMode && viewer) {
+                    const center = viewer.camera.positionCartographic;
+                    viewer.camera.flyTo({
+                        destination: Cesium.Cartesian3.fromRadians(center.longitude, center.latitude, center.height),
+                        orientation: { heading: 0, pitch: -Cesium.Math.PI_OVER_TWO, roll: 0 },
+                        duration: 1.0
+                    });
+                }
+            };
+
             document.getElementById('opacity-slider')?.addEventListener('input', (e) => {
                 globalOpacity = parseFloat(e.target.value);
                 document.getElementById('opacity-val').innerText = Math.round(globalOpacity*100) + '%';
                 renderMap();
+                if(is3DMode) renderCesium();
             });
+            
+            // Global Stroke Color Change
             document.getElementById('global-stroke-color')?.addEventListener('input', (e) => {
                 globalStrokeColor = e.target.value;
-                renderMap();
+                renderMap(); // Redraw 2D
+                if(is3DMode) renderCesium(); // Redraw 3D
             });
 
-            // Color Mode
             document.getElementById('color-mode-select')?.addEventListener('change', (e) => {
                 const mode = e.target.value;
-                const hint = document.getElementById('color-mode-hint');
                 const legendBox = document.getElementById('legend-box');
-                if (mode === 'religion' || mode === 'government') {
-                    hint?.classList.remove('hidden'); legendBox?.classList.remove('hidden'); updateLegend(mode);
+                if (mode === 'religion' || mode === 'government' || mode === 'rank') {
+                    legendBox.classList.remove('hidden'); updateLegend(mode);
                 } else {
-                    hint?.classList.add('hidden'); legendBox?.classList.add('hidden');
+                    legendBox.classList.add('hidden');
                 }
                 renderMap();
+                if(is3DMode) renderCesium();
             });
 
-            // Populate Rank Dropdown
-            const levelSelect = document.getElementById('inp-level');
-            if(levelSelect && HIERARCHY) {
-                levelSelect.innerHTML = '';
+            // Hierarchy Filter
+            const filterContainer = document.getElementById('filter-levels-container');
+            if(filterContainer && HIERARCHY) {
+                filterContainer.innerHTML = '';
                 HIERARCHY.forEach(h => {
-                    const opt = document.createElement('option');
-                    opt.value = h.id; opt.text = h.name;
-                    levelSelect.appendChild(opt);
+                    const div = document.createElement('div');
+                    div.innerHTML = `<label class="flex items-center text-xs cursor-pointer hover:bg-white/50 p-1 rounded"><input type="checkbox" checked class="filter-level accent-[#5D4037] mr-2" value="${h.id}"> ${h.name}</label>`;
+                    filterContainer.appendChild(div);
+                });
+                document.querySelectorAll('.filter-level').forEach(el => el.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); }));
+            }
+
+            // Forms
+            const formArea = document.getElementById('form-area');
+            if(formArea) formArea.onsubmit = saveArea;
+
+            // Road Weight Slider
+            document.getElementById('road-weight')?.addEventListener('input', (e) => {
+                document.getElementById('road-weight-val').innerText = e.target.value;
+            });
+
+            // Populate Level Select
+            const levelSelect = document.getElementById('inp-level');
+            if(levelSelect) {
+                HIERARCHY.forEach(h => {
+                    const opt = document.createElement('option'); opt.value = h.id; opt.text = h.name; levelSelect.appendChild(opt);
                 });
                 levelSelect.onchange = (e) => {
                     const lvl = HIERARCHY.find(h => h.id === e.target.value);
@@ -915,314 +1232,372 @@
                 };
             }
 
-            // Marker Icons
-            const iconGrid = document.getElementById('marker-icon-grid');
-            if(iconGrid && MARKER_ICONS) {
-                iconGrid.innerHTML = '';
-                MARKER_ICONS.forEach(icon => {
-                    const el = document.createElement('div');
-                    el.className = 'icon-option';
-                    el.innerText = icon;
-                    el.onclick = () => {
-                        document.querySelectorAll('.icon-option').forEach(i => i.classList.remove('selected'));
-                        el.classList.add('selected');
-                        selectedMarkerIcon = icon;
-                    };
-                    if(icon === '📍') el.classList.add('selected');
-                    iconGrid.appendChild(el);
-                });
-            }
-
-            // Listeners
-            const formArea = document.getElementById('form-area');
-            if(formArea) formArea.onsubmit = saveArea;
-            
-            document.querySelectorAll('.filter-status, .filter-level, #search-input').forEach(el => {
-                el.addEventListener('change', renderMap);
-                if(el.id === 'search-input') el.addEventListener('keyup', renderMap);
-            });
-            
-            // Image Preview
-            document.getElementById('inp-flag')?.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if(file) {
-                    const reader = new FileReader();
-                    reader.onload = (evt) => {
-                        document.getElementById('preview-flag').src = evt.target.result;
-                        document.getElementById('preview-flag').classList.remove('hidden');
-                        document.getElementById('preview-flag-placeholder').classList.add('hidden');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            
-            // Labels & Roads Toggles
-            document.getElementById('toggle-created-labels')?.addEventListener('change', renderMap);
-            document.getElementById('toggle-roads')?.addEventListener('change', renderMap);
+            renderCommonIcons();
+            document.getElementById('search-input')?.addEventListener('keyup', () => { renderMap(); if(is3DMode) renderCesium(); });
         }
 
-        function updateLegend(mode) {
-            const container = document.getElementById('legend-content');
-            if(!container) return;
+        // --- Helper: Check Mode before Drawing ---
+        window.checkModeAndDraw = (type) => {
+            if(is3DMode) {
+                // Auto switch to 2D to allow drawing
+                toggleGlobeMode();
+                showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดเครื่องมือวาดอีกครั้ง", null, true);
+                return;
+            }
+            if(type === 'polygon') window.startDrawPolygon();
+            else if(type === 'polyline') window.startDrawPolyline();
+            else if(type === 'marker') window.startDrawMarker();
+        }
+
+        // --- Icon System ---
+        function renderCommonIcons() {
+            const container = document.getElementById('common-icons-container');
             container.innerHTML = '';
-            const data = mode === 'religion' ? COLORS.religion : COLORS.gov;
-            document.getElementById('legend-title').innerText = mode === 'religion' ? 'แยกตามศาสนา' : 'แยกตามระบอบปกครอง';
-            for (const [key, color] of Object.entries(data)) {
-                container.innerHTML += `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full border border-gray-300 shadow-sm" style="background-color: ${color}"></span><span>${key}</span></div>`;
-            }
-            container.innerHTML += `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full border border-gray-300 shadow-sm" style="background-color: #ccc"></span><span>อื่น ๆ / ไม่ระบุ</span></div>`;
+            COMMON_ICONS.forEach(iconName => {
+                const url = `https://api.iconify.design/${iconName.replace(':','/')}.svg`;
+                const div = document.createElement('div');
+                div.className = 'icon-option flex-shrink-0';
+                div.innerHTML = `<img src="${url}">`;
+                div.onclick = () => selectIcon(url, div);
+                container.appendChild(div);
+            });
         }
 
-        // --- Hierarchy Helpers ---
-        function getAllAncestors(ent) {
-            const ancestors = [];
-            let current = ent;
-            let depth = 0;
-            while (current.parentId && depth < 20) {
-                const parent = entities.find(e => e.id === current.parentId);
-                if (parent) { ancestors.push(parent); current = parent; } else { break; }
-                depth++;
-            }
-            return ancestors.reverse();
-        }
-
-        function getDescendants(parentIds) {
-            let descendants = [];
-            let queue = [...parentIds];
-            let visited = new Set(parentIds);
-            let limit = 0;
-            while(queue.length > 0 && limit < 5000) {
-                const pid = queue.shift();
-                const children = entities.filter(e => e.parentId === pid);
-                children.forEach(c => {
-                    if(!visited.has(c.id)) { visited.add(c.id); descendants.push(c); queue.push(c.id); }
-                });
-                limit++;
-            }
-            return descendants;
-        }
-
-        // --- Render Logic ---
-        function renderMap() {
-            if(!map || !drawnItems) return;
-            drawnItems.clearLayers();
-            const colorModeSelect = document.getElementById('color-mode-select');
-            const colorMode = colorModeSelect ? colorModeSelect.value : 'entity';
-            const searchInput = document.getElementById('search-input');
-            const searchTxt = searchInput ? searchInput.value.toLowerCase() : '';
+        window.searchIcons = async () => {
+            const query = document.getElementById('icon-search-query').value;
+            if(!query) return;
+            const container = document.getElementById('icon-results');
+            container.innerHTML = '<div class="col-span-full text-center py-2"><span class="material-icons-round animate-spin">refresh</span> Loading...</div>';
             
-            const selectedStatus = Array.from(document.querySelectorAll('.filter-status:checked')).map(cb => cb.value);
+            try {
+                const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=50`);
+                const data = await res.json();
+                container.innerHTML = '';
+                
+                if(data.icons && data.icons.length > 0) {
+                    data.icons.forEach(iconName => {
+                        const url = `https://api.iconify.design/${iconName.replace(':','/')}.svg`;
+                        const div = document.createElement('div');
+                        div.className = 'icon-option';
+                        div.innerHTML = `<img src="${url}" title="${iconName}">`;
+                        div.onclick = () => selectIcon(url, div);
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = '<div class="col-span-full text-center text-gray-500 text-xs py-2">ไม่พบไอคอน</div>';
+                }
+            } catch(e) {
+                container.innerHTML = '<div class="col-span-full text-center text-red-500 text-xs">Error fetching icons</div>';
+            }
+        }
+
+        function selectIcon(url, element) {
+            selectedMarkerIconUrl = url;
+            document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        // --- Cesium Rendering Logic ---
+        function renderCesium() {
+            if(!viewer) return;
+            viewer.entities.removeAll();
+            
+            const colorMode = document.getElementById('color-mode-select').value;
+            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+            const showRoads = document.getElementById('toggle-roads').checked;
             const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
             
-            const toggleLabels = document.getElementById('toggle-created-labels');
-            const showCreatedLabels = toggleLabels ? toggleLabels.checked : true;
-            
-            const toggleRoads = document.getElementById('toggle-roads');
-            const showRoads = toggleRoads ? toggleRoads.checked : true;
-
-            const sortedEntities = [...entities].sort((a, b) => getRank(b.level) - getRank(a.level));
-
-            let allowedIds = null;
-            if (searchTxt) {
-                const directMatches = entities.filter(e => {
-                    const nameMatch = e.name.toLowerCase().includes(searchTxt);
-                    const originalMatch = e.originalName && e.originalName.toLowerCase().includes(searchTxt);
-                    const annexedByMatch = e.annexedByName && e.annexedByName.toLowerCase().includes(searchTxt);
-                    return nameMatch || originalMatch || annexedByMatch;
-                });
-                const directMatchIds = directMatches.map(e => e.id);
-                const descendants = getDescendants(directMatchIds);
-                allowedIds = new Set([...directMatchIds, ...descendants.map(d => d.id)]);
-            }
-
-            sortedEntities.forEach(ent => {
-                if (allowedIds && !allowedIds.has(ent.id)) return;
+            entities.forEach(ent => {
                 if (ent.type === 'area' && !selectedLevels.includes(ent.level)) return;
-
-                let status = 'independent';
-                if (ent.isAnnexed) status = 'annexed';
-                else if (ent.isColony) status = 'colony';
-                else if (ent.isVassal) status = 'vassal';
-                
-                if (!selectedStatus.includes('all') && !selectedStatus.includes(status)) return;
+                if(searchTxt && !ent.name.toLowerCase().includes(searchTxt)) return;
 
                 try {
                     const geoJson = JSON.parse(ent.geoJson);
                     
+                    // 1. ROADS
+                    if (ent.type === 'road') {
+                        if(!showRoads) return;
+                        const coords = geoJson.geometry.coordinates.map(c => Number(c[0]), Number(c[1])).flat(); // Simplified
+                        // Extract coords from LineString
+                        const flatCoords = [];
+                        geoJson.geometry.coordinates.forEach(pt => { flatCoords.push(pt[0], pt[1]); });
+                        
+                        viewer.entities.add({
+                            polyline: {
+                                positions: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                                width: parseInt(ent.weight) || 4,
+                                material: Cesium.Color.fromCssColorString(ent.color)
+                            },
+                            name: ent.name
+                        });
+                        return;
+                    }
+
+                    // 2. MARKERS
+                    if (ent.type === 'marker') {
+                        const lon = geoJson.geometry.coordinates[0];
+                        const lat = geoJson.geometry.coordinates[1];
+                        viewer.entities.add({
+                            position: Cesium.Cartesian3.fromDegrees(lon, lat),
+                            billboard: {
+                                image: ent.iconUrl,
+                                scale: 1.0,
+                                color: Cesium.Color.fromCssColorString(ent.color)
+                            },
+                            name: ent.name
+                        });
+                        return;
+                    }
+
+                    // 3. AREAS (POLYGONS)
+                    let fillColor = ent.color;
+                    if (colorMode === 'religion') fillColor = COLORS.religion[ent.religion] || '#ccc';
+                    if (colorMode === 'government') fillColor = COLORS.gov[ent.government] || '#ccc';
+                    if (colorMode === 'rank') {
+                        const h = HIERARCHY.find(x => x.id === ent.level);
+                        fillColor = h ? h.defaultColor : '#ccc';
+                    }
+                    if (ent.isWater) fillColor = '#81D4FA';
+                    if (colorMode === 'entity' && (ent.isAnnexed || ent.isVassal)) fillColor = ent.color;
+
+                    // Convert GeoJSON Polygon to Cesium Hierarchy
+                    // Handling simple Polygon only for this demo (Exterior ring)
+                    let hierarchy;
+                    const coords = geoJson.geometry.coordinates;
+                    if(geoJson.geometry.type === 'Polygon') {
+                         const flat = [];
+                         coords[0].forEach(pt => { flat.push(pt[0], pt[1]); });
+                         hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
+                         
+                         viewer.entities.add({
+                            polygon: {
+                                hierarchy: hierarchy,
+                                material: Cesium.Color.fromCssColorString(fillColor).withAlpha(ent.isWater ? 0.5 : globalOpacity),
+                                outline: true,
+                                outlineColor: Cesium.Color.fromCssColorString(ent.isWater ? '#29B6F6' : globalStrokeColor), // USE GLOBAL STROKE
+                                outlineWidth: 2
+                            },
+                            name: ent.name,
+                            description: `<b>${ent.name}</b><br>${ent.ruler}`
+                         });
+                    }
+                } catch(e) { console.error("Cesium render error", e); }
+            });
+        }
+
+        // --- Leaflet Rendering Logic ---
+        function renderMap() {
+            if(!map || !drawnItems) return;
+            drawnItems.clearLayers();
+            
+            const colorMode = document.getElementById('color-mode-select').value;
+            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+            const showRoads = document.getElementById('toggle-roads').checked;
+            const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
+
+            const sortedEntities = [...entities].sort((a, b) => getRank(b.level) - getRank(a.level));
+
+            sortedEntities.forEach(ent => {
+                if (ent.type === 'area' && !selectedLevels.includes(ent.level)) return;
+                
+                if(searchTxt && !ent.name.toLowerCase().includes(searchTxt)) return;
+
+                try {
+                    const geoJson = JSON.parse(ent.geoJson);
+
+                    // 1. ROADS
                     if (ent.type === 'road') {
                         if(!showRoads) return;
                         L.geoJSON(geoJson, {
-                            style: { color: ent.color, weight: 4, dashArray: ent.roadType === 'army' ? '10, 15' : null, opacity: 0.9 }
+                            style: { 
+                                color: ent.color, 
+                                weight: parseInt(ent.weight) || 4, 
+                                dashArray: ent.roadType === 'army' ? '10, 15' : null, 
+                                opacity: 0.8,
+                                lineCap: 'round'
+                            }
                         }).bindPopup(`
                             <div class="text-center">
-                                <span class="bg-gray-100 text-gray-500 text-[10px] px-1 rounded font-mono">#${ent.customId || 'N/A'}</span>
-                                <div class="font-bold text-[#5D4037] text-lg">${ent.name}</div>
-                                <div class="text-xs text-gray-500 mb-2">${ent.roadType==='army'?'⚔️ เส้นทางเดินทัพ':'🛒 ถนนการค้า'}</div>
-                                <button onclick="window.confirmDelete('${ent.id}')" class="text-red-500 text-xs hover:text-red-700 underline cursor-pointer">ลบเส้นทาง</button>
+                                <div class="font-bold text-[#5D4037] text-lg cute-font">${ent.name}</div>
+                                <div class="text-xs text-gray-500 mb-2">${ent.roadType==='army'?'เส้นทางเดินทัพ':'ถนนการค้า'}</div>
+                                <button onclick="window.confirmDelete('${ent.id}')" class="text-red-400 text-xs underline cursor-pointer">ลบเส้นทาง</button>
                             </div>
                         `).addTo(drawnItems);
                         return;
                     }
                     
+                    // 2. MARKERS
                     if (ent.type === 'marker') {
+                        const iconHtml = `<div style="position:relative; width:30px; height:30px;">
+                                            <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:${ent.color}; opacity:0.3; border-radius:50%; filter:blur(4px);"></div>
+                                            <img src="${ent.iconUrl}" style="width:30px; height:30px; position:relative; z-index:2; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">
+                                          </div>`;
                         const icon = L.divIcon({
-                            className: 'custom-div-icon',
-                            html: `<div style="font-size:32px; color:${ent.color}; filter: drop-shadow(2px 2px 0 white);">${ent.icon}</div>`,
-                            iconSize: [30, 30], iconAnchor: [15, 30]
+                            className: 'custom-marker',
+                            html: iconHtml,
+                            iconSize: [30, 30], iconAnchor: [15, 15]
                         });
                         L.geoJSON(geoJson, {
                             pointToLayer: (f, l) => L.marker(l, {icon: icon})
                         }).bindPopup(`
                             <div class="text-center font-bold text-[#5D4037]">
-                                <div class="text-2xl mb-1">${ent.icon}</div>
-                                <div class="mb-1">${ent.name}</div>
-                                <button onclick="window.confirmDelete('${ent.id}')" class="text-red-500 text-xs hover:text-red-700 underline cursor-pointer">ลบหมุด</button>
+                                <img src="${ent.iconUrl}" class="w-12 h-12 mx-auto mb-2">
+                                <div class="mb-1 text-lg cute-font">${ent.name}</div>
+                                <button onclick="window.confirmDelete('${ent.id}')" class="text-red-400 text-xs underline cursor-pointer">ลบหมุด</button>
                             </div>
                         `).addTo(drawnItems);
                         return;
                     }
 
+                    // 3. AREAS
                     let fillColor = ent.color;
-                    if (colorMode === 'religion') fillColor = COLORS.religion[ent.religion] || '#ccc';
-                    if (colorMode === 'government') fillColor = COLORS.gov[ent.government] || '#ccc';
-                    if (ent.isWater) fillColor = '#85C1E9'; 
-                    else if (colorMode === 'entity' && (ent.isAnnexed || ent.isVassal)) fillColor = ent.color;
+                    let colorContext = { type: 'entity', value: 'สีประจำเขต' };
+
+                    if (colorMode === 'religion') {
+                        fillColor = COLORS.religion[ent.religion] || '#ccc';
+                        colorContext = { type: 'religion', value: ent.religion };
+                    }
+                    if (colorMode === 'government') {
+                        fillColor = COLORS.gov[ent.government] || '#ccc';
+                        colorContext = { type: 'gov', value: ent.government };
+                    }
+                    if (colorMode === 'rank') {
+                        const h = HIERARCHY.find(x => x.id === ent.level);
+                        fillColor = h ? h.defaultColor : '#ccc';
+                        colorContext = { type: 'rank', value: h ? h.name : 'Unknown' };
+                    }
+
+                    if (ent.isWater) {
+                        fillColor = '#81D4FA';
+                        colorContext = { type: 'water', value: 'น่านน้ำ' };
+                    }
+                    
+                    if (colorMode === 'entity' && (ent.isAnnexed || ent.isVassal)) fillColor = ent.color;
 
                     const layer = L.geoJSON(geoJson, {
                         style: {
-                            color: ent.isWater ? '#2980B9' : globalStrokeColor,
+                            color: ent.isWater ? '#29B6F6' : globalStrokeColor, // USE GLOBAL STROKE
                             weight: ent.isWater ? 1 : 1.5,
-                            dashArray: ent.isWater || ent.isColony ? '6, 6' : null, 
                             fillColor: fillColor,
-                            fillOpacity: ent.isWater ? 0.4 : globalOpacity
+                            fillOpacity: ent.isWater ? 0.5 : globalOpacity
                         },
                         onEachFeature: (f, l) => {
                             l.options.entityId = ent.id;
-                            if (showCreatedLabels && !ent.isWater && getRank(ent.level) >= 1) {
-                                let center;
-                                try {
-                                    const turfCenter = turf.pointOnSurface(geoJson);
-                                    center = [turfCenter.geometry.coordinates[1], turfCenter.geometry.coordinates[0]];
-                                } catch(e) { center = l.getBounds().getCenter(); }
-
-                                const subLabel = ent.isColony ? `<span class="text-[8px] bg-white/90 px-1 rounded text-red-600 border border-red-200">(อาณานิคมของ ${ent.colonyOfName})</span>` : '';
-                                const labelText = ent.isAnnexed ? ent.annexedByName : ent.name;
-                                const labelMarker = L.marker(center, {
+                            if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
+                                const center = l.getBounds().getCenter();
+                                const label = L.marker(center, {
                                     icon: L.divIcon({
-                                        className: 'map-label-container',
-                                        html: `<div class="map-label-text" style="color:${ent.labelColor || '#4E342E'}">${labelText}</div><br>${subLabel}`,
-                                        iconSize: [120, 40], iconAnchor: [60, 20]
+                                        className: 'text-center pointer-events-none',
+                                        html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${ent.isAnnexed ? ent.annexedByName : ent.name}</span>`,
+                                        iconSize: [100, 20], iconAnchor: [50, 10]
                                     })
                                 });
-                                drawnItems.addLayer(labelMarker);
+                                drawnItems.addLayer(label);
                             }
-                            l.bindPopup(createPopupContent(ent));
+                            l.bindPopup(createPopupContent(ent, fillColor, colorContext));
                         }
                     });
                     drawnItems.addLayer(layer);
 
-                } catch (e) { console.error("Render entity error", e); }
+                } catch (e) { console.error("Render error", e); }
             });
         }
 
-        function createPopupContent(ent) {
+        function createPopupContent(ent, displayColor, colorContext) {
             const flag = ent.flag || 'https://cdn-icons-png.flaticon.com/512/1458/1458514.png';
-            const ancestors = getAllAncestors(ent);
-            const fullHierarchy = [...ancestors, ent];
-            
-            let hierarchyHtml = '';
-            if (fullHierarchy.length > 0) {
-                hierarchyHtml = `<div class="hierarchy-box custom-scrollbar"><div class="hierarchy-title">โครงสร้างการปกครอง</div>`;
-                fullHierarchy.forEach((item, idx) => {
-                    const isActive = (idx === fullHierarchy.length - 1);
-                    hierarchyHtml += `<div class="h-item ${isActive ? 'active' : ''}"><div class="h-line"></div><div class="h-dot"></div><div class="h-info"><span class="h-rank">${getHierarchyName(item.level)}</span><span class="h-name">${item.name}</span></div></div>`;
-                });
-                hierarchyHtml += `</div>`;
-            }
+            let statusBadge = '<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full border border-emerald-200">รัฐอิสระ</span>';
+            if (ent.isAnnexed) statusBadge = '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-200">ถูกผนวก</span>';
+            if (ent.isWater) statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">น่านน้ำ</span>';
 
-            let statusBadge = '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full border border-green-200">รัฐอิสระ</span>';
-            if (ent.isWater) statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200 font-bold">🌊 น่านน้ำ</span>';
-
-            let extraInfo = '';
-            let displayName = ent.name;
-            const displayId = (ent.customId || (ent.id ? ent.id.substring(0,6) : '???'));
-
-            if (ent.isAnnexed) {
-                statusBadge = '<span class="bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5 rounded-full border border-orange-200">ถูกผนวก</span>';
-                displayName = ent.annexedByName;
-                extraInfo = `<div class="text-[10px] text-red-500 mt-1 flex items-center justify-center gap-1">เดิม: ${ent.originalName || ent.name}</div>`;
-            } else if (ent.isVassal) {
-                statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
-                extraInfo = `<div class="text-[10px] text-purple-500 mt-1">(ของ ${ent.vassalOfName})</div>`;
-            } else if (ent.isColony) {
-                statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">อาณานิคม</span>';
-                extraInfo = `<div class="text-[10px] text-blue-500 mt-1">(ของ ${ent.colonyOfName})</div>`;
-            }
+            let colorDesc = "สีประจำเขต";
+            if(colorContext.type === 'religion') colorDesc = `☸️ ศาสนา: ${colorContext.value}`;
+            else if(colorContext.type === 'gov') colorDesc = `⚖️ ปกครอง: ${colorContext.value}`;
+            else if(colorContext.type === 'rank') colorDesc = `👑 ศักดิ์: ${getHierarchyName(ent.level)}`;
+            else if(colorContext.type === 'water') colorDesc = `🌊 พื้นที่: น่านน้ำ`;
 
             return `
-                <div class="font-sans relative">
-                    <div class="popup-header-bg"></div>
-                    <img src="${flag}" class="popup-avatar">
-                    <div class="pt-8 px-4 pb-4 text-center">
-                        <div class="mb-1"><span class="text-[10px] font-mono text-gray-400 bg-gray-100 px-1 rounded">#${displayId}</span></div>
-                        <h3 class="text-xl font-bold text-[#5D4037] leading-tight fantasy-font">${displayName}</h3>
-                        ${extraInfo}
-                        <div class="mt-2 mb-2">${statusBadge}</div>
-                        ${hierarchyHtml}
-                        <div class="grid grid-cols-2 gap-2 text-left text-xs bg-[#FFFDF5] p-2 rounded-lg border border-[#EFEBE9] mt-2">
-                            <div class="col-span-2 flex justify-between border-b border-dashed border-gray-200 pb-1 mb-1">
-                                <span class="text-gray-400">ศักดิ์</span>
-                                <span class="font-bold text-[#5D4037]">${getHierarchyName(ent.level)}</span>
+                <div class="relative font-sans">
+                    <div class="h-16 bg-gradient-to-r from-[#FFF3E0] to-white rounded-t-2xl"></div>
+                    <img src="${flag}" class="absolute top-4 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full border-4 border-white shadow-md object-cover bg-white">
+                    <div class="pt-6 px-5 pb-5 text-center">
+                        <h3 class="text-xl font-bold text-[#5D4037] leading-tight cute-font mt-1">${ent.isAnnexed ? ent.annexedByName : ent.name}</h3>
+                        <div class="mt-2 mb-3 flex flex-col justify-center gap-2 items-center">
+                            ${statusBadge}
+                            <div class="color-tag" title="Color Meaning">
+                                <span class="swatch-circle" style="background-color:${displayColor}"></span> ${colorDesc}
                             </div>
-                            <div class="col-span-2 mb-1">
-                                <span class="text-gray-400 block mb-0.5">ผู้ปกครอง</span>
-                                <span class="font-bold text-[#8D6E63]">${ent.ruler}</span>
-                            </div>
-                            <div class="flex items-center gap-1 text-gray-600"><span class="material-icons-round text-sm text-yellow-600">self_improvement</span> ${ent.religion}</div>
-                             <div class="flex items-center gap-1 text-gray-600"><span class="material-icons-round text-sm text-blue-600">gavel</span> ${ent.government}</div>
                         </div>
-                        <div class="mt-3 flex gap-2 justify-center pt-2 border-t border-gray-100">
-                             <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100" title="แก้ไข"><span class="material-icons-round text-sm">edit</span></button>
-                            <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100" title="ลบ"><span class="material-icons-round text-sm">delete</span></button>
-                            ${(!ent.isColony && !ent.isVassal && !ent.isAnnexed) ? 
-                                `<button onclick="window.openWarModal('${ent.id}')" class="h-8 px-3 rounded-full bg-[#5D4037] text-white text-xs hover:bg-[#4E342E] flex items-center gap-1" title="ยุทธการ"><span class="material-icons-round text-sm">sports_kabaddi</span> ยุทธการ</button>` : 
-                                `<button onclick="window.declareIndependence('${ent.id}')" class="h-8 px-3 rounded-full bg-green-600 text-white text-xs hover:bg-green-700 flex items-center gap-1"><span class="material-icons-round text-sm">flag</span> กู้เอกราช</button>`
+                        
+                        <div class="text-left text-xs bg-[#FFFBF0] p-3 rounded-xl border border-[#EEE] space-y-2">
+                            <div class="flex justify-between border-b border-dashed border-[#DDD] pb-1">
+                                <span class="text-gray-400">ระดับ</span>
+                                <span class="font-bold text-[#8D6E63]">${getHierarchyName(ent.level)}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-400 block text-[10px]">ผู้ปกครอง</span>
+                                <span class="font-bold text-[#5D4037] truncate block">${ent.ruler}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 pt-1">
+                                <span class="material-icons-round text-[14px] text-amber-500">self_improvement</span>
+                                <span>${ent.religion}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex gap-2 justify-center border-t border-gray-100 pt-3">
+                             <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition"><span class="material-icons-round text-sm">edit</span></button>
+                            <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition"><span class="material-icons-round text-sm">delete</span></button>
+                            ${(!ent.isColony && !ent.isVassal && !ent.isAnnexed && !ent.isWater) ? 
+                                `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-sm">⚔️ ยุทธการ</button>` : 
+                                ''
                             }
+                            ${(ent.isAnnexed || ent.isVassal) ? `<button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-sm">🚩 กู้เอกราช</button>` : ''}
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        // --- Drawing Handlers ---
+        function updateLegend(mode) {
+            const container = document.getElementById('legend-content');
+            container.innerHTML = '';
+            let data = {};
+            let title = '';
+
+            if (mode === 'religion') { data = COLORS.religion; title = 'แยกตามศาสนา'; }
+            else if (mode === 'government') { data = COLORS.gov; title = 'แยกตามระบอบปกครอง'; }
+            else if (mode === 'rank') { 
+                data = {};
+                HIERARCHY.forEach(h => data[h.name] = h.defaultColor);
+                title = 'แยกตามศักดิ์ปกครอง';
+            }
+
+            document.getElementById('legend-title').innerText = title;
+            for (const [key, color] of Object.entries(data)) {
+                container.innerHTML += `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full border border-gray-200" style="background-color: ${color}"></span><span class="truncate">${key}</span></div>`;
+            }
+        }
+
+        // --- Drawing Events ---
         window.startDrawPolygon = () => new L.Draw.Polygon(map).enable();
         window.startDrawPolyline = () => new L.Draw.Polyline(map).enable();
         window.startDrawMarker = () => new L.Draw.Marker(map).enable();
-        
         window.toggleFullScreen = async () => {
-            try {
-                if (!document.fullscreenElement) {
-                    await document.documentElement.requestFullscreen();
-                } else {
-                    await document.exitFullscreen();
-                }
-            } catch (err) {
-                console.warn("Fullscreen denied:", err);
-                showConfirmModal("ข้อผิดพลาด", "ไม่สามารถใช้งานโหมดเต็มจอได้ในขณะนี้เนื่องจากข้อจำกัดของเบราว์เซอร์", null, true);
-            }
-        };
+             try {
+                if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+                else await document.exitFullscreen();
+             } catch(e) {
+                 showConfirmModal("Fullscreen Error", "เบราว์เซอร์นี้ไม่อนุญาตให้ใช้โหมดเต็มหน้าจอ", null, true);
+             }
+        }
 
         function onDrawCreated(e) {
             currentDrawLayer = e.layer;
             drawnItems.addLayer(currentDrawLayer); 
             if (e.layerType === 'polygon') {
                 document.getElementById('modal-area').classList.remove('hidden');
-                document.getElementById('modal-title').innerText = "สร้างเขตปกครอง";
                 document.getElementById('form-area').reset();
-                document.getElementById('area-id').value = ''; 
-                document.getElementById('preview-flag').classList.add('hidden');
-                document.getElementById('preview-flag-placeholder').classList.remove('hidden');
-                document.getElementById('inp-level').dispatchEvent(new Event('change')); 
+                document.getElementById('area-id').value = '';
+                document.getElementById('inp-level').dispatchEvent(new Event('change'));
             } else if (e.layerType === 'polyline') {
                 document.getElementById('modal-road').classList.remove('hidden');
             } else if (e.layerType === 'marker') {
@@ -1236,190 +1611,121 @@
             });
         }
 
-        // --- Save Functions (ROBUST) ---
+        // --- Actions ---
         window.saveRoad = async () => {
-            const btn = document.querySelector('#modal-road button.btn-ancient');
-            if(btn) { btn.innerHTML = 'กำลังบันทึก...'; btn.disabled = true; }
-            try {
-                const data = {
-                    name: document.getElementById('road-name').value || 'เส้นทางไร้ชื่อ',
-                    customId: document.getElementById('road-custom-id').value || null,
-                    roadType: document.getElementById('road-type').value,
-                    color: document.getElementById('road-color').value,
-                    geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
-                    type: 'road', level: 'road'
-                };
-                await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
-                closeModal('modal-road'); currentDrawLayer = null;
-            } catch(e) {
-                showConfirmModal("บันทึกไม่สำเร็จ", e.message, null, true);
-            } finally {
-                if(btn) { btn.innerHTML = 'บันทึกเส้นทาง'; btn.disabled = false; }
-            }
+            if(!validateAuth()) return;
+            const weight = document.getElementById('road-weight').value;
+            const data = {
+                name: document.getElementById('road-name').value || 'ทางไร้ชื่อ',
+                roadType: document.getElementById('road-type').value,
+                color: document.getElementById('road-color').value,
+                weight: weight,
+                geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
+                type: 'road', level: 'road'
+            };
+            await saveToFirestore(data);
+            closeModal('modal-road'); currentDrawLayer = null;
         }
 
         window.saveMarker = async () => {
-            const btn = document.querySelector('#modal-marker button.btn-ancient');
-            if(btn) { btn.innerHTML = 'กำลังบันทึก...'; btn.disabled = true; }
-            try {
-                const name = document.getElementById('marker-name').value || 'จุดสำคัญ';
-                const color = document.getElementById('marker-color').value;
-                const data = {
-                    name: name,
-                    icon: selectedMarkerIcon,
-                    color: color,
-                    geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
-                    type: 'marker', level: 'marker'
-                };
-                await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
-                closeModal('modal-marker'); currentDrawLayer = null;
-            } catch(e) {
-                showConfirmModal("บันทึกไม่สำเร็จ", e.message, null, true);
-            } finally {
-                if(btn) { btn.innerHTML = 'ปักหมุด'; btn.disabled = false; }
-            }
+            if(!validateAuth()) return;
+            const data = {
+                name: document.getElementById('marker-name').value || 'จุดสำคัญ',
+                iconUrl: selectedMarkerIconUrl,
+                color: document.getElementById('marker-color').value,
+                geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
+                type: 'marker', level: 'marker'
+            };
+            await saveToFirestore(data);
+            closeModal('modal-marker'); currentDrawLayer = null;
         }
 
-        async function saveArea(e) {
+        window.saveArea = async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="material-icons-round animate-spin text-sm">refresh</span> กำลังบันทึก...';
-            btn.disabled = true;
+            if(!validateAuth()) return;
+            const id = document.getElementById('area-id').value;
+            const data = {
+                name: document.getElementById('inp-name').value,
+                customId: document.getElementById('inp-custom-id').value,
+                level: document.getElementById('inp-level').value,
+                parentId: document.getElementById('inp-parent').value,
+                ruler: document.getElementById('inp-ruler').value,
+                religion: document.getElementById('inp-religion').value,
+                government: document.getElementById('inp-gov').value,
+                color: document.getElementById('inp-color').value,
+                labelColor: document.getElementById('inp-label-color').value,
+                isWater: document.querySelector('input[name="areaType"]:checked').value === 'water',
+                type: 'area'
+            };
+            
+            const img = document.getElementById('preview-flag');
+            if(img.src && !img.src.includes(window.location.href)) data.flag = img.src;
 
-            try {
-                const id = document.getElementById('area-id').value;
-                const data = {
-                    name: document.getElementById('inp-name').value,
-                    customId: document.getElementById('inp-custom-id').value || null,
-                    level: document.getElementById('inp-level').value,
-                    parentId: document.getElementById('inp-parent').value || null,
-                    ruler: document.getElementById('inp-ruler').value,
-                    religion: document.getElementById('inp-religion').value,
-                    government: document.getElementById('inp-gov').value,
-                    color: document.getElementById('inp-color').value,
-                    labelColor: document.getElementById('inp-label-color').value,
-                    isWater: document.querySelector('input[name="areaType"]:checked').value === 'water',
-                    flag: document.getElementById('preview-flag').src.includes('data:') ? document.getElementById('preview-flag').src : null,
-                    type: 'area'
-                };
-                if (!id) {
-                    data.geoJson = JSON.stringify(currentDrawLayer.toGeoJSON());
-                    data.createdAt = new Date().toISOString();
-                    data.originalName = data.name; data.originalRuler = data.ruler; data.originalColor = data.color;
-                    await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
-                } else {
-                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), data, { merge: true });
-                }
-                closeModal('modal-area'); 
-                currentDrawLayer = null;
-            } catch(err) {
-                console.error("Save error:", err);
-                showConfirmModal("บันทึกไม่สำเร็จ", "เกิดข้อผิดพลาด: " + err.message + "\n(กรุณาตรวจสอบการเชื่อมต่อหรือสิทธิ์การใช้งาน)", null, true);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+            if(!id) {
+                data.geoJson = JSON.stringify(currentDrawLayer.toGeoJSON());
+                data.createdAt = new Date().toISOString();
+                data.originalName = data.name; data.originalRuler = data.ruler; data.originalColor = data.color;
             }
+
+            await saveToFirestore(data, id);
+            closeModal('modal-area'); currentDrawLayer = null;
         }
 
-        // --- War & Management ---
-        window.openWarModal = (targetId) => {
-            const target = entities.find(e => e.id === targetId);
-            if (!target) return;
-            document.getElementById('war-target-id').value = targetId;
-            document.getElementById('war-target-name').innerText = target.name;
-            const attackerSelect = document.getElementById('war-attacker-select');
-            attackerSelect.innerHTML = '';
-            const myEmpires = entities.filter(e => !e.isWater && !e.isAnnexed && !e.isVassal && !e.isColony && e.id !== targetId && e.type === 'area');
-            if (myEmpires.length === 0) { 
-                showConfirmModal("แจ้งเตือน", "คุณไม่มีพื้นที่ที่เป็นอิสระในการทำสงคราม", null, true);
-                return; 
+        // --- Helpers ---
+        function validateAuth() {
+            if (!window.userId) {
+                showConfirmModal("ยังไม่เข้าสู่ระบบ", "กรุณาเข้าสู่ระบบเพื่อบันทึกข้อมูล", null, true);
+                return false;
             }
-            myEmpires.forEach(e => {
-                const opt = document.createElement('option'); opt.value = e.id; opt.text = `${e.name} (${getHierarchyName(e.level)})`; attackerSelect.appendChild(opt);
+            return true;
+        }
+
+        async function saveToFirestore(data, id = null) {
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires');
+                if(id) await setDoc(doc(colRef, id), data, {merge: true});
+                else await addDoc(colRef, data);
+            } catch(e) { showConfirmModal("Error", e.message, null, true); }
+        }
+
+        window.openWarModal = (tid) => {
+            const t = entities.find(e => e.id === tid);
+            document.getElementById('war-target-id').value = tid;
+            document.getElementById('war-target-name').innerText = t.name;
+            const sel = document.getElementById('war-attacker-select'); sel.innerHTML = '';
+            entities.filter(e => !e.isWater && !e.isAnnexed && e.type === 'area' && e.id !== tid).forEach(e => {
+                const opt = document.createElement('option'); opt.value = e.id; opt.text = e.name; sel.appendChild(opt);
             });
             document.getElementById('modal-war').classList.remove('hidden');
-        };
+        }
 
         window.confirmWarAction = async (type) => {
-            const targetId = document.getElementById('war-target-id').value;
-            const attackerId = document.getElementById('war-attacker-select').value;
-            const target = entities.find(e => e.id === targetId);
-            const attacker = entities.find(e => e.id === attackerId);
-            if (!target || !attacker) return;
+            const tid = document.getElementById('war-target-id').value;
+            const aid = document.getElementById('war-attacker-select').value;
+            const attacker = entities.find(e => e.id === aid);
             
-            try {
-                const updateData = {};
-                if (!target.originalColor) updateData.originalColor = target.color;
-                if (!target.originalName) updateData.originalName = target.name;
-                if (!target.originalRuler) updateData.originalRuler = target.ruler;
-
-                if (type === 'annex') { updateData.color = attacker.color; updateData.ruler = attacker.ruler; updateData.isAnnexed = true; updateData.annexedByName = attacker.name; }
-                else if (type === 'vassal') { updateData.color = attacker.color; updateData.isVassal = true; updateData.vassalOfName = attacker.name; }
-                else if (type === 'colony') { updateData.isColony = true; updateData.colonyOfName = attacker.name; }
-                
-                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', targetId), updateData, { merge: true });
-                closeModal('modal-war');
-            } catch(e) {
-                showConfirmModal("ผิดพลาด", "ไม่สามารถทำสงครามได้: " + e.message, null, true);
-            }
-        };
-
-        // --- NEW: Custom Confirm Modal Logic ---
-        window.showConfirmModal = (title, msg, actionFn, isAlert = false) => {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-msg').innerText = msg;
-            pendingConfirmAction = actionFn;
-            const confirmBtn = document.querySelector('#modal-confirm button:last-child');
-            const cancelBtn = document.querySelector('#modal-confirm button:first-child');
+            const updates = { isAnnexed: type==='annex', isVassal: type==='vassal', isColony: type==='colony' };
+            if(type === 'annex') { updates.color = attacker.color; updates.annexedByName = attacker.name; updates.ruler = attacker.ruler; }
             
-            if(isAlert) {
-                confirmBtn.innerText = "ตกลง";
-                cancelBtn.classList.add('hidden');
-                confirmBtn.onclick = () => closeModal('modal-confirm');
-            } else {
-                confirmBtn.innerText = "ยืนยัน";
-                cancelBtn.classList.remove('hidden');
-                confirmBtn.onclick = executePendingConfirm;
-            }
-            
-            document.getElementById('modal-confirm').classList.remove('hidden');
+            await setDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', tid), updates, {merge: true});
+            closeModal('modal-war');
         }
 
-        window.executePendingConfirm = async () => {
-            if (pendingConfirmAction) await pendingConfirmAction();
-            closeModal('modal-confirm');
-            pendingConfirmAction = null;
-        }
-
-        // --- Replaced Functions using Custom Confirm ---
-        window.declareIndependence = async (id) => {
-            showConfirmModal("ประกาศเอกราช", "คุณต้องการประกาศเอกราชใช่หรือไม่?", async () => {
-                try {
-                    const ent = entities.find(e => e.id === id);
-                    const updateData = {
-                        color: ent.originalColor || ent.color, ruler: ent.originalRuler || ent.ruler,
-                        isAnnexed: false, isVassal: false, isColony: false,
-                        annexedByName: null, vassalOfName: null, colonyOfName: null
-                    };
-                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), updateData, { merge: true });
-                } catch(e) { showConfirmModal("ผิดพลาด", e.message, null, true); }
-            });
-        };
-
-        window.confirmDelete = async (id) => {
-            showConfirmModal("ยืนยันการลบ", "การกระทำนี้ไม่สามารถย้อนกลับได้ ต้องการลบหรือไม่?", async () => {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id));
-                } catch(e) { showConfirmModal("ลบไม่สำเร็จ", e.message, null, true); }
+        window.declareIndependence = (id) => {
+            showConfirmModal("กู้เอกราช", "ต้องการประกาศอิสรภาพหรือไม่?", async () => {
+                const ent = entities.find(e => e.id === id);
+                await setDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', id), {
+                    isAnnexed: false, isVassal: false, isColony: false,
+                    color: ent.originalColor || ent.color, ruler: ent.originalRuler || ent.ruler
+                }, {merge: true});
             });
         }
+
+        window.confirmDelete = (id) => showConfirmModal("ลบข้อมูล", "ยืนยันการลบ?", async () => await deleteDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', id)));
 
         window.openEditModal = (id) => {
             const ent = entities.find(e => e.id === id);
-            if (!ent) return;
             document.getElementById('modal-area').classList.remove('hidden');
-            document.getElementById('modal-title').innerText = "แก้ไขเขตปกครอง";
             document.getElementById('area-id').value = ent.id;
             document.getElementById('inp-name').value = ent.name;
             document.getElementById('inp-custom-id').value = ent.customId || '';
@@ -1430,30 +1736,56 @@
             document.getElementById('inp-religion').value = ent.religion;
             document.getElementById('inp-gov').value = ent.government;
             document.getElementById('inp-color').value = ent.color;
-            document.getElementById('inp-label-color').value = ent.labelColor || '#4E342E';
-            
-            if (ent.flag) {
-                document.getElementById('preview-flag').src = ent.flag; document.getElementById('preview-flag').classList.remove('hidden'); document.getElementById('preview-flag-placeholder').classList.add('hidden');
-            } else {
-                 document.getElementById('preview-flag').classList.add('hidden'); document.getElementById('preview-flag-placeholder').classList.remove('hidden');
+            if(ent.flag) {
+                document.getElementById('preview-flag').src = ent.flag;
+                document.getElementById('preview-flag').classList.remove('hidden');
+                document.getElementById('preview-flag-placeholder').classList.add('hidden');
             }
-            const typeRadios = document.getElementsByName('areaType');
-            for(let r of typeRadios) { r.checked = (r.value === (ent.isWater ? 'water' : 'land')); }
         }
 
-        // Helpers
-        window.cancelDraw = () => { if (currentDrawLayer && !document.getElementById('area-id').value) drawnItems.removeLayer(currentDrawLayer); closeModal('modal-area'); closeModal('modal-road'); closeModal('modal-marker'); currentDrawLayer = null; };
-        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
-        function updateParentSelect(currentRank) {
-            const parentSelect = document.getElementById('inp-parent');
-            if(!parentSelect) return;
-            parentSelect.innerHTML = '<option value="">-- เป็นอิสระ / สูงสุด --</option>';
-            entities.filter(e => getRank(e.level) > currentRank && !e.isWater).forEach(p => {
-                const opt = document.createElement('option'); opt.value = p.id; opt.text = `${p.name} (${getHierarchyName(p.level)})`; parentSelect.appendChild(opt);
-            });
+        document.getElementById('form-login').onsubmit = async (e) => {
+            e.preventDefault();
+            try { await signInWithEmailAndPassword(auth, document.getElementById('login-username').value, document.getElementById('login-password').value); closeModal('modal-login'); }
+            catch(err) { showConfirmModal("Login Failed", err.message, null, true); }
         }
-        function getRank(levelId) { return HIERARCHY.find(x => x.id === levelId)?.rank || 0; }
-        function getHierarchyName(id) { return HIERARCHY.find(x => x.id === id)?.name || id; }
+        document.getElementById('form-register').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const u = await createUserWithEmailAndPassword(auth, document.getElementById('reg-email').value, document.getElementById('reg-password').value);
+                await updateProfile(u.user, { displayName: document.getElementById('reg-username').value });
+                closeModal('modal-register');
+            } catch(err) { showConfirmModal("Register Failed", err.message, null, true); }
+        }
+        window.logoutUser = () => signOut(auth);
+
+        window.cancelDraw = () => { if(currentDrawLayer && !document.getElementById('area-id').value) drawnItems.removeLayer(currentDrawLayer); document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden')); currentDrawLayer=null; }
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.showConfirmModal = (t, m, fn, alert=false) => {
+            document.getElementById('confirm-title').innerText = t; document.getElementById('confirm-msg').innerText = m; pendingConfirmAction = fn;
+            const btns = document.querySelectorAll('#modal-confirm button');
+            btns[0].style.display = alert ? 'none' : 'block'; 
+            btns[1].innerText = alert ? 'ตกลง' : 'ยืนยัน';
+            btns[1].onclick = alert ? () => closeModal('modal-confirm') : executePendingConfirm;
+            document.getElementById('modal-confirm').classList.remove('hidden');
+        }
+        window.executePendingConfirm = async () => { if(pendingConfirmAction) await pendingConfirmAction(); closeModal('modal-confirm'); }
+        
+        function updateParentSelect(rank) {
+            const s = document.getElementById('inp-parent'); s.innerHTML = '<option value="">-- เป็นอิสระ --</option>';
+            entities.filter(e => getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+        }
+        function getRank(id) { return HIERARCHY.find(x=>x.id===id)?.rank || 0; }
+        function getHierarchyName(id) { return HIERARCHY.find(x=>x.id===id)?.name || id; }
+
+        document.getElementById('inp-flag').onchange = (e) => {
+            if(e.target.files[0]) {
+                const r = new FileReader(); r.onload = (ev) => { 
+                    document.getElementById('preview-flag').src = ev.target.result; 
+                    document.getElementById('preview-flag').classList.remove('hidden');
+                    document.getElementById('preview-flag-placeholder').classList.add('hidden');
+                }; r.readAsDataURL(e.target.files[0]);
+            }
+        }
     </script>
 </body>
 </html>
