@@ -195,6 +195,12 @@
             transform: translateY(2px);
             box-shadow: 0 2px 0 #3E2723;
         }
+        .btn-ancient:disabled {
+            background: #BCAAA4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
         /* Icon Grid */
         .icon-grid {
@@ -1230,60 +1236,90 @@
             });
         }
 
-        // --- Save Functions ---
+        // --- Save Functions (ROBUST) ---
         window.saveRoad = async () => {
-             const data = {
-                name: document.getElementById('road-name').value || 'เส้นทางไร้ชื่อ',
-                customId: document.getElementById('road-custom-id').value || null,
-                roadType: document.getElementById('road-type').value,
-                color: document.getElementById('road-color').value,
-                geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
-                type: 'road', level: 'road'
-            };
-            await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
-            closeModal('modal-road'); currentDrawLayer = null;
+            const btn = document.querySelector('#modal-road button.btn-ancient');
+            if(btn) { btn.innerHTML = 'กำลังบันทึก...'; btn.disabled = true; }
+            try {
+                const data = {
+                    name: document.getElementById('road-name').value || 'เส้นทางไร้ชื่อ',
+                    customId: document.getElementById('road-custom-id').value || null,
+                    roadType: document.getElementById('road-type').value,
+                    color: document.getElementById('road-color').value,
+                    geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
+                    type: 'road', level: 'road'
+                };
+                await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
+                closeModal('modal-road'); currentDrawLayer = null;
+            } catch(e) {
+                showConfirmModal("บันทึกไม่สำเร็จ", e.message, null, true);
+            } finally {
+                if(btn) { btn.innerHTML = 'บันทึกเส้นทาง'; btn.disabled = false; }
+            }
         }
 
         window.saveMarker = async () => {
-            const name = document.getElementById('marker-name').value || 'จุดสำคัญ';
-            const color = document.getElementById('marker-color').value;
-            const data = {
-                name: name,
-                icon: selectedMarkerIcon,
-                color: color,
-                geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
-                type: 'marker', level: 'marker'
-            };
-            await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
-            closeModal('modal-marker'); currentDrawLayer = null;
+            const btn = document.querySelector('#modal-marker button.btn-ancient');
+            if(btn) { btn.innerHTML = 'กำลังบันทึก...'; btn.disabled = true; }
+            try {
+                const name = document.getElementById('marker-name').value || 'จุดสำคัญ';
+                const color = document.getElementById('marker-color').value;
+                const data = {
+                    name: name,
+                    icon: selectedMarkerIcon,
+                    color: color,
+                    geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
+                    type: 'marker', level: 'marker'
+                };
+                await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
+                closeModal('modal-marker'); currentDrawLayer = null;
+            } catch(e) {
+                showConfirmModal("บันทึกไม่สำเร็จ", e.message, null, true);
+            } finally {
+                if(btn) { btn.innerHTML = 'ปักหมุด'; btn.disabled = false; }
+            }
         }
 
         async function saveArea(e) {
             e.preventDefault();
-            const id = document.getElementById('area-id').value;
-            const data = {
-                name: document.getElementById('inp-name').value,
-                customId: document.getElementById('inp-custom-id').value || null,
-                level: document.getElementById('inp-level').value,
-                parentId: document.getElementById('inp-parent').value || null,
-                ruler: document.getElementById('inp-ruler').value,
-                religion: document.getElementById('inp-religion').value,
-                government: document.getElementById('inp-gov').value,
-                color: document.getElementById('inp-color').value,
-                labelColor: document.getElementById('inp-label-color').value,
-                isWater: document.querySelector('input[name="areaType"]:checked').value === 'water',
-                flag: document.getElementById('preview-flag').src.includes('data:') ? document.getElementById('preview-flag').src : null,
-                type: 'area'
-            };
-            if (!id) {
-                data.geoJson = JSON.stringify(currentDrawLayer.toGeoJSON());
-                data.createdAt = new Date().toISOString();
-                data.originalName = data.name; data.originalRuler = data.ruler; data.originalColor = data.color;
-                await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
-            } else {
-                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), data, { merge: true });
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="material-icons-round animate-spin text-sm">refresh</span> กำลังบันทึก...';
+            btn.disabled = true;
+
+            try {
+                const id = document.getElementById('area-id').value;
+                const data = {
+                    name: document.getElementById('inp-name').value,
+                    customId: document.getElementById('inp-custom-id').value || null,
+                    level: document.getElementById('inp-level').value,
+                    parentId: document.getElementById('inp-parent').value || null,
+                    ruler: document.getElementById('inp-ruler').value,
+                    religion: document.getElementById('inp-religion').value,
+                    government: document.getElementById('inp-gov').value,
+                    color: document.getElementById('inp-color').value,
+                    labelColor: document.getElementById('inp-label-color').value,
+                    isWater: document.querySelector('input[name="areaType"]:checked').value === 'water',
+                    flag: document.getElementById('preview-flag').src.includes('data:') ? document.getElementById('preview-flag').src : null,
+                    type: 'area'
+                };
+                if (!id) {
+                    data.geoJson = JSON.stringify(currentDrawLayer.toGeoJSON());
+                    data.createdAt = new Date().toISOString();
+                    data.originalName = data.name; data.originalRuler = data.ruler; data.originalColor = data.color;
+                    await setDoc(doc(collection(db, 'artifacts', appId, 'users', userId, 'fantasy_empires')), data);
+                } else {
+                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), data, { merge: true });
+                }
+                closeModal('modal-area'); 
+                currentDrawLayer = null;
+            } catch(err) {
+                console.error("Save error:", err);
+                showConfirmModal("บันทึกไม่สำเร็จ", "เกิดข้อผิดพลาด: " + err.message + "\n(กรุณาตรวจสอบการเชื่อมต่อหรือสิทธิ์การใช้งาน)", null, true);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
-            closeModal('modal-area'); currentDrawLayer = null;
         }
 
         // --- War & Management ---
@@ -1311,16 +1347,22 @@
             const target = entities.find(e => e.id === targetId);
             const attacker = entities.find(e => e.id === attackerId);
             if (!target || !attacker) return;
-            const updateData = {};
-            if (!target.originalColor) updateData.originalColor = target.color;
-            if (!target.originalName) updateData.originalName = target.name;
-            if (!target.originalRuler) updateData.originalRuler = target.ruler;
+            
+            try {
+                const updateData = {};
+                if (!target.originalColor) updateData.originalColor = target.color;
+                if (!target.originalName) updateData.originalName = target.name;
+                if (!target.originalRuler) updateData.originalRuler = target.ruler;
 
-            if (type === 'annex') { updateData.color = attacker.color; updateData.ruler = attacker.ruler; updateData.isAnnexed = true; updateData.annexedByName = attacker.name; }
-            else if (type === 'vassal') { updateData.color = attacker.color; updateData.isVassal = true; updateData.vassalOfName = attacker.name; }
-            else if (type === 'colony') { updateData.isColony = true; updateData.colonyOfName = attacker.name; }
-            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', targetId), updateData, { merge: true });
-            closeModal('modal-war');
+                if (type === 'annex') { updateData.color = attacker.color; updateData.ruler = attacker.ruler; updateData.isAnnexed = true; updateData.annexedByName = attacker.name; }
+                else if (type === 'vassal') { updateData.color = attacker.color; updateData.isVassal = true; updateData.vassalOfName = attacker.name; }
+                else if (type === 'colony') { updateData.isColony = true; updateData.colonyOfName = attacker.name; }
+                
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', targetId), updateData, { merge: true });
+                closeModal('modal-war');
+            } catch(e) {
+                showConfirmModal("ผิดพลาด", "ไม่สามารถทำสงครามได้: " + e.message, null, true);
+            }
         };
 
         // --- NEW: Custom Confirm Modal Logic ---
@@ -1353,19 +1395,23 @@
         // --- Replaced Functions using Custom Confirm ---
         window.declareIndependence = async (id) => {
             showConfirmModal("ประกาศเอกราช", "คุณต้องการประกาศเอกราชใช่หรือไม่?", async () => {
-                const ent = entities.find(e => e.id === id);
-                const updateData = {
-                    color: ent.originalColor || ent.color, ruler: ent.originalRuler || ent.ruler,
-                    isAnnexed: false, isVassal: false, isColony: false,
-                    annexedByName: null, vassalOfName: null, colonyOfName: null
-                };
-                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), updateData, { merge: true });
+                try {
+                    const ent = entities.find(e => e.id === id);
+                    const updateData = {
+                        color: ent.originalColor || ent.color, ruler: ent.originalRuler || ent.ruler,
+                        isAnnexed: false, isVassal: false, isColony: false,
+                        annexedByName: null, vassalOfName: null, colonyOfName: null
+                    };
+                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id), updateData, { merge: true });
+                } catch(e) { showConfirmModal("ผิดพลาด", e.message, null, true); }
             });
         };
 
         window.confirmDelete = async (id) => {
             showConfirmModal("ยืนยันการลบ", "การกระทำนี้ไม่สามารถย้อนกลับได้ ต้องการลบหรือไม่?", async () => {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id));
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', id));
+                } catch(e) { showConfirmModal("ลบไม่สำเร็จ", e.message, null, true); }
             });
         }
 
