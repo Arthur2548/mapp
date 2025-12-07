@@ -95,7 +95,7 @@
             top: 0;
             left: 0;
             height: 100%;
-            width: 320px;
+            width: 340px; /* Slightly wider for hierarchy */
             background: rgba(255, 251, 240, 0.95);
             backdrop-filter: blur(12px);
             border-right: 2px dashed var(--wood-light);
@@ -107,7 +107,7 @@
         }
 
         .sidebar-collapsed {
-            transform: translateX(-320px);
+            transform: translateX(-340px);
         }
 
         .toggle-sidebar-btn {
@@ -388,6 +388,16 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
+        .icon-category-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #8D6E63;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            border-bottom: 1px dashed #D7CCC8;
+            padding-bottom: 2px;
+        }
+
         /* Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -412,6 +422,27 @@
             border: 1px solid rgba(0,0,0,0.1);
             display: inline-block;
         }
+
+        /* Hierarchy Path in Popup */
+        .hierarchy-path {
+            font-size: 10px;
+            color: #795548;
+            background-color: #EFEBE9;
+            padding: 4px 8px;
+            border-radius: 8px;
+            margin-top: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+        .h-node::after {
+            content: "›";
+            margin-left: 4px;
+            color: #BCAAA4;
+        }
+        .h-node:last-child::after { content: ""; }
+        .h-node:last-child { font-weight: bold; color: #5D4037; }
 
         /* Cesium Widget Cleanups */
         .cesium-widget-credits { display: none !important; }
@@ -510,12 +541,15 @@
                 </h3>
                 <div class="input-group mb-3">
                     <span class="material-icons-round icon">search</span>
-                    <input type="text" id="search-input" placeholder="ค้นหาชื่อ..." class="input-cute py-2 text-sm">
+                    <input type="text" id="search-input" placeholder="ค้นหาชื่อ, ผู้ปกครอง, ศักดิ์..." class="input-cute py-2 text-sm">
                 </div>
                 
                 <div class="mb-3">
-                     <div class="font-bold text-[#8D6E63] text-[11px] uppercase tracking-wider mb-2">กรองตามศักดิ์ปกครอง</div>
-                     <div id="filter-levels-container" class="grid grid-cols-1 gap-1 max-h-32 overflow-y-auto custom-scrollbar pl-1">
+                     <div class="font-bold text-[#8D6E63] text-[11px] uppercase tracking-wider mb-2 flex justify-between items-center">
+                         <span>กรองตามศักดิ์ปกครอง</span>
+                         <button onclick="toggleAllLevels(true)" class="text-[9px] text-blue-500 hover:underline">เลือกทั้งหมด</button>
+                     </div>
+                     <div id="filter-levels-container" class="grid grid-cols-1 gap-1 max-h-40 overflow-y-auto custom-scrollbar pl-1">
                          <!-- JS Populates this -->
                      </div>
                 </div>
@@ -591,34 +625,17 @@
     <div id="modal-login" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper modal-paper-auth w-[380px] p-8">
             <button onclick="closeModal('modal-login')" class="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition z-10"><span class="material-icons-round">close</span></button>
-            
-            <!-- Decorative Blobs -->
-            <div class="blob blob-1"></div>
-            <div class="blob blob-2"></div>
-            
             <div class="relative z-10 text-center">
                 <div class="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg border-4 border-[#FFF3E0]">
                     <span class="material-icons-round text-4xl text-[#5D4037]">lock_open</span>
                 </div>
                 <h2 class="text-2xl text-[#5D4037] font-bold mb-1 cute-font">ยินดีต้อนรับกลับมา!</h2>
                 <p class="text-gray-500 text-xs mb-6">เข้าสู่ดินแดนแห่งจินตนาการของคุณ</p>
-
                 <form id="form-login" class="space-y-4">
-                    <div class="input-group">
-                        <span class="material-icons-round icon">person</span>
-                        <input type="text" id="login-username" class="input-cute" required placeholder="ชื่อผู้ใช้">
-                    </div>
-                    <div class="input-group">
-                         <span class="material-icons-round icon">vpn_key</span>
-                        <input type="password" id="login-password" class="input-cute" required placeholder="รหัสผ่าน">
-                    </div>
+                    <div class="input-group"><span class="material-icons-round icon">person</span><input type="text" id="login-username" class="input-cute" required placeholder="ชื่อผู้ใช้"></div>
+                    <div class="input-group"><span class="material-icons-round icon">vpn_key</span><input type="password" id="login-password" class="input-cute" required placeholder="รหัสผ่าน"></div>
                     <button type="submit" class="btn-cute w-full mt-2 shadow-lg hover:shadow-xl">เปิดประตูมิติ</button>
                 </form>
-                
-                <div class="text-center mt-6 pt-4 border-t border-dashed border-[#D7CCC8]">
-                    <p class="text-xs text-gray-500 mb-2">ยังไม่มีบัญชี?</p>
-                    <button onclick="closeModal('modal-login'); document.getElementById('modal-register').classList.remove('hidden')" class="text-sm font-bold text-[#8D6E63] hover:text-[#5D4037] underline decoration-dashed">สร้างบัญชีใหม่</button>
-                </div>
             </div>
         </div>
     </div>
@@ -627,198 +644,78 @@
     <div id="modal-register" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper modal-paper-auth w-[420px] p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button onclick="closeModal('modal-register')" class="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition z-10"><span class="material-icons-round">close</span></button>
-            
-            <div class="blob blob-1" style="background:#E1BEE7;"></div>
-            <div class="blob blob-2" style="background:#C5CAE9;"></div>
-
             <div class="relative z-10">
                 <h2 class="text-2xl text-[#5D4037] font-bold mb-6 text-center cute-font">สร้างตัวตนใหม่</h2>
                 <form id="form-register" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อ</label>
-                            <input type="text" id="reg-firstname" class="input-cute" required>
-                        </div>
-                        <div>
-                             <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">นามสกุล</label>
-                             <input type="text" id="reg-lastname" class="input-cute" required>
-                        </div>
+                        <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อ</label><input type="text" id="reg-firstname" class="input-cute" required></div>
+                        <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">นามสกุล</label><input type="text" id="reg-lastname" class="input-cute" required></div>
                     </div>
-                    <div>
-                         <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">อีเมล</label>
-                         <div class="input-group">
-                            <span class="material-icons-round icon">email</span>
-                            <input type="email" id="reg-email" class="input-cute" required placeholder="hello@example.com">
-                         </div>
-                    </div>
-                    <div>
-                         <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อผู้ใช้ (Username)</label>
-                         <div class="input-group">
-                            <span class="material-icons-round icon">face</span>
-                            <input type="text" id="reg-username" class="input-cute" required placeholder="Display Name">
-                         </div>
-                    </div>
-                    <div>
-                         <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">รหัสผ่าน</label>
-                         <div class="input-group">
-                            <span class="material-icons-round icon">lock</span>
-                            <input type="password" id="reg-password" class="input-cute" required placeholder="******">
-                         </div>
-                    </div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">อีเมล</label><div class="input-group"><span class="material-icons-round icon">email</span><input type="email" id="reg-email" class="input-cute" required placeholder="hello@example.com"></div></div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อผู้ใช้</label><div class="input-group"><span class="material-icons-round icon">face</span><input type="text" id="reg-username" class="input-cute" required placeholder="Display Name"></div></div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">รหัสผ่าน</label><div class="input-group"><span class="material-icons-round icon">lock</span><input type="password" id="reg-password" class="input-cute" required placeholder="******"></div></div>
                     <button type="submit" class="btn-cute w-full mt-4 bg-gradient-to-r from-emerald-600 to-teal-600">ลงทะเบียน</button>
                 </form>
-                 <div class="text-center mt-4 relative z-10">
-                    <button onclick="closeModal('modal-register'); document.getElementById('modal-login').classList.remove('hidden')" class="text-xs text-gray-500 hover:text-[#5D4037] underline">มีบัญชีแล้ว? เข้าสู่ระบบ</button>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Create/Edit Area (Same but styled) -->
+    <!-- Modal: Create/Edit Area -->
     <div id="modal-area" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
         <div class="modal-paper w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal('modal-area')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
-                <span class="material-icons-round text-2xl">close</span>
-            </button>
-            
-            <h2 class="text-2xl text-[#5D4037] font-bold mb-6 flex items-center gap-2 border-b border-dashed border-[#E0E0E0] pb-3 cute-font">
-                <span class="material-icons-round text-3xl text-amber-400">edit_location_alt</span>
-                <span id="modal-title">สร้างเขตปกครอง</span>
-            </h2>
-
+            <button onclick="closeModal('modal-area')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round text-2xl">close</span></button>
+            <h2 class="text-2xl text-[#5D4037] font-bold mb-6 flex items-center gap-2 border-b border-dashed border-[#E0E0E0] pb-3 cute-font"><span class="material-icons-round text-3xl text-amber-400">edit_location_alt</span><span id="modal-title">สร้างเขตปกครอง</span></h2>
             <form id="form-area" class="space-y-5">
                 <input type="hidden" id="area-id">
-                
                 <div class="flex gap-6 items-start">
-                    <!-- Flag Upload -->
                     <div class="flex-shrink-0 flex flex-col items-center w-28">
                         <div class="relative group cursor-pointer w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-50" onclick="document.getElementById('inp-flag').click()">
                             <img id="preview-flag" src="" class="w-full h-full object-cover hidden transition group-hover:brightness-90">
-                            <div id="preview-flag-placeholder" class="w-full h-full flex flex-col items-center justify-center text-gray-300 group-hover:bg-gray-100 transition">
-                                <span class="material-icons-round text-3xl">add_photo_alternate</span>
-                                <span class="text-[10px] mt-1">รูปธง/ตรา</span>
-                            </div>
+                            <div id="preview-flag-placeholder" class="w-full h-full flex flex-col items-center justify-center text-gray-300 group-hover:bg-gray-100 transition"><span class="material-icons-round text-3xl">add_photo_alternate</span><span class="text-[10px] mt-1">รูปธง/ตรา</span></div>
                         </div>
                         <input type="file" id="inp-flag" class="hidden" accept="image/*">
                     </div>
-
-                    <!-- Main Info -->
                     <div class="flex-grow space-y-4">
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อเขตปกครอง</label>
-                                <input type="text" id="inp-name" class="input-cute font-bold text-[#5D4037]" required placeholder="เช่น นครดราก้อน">
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">รหัส (ID)</label>
-                                <input type="text" id="inp-custom-id" class="input-cute font-mono text-sm" placeholder="เช่น ZONE-01">
-                            </div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อเขตปกครอง</label><input type="text" id="inp-name" class="input-cute font-bold text-[#5D4037]" required placeholder="เช่น นครดราก้อน"></div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">รหัส (ID)</label><input type="text" id="inp-custom-id" class="input-cute font-mono text-sm" placeholder="เช่น ZONE-01"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระดับศักดิ์</label>
-                                <select id="inp-level" class="input-cute cursor-pointer"></select>
-                            </div>
-                             <div>
-                                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">เขตปกครองแม่</label>
-                                <select id="inp-parent" class="input-cute text-sm cursor-pointer">
-                                    <option value="">-- เป็นอิสระ / สูงสุด --</option>
-                                </select>
-                            </div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระดับศักดิ์</label><select id="inp-level" class="input-cute cursor-pointer"></select></div>
+                             <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">เขตปกครองแม่</label><select id="inp-parent" class="input-cute text-sm cursor-pointer"><option value="">-- เป็นอิสระ / สูงสุด --</option></select></div>
                         </div>
-                         <div>
-                             <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ผู้ปกครอง</label>
-                             <input type="text" id="inp-ruler" class="input-cute" required>
-                         </div>
+                         <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ผู้ปกครอง</label><input type="text" id="inp-ruler" class="input-cute" required></div>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-3 gap-4 pt-2">
-                    <div>
-                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ศาสนา</label>
-                        <select id="inp-religion" class="input-cute text-sm">
-                            <option>พุทธ</option><option>คริสต์</option><option>อิสลาม</option>
-                            <option>พราหมณ์ฮินดู</option><option>ศาสนาดั้งเดิม</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระบอบปกครอง</label>
-                        <select id="inp-gov" class="input-cute text-sm">
-                            <option>สมบูรณาญาสิทธิราชย์</option><option>ประชาธิปไตย</option>
-                            <option>คอมมิวนิสต์</option><option>ปริมิตาญาสิทธิราชย์</option>
-                        </select>
-                    </div>
-                    <div>
-                         <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ประเภทพื้นที่</label>
-                         <div class="flex gap-2 mt-1">
-                             <label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-2 rounded-xl border border-gray-200 bg-white hover:bg-amber-50 transition">
-                                 <input type="radio" name="areaType" value="land" checked class="accent-[#5D4037]"> <span class="text-xs font-bold">ดินแดน</span>
-                             </label>
-                             <label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-2 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 transition">
-                                 <input type="radio" name="areaType" value="water" class="accent-[#2980B9]"> <span class="text-xs font-bold text-blue-600">น่านน้ำ</span>
-                             </label>
-                         </div>
-                    </div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ศาสนา</label><select id="inp-religion" class="input-cute text-sm"><option>พุทธ</option><option>คริสต์</option><option>อิสลาม</option><option>พราหมณ์ฮินดู</option><option>ศาสนาดั้งเดิม</option></select></div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระบอบปกครอง</label><select id="inp-gov" class="input-cute text-sm"><option>สมบูรณาญาสิทธิราชย์</option><option>ประชาธิปไตย</option><option>คอมมิวนิสต์</option><option>ปริมิตาญาสิทธิราชย์</option></select></div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ประเภทพื้นที่</label><div class="flex gap-2 mt-1"><label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-2 rounded-xl border border-gray-200 bg-white hover:bg-amber-50 transition"><input type="radio" name="areaType" value="land" checked class="accent-[#5D4037]"> <span class="text-xs font-bold">ดินแดน</span></label><label class="flex-1 flex items-center justify-center gap-1 cursor-pointer py-2 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 transition"><input type="radio" name="areaType" value="water" class="accent-[#2980B9]"> <span class="text-xs font-bold text-blue-600">น่านน้ำ</span></label></div></div>
                 </div>
-
                 <div class="pt-4 grid grid-cols-2 gap-4 border-t border-dashed border-[#E0E0E0] mt-4">
-                    <div>
-                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีประจำเขต</label>
-                        <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200">
-                            <input type="color" id="inp-color" class="w-10 h-8 border-0 rounded cursor-pointer bg-transparent">
-                            <span class="text-xs text-gray-500">ใช้แบ่งแยกพื้นที่</span>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีตัวอักษร</label>
-                        <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200">
-                            <input type="color" id="inp-label-color" class="w-10 h-8 border-0 rounded cursor-pointer bg-transparent" value="#4E342E">
-                            <span class="text-xs text-gray-500">ชื่อบนแผนที่</span>
-                        </div>
-                    </div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีประจำเขต</label><div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200"><input type="color" id="inp-color" class="w-10 h-8 border-0 rounded cursor-pointer bg-transparent"><span class="text-xs text-gray-500">ใช้แบ่งแยกพื้นที่</span></div></div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีตัวอักษร</label><div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200"><input type="color" id="inp-label-color" class="w-10 h-8 border-0 rounded cursor-pointer bg-transparent" value="#4E342E"><span class="text-xs text-gray-500">ชื่อบนแผนที่</span></div></div>
                 </div>
-
                 <div class="flex justify-end items-center mt-6 gap-3">
                     <button type="button" onclick="cancelDraw()" class="px-5 py-2 text-gray-500 hover:text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition">ยกเลิก</button>
-                    <button type="submit" class="btn-cute">
-                        <span class="material-icons-round text-sm">save</span> บันทึกข้อมูล
-                    </button>
+                    <button type="submit" class="btn-cute"><span class="material-icons-round text-sm">save</span> บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
     </div>
     
-    <!-- Modal: Road (Updated with Weight Slider) -->
+    <!-- Modal: Road -->
     <div id="modal-road" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
         <div class="modal-paper w-96 p-6 relative">
-            <button onclick="closeModal('modal-road')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
-                <span class="material-icons-round">close</span>
-            </button>
-            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font">
-                <span class="material-icons-round text-amber-700">add_road</span> สร้างเส้นทาง
-            </h3>
+            <button onclick="closeModal('modal-road')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
+            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font"><span class="material-icons-round text-amber-700">add_road</span> สร้างเส้นทาง</h3>
             <div class="space-y-3">
                 <input type="hidden" id="road-id-hidden">
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อเส้นทาง</label>
-                    <input type="text" id="road-name" placeholder="ชื่อถนน / ทางหลวง..." class="input-cute">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ประเภท</label>
-                    <select id="road-type" class="input-cute bg-white">
-                        <option value="trade">ถนนการค้า (เส้นทึบ)</option>
-                        <option value="army">เส้นทางเดินทัพ (เส้นประ)</option>
-                    </select>
-                </div>
+                <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อเส้นทาง</label><input type="text" id="road-name" placeholder="ชื่อถนน / ทางหลวง..." class="input-cute"></div>
+                <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ประเภท</label><select id="road-type" class="input-cute bg-white"><option value="trade">ถนนการค้า (เส้นทึบ)</option><option value="army">เส้นทางเดินทัพ (เส้นประ)</option></select></div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีเส้นทาง</label>
-                        <input type="color" id="road-color" value="#5D4037" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ความหนา: <span id="road-weight-val">4</span></label>
-                        <input type="range" id="road-weight" min="1" max="15" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#5D4037] mt-2">
-                    </div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีเส้นทาง</label><input type="color" id="road-color" value="#5D4037" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm"></div>
+                    <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ความหนา: <span id="road-weight-val">4</span></label><input type="range" id="road-weight" min="1" max="15" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#5D4037] mt-2"></div>
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-6">
@@ -828,46 +725,33 @@
         </div>
     </div>
 
-    <!-- Modal Marker (Updated with Iconify Search) -->
+    <!-- Modal Marker (Enhanced with Quick Select) -->
     <div id="modal-marker" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
-        <div class="modal-paper w-[450px] p-6 relative">
-            <button onclick="closeModal('modal-marker')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
-                <span class="material-icons-round">close</span>
-            </button>
-            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font">
-                <span class="material-icons-round text-rose-500">place</span> ปักหมุดสถานที่
-            </h3>
+        <div class="modal-paper w-[500px] p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('modal-marker')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
+            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font"><span class="material-icons-round text-rose-500">place</span> ปักหมุดสถานที่</h3>
             <div class="space-y-4">
-                <div class="input-group">
-                    <span class="material-icons-round icon">edit</span>
-                    <input type="text" id="marker-name" placeholder="ชื่อสถานที่..." class="input-cute font-bold text-[#5D4037]">
-                </div>
+                <div class="input-group"><span class="material-icons-round icon">edit</span><input type="text" id="marker-name" placeholder="ชื่อสถานที่..." class="input-cute font-bold text-[#5D4037]"></div>
                 
-                <!-- Iconify Search Section -->
+                <!-- Quick Icon Select -->
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <label class="text-xs font-bold text-[#8D6E63] ml-1 mb-2 block">เลือกไอคอน (ค้นหาภาษาอังกฤษ)</label>
-                    <div class="flex gap-2 mb-2">
-                        <input type="text" id="icon-search-query" placeholder="เช่น castle, sword, tree..." class="input-cute text-sm py-1.5 px-3">
-                        <button onclick="searchIcons()" class="bg-[#5D4037] text-white rounded-xl px-3 hover:bg-[#4E342E]"><span class="material-icons-round">search</span></button>
-                    </div>
-                    
-                    <div id="icon-results" class="icon-grid h-32 overflow-y-auto custom-scrollbar p-1">
-                        <div class="col-span-full text-center text-gray-400 text-xs py-4">พิมพ์ค้นหาหรือเลือกจากด้านล่าง</div>
-                    </div>
-                    
-                    <!-- Common Icons Quick Select -->
-                    <div class="mt-2 pt-2 border-t border-gray-200">
-                        <label class="text-[10px] text-gray-400 mb-1 block">ยอดนิยม</label>
-                        <div class="flex gap-2 overflow-x-auto pb-1 custom-scrollbar" id="common-icons-container">
-                             <!-- JS Populates -->
-                        </div>
+                    <label class="text-xs font-bold text-[#8D6E63] ml-1 mb-2 block">เลือกไอคอนด่วน (ไม่ต้องพิมพ์)</label>
+                    <div id="quick-icons-container" class="h-48 overflow-y-auto custom-scrollbar p-1 icon-grid">
+                        <!-- Populated by JS -->
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีหมุด</label>
-                    <input type="color" id="marker-color" value="#E53935" class="w-full h-8 rounded-lg cursor-pointer border-2 border-white shadow-sm">
+                <!-- API Search -->
+                <div class="bg-white p-3 rounded-xl border border-gray-200">
+                    <label class="text-[10px] font-bold text-gray-400 ml-1 mb-1 block">หรือค้นหาเพิ่มเติม (Iconify)</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="icon-search-query" placeholder="เช่น dragon, sword, magic..." class="input-cute text-sm py-1.5 px-3">
+                        <button onclick="searchIcons()" class="bg-[#5D4037] text-white rounded-xl px-3 hover:bg-[#4E342E]"><span class="material-icons-round">search</span></button>
+                    </div>
+                    <div id="icon-results" class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar min-h-[40px]"></div>
                 </div>
+
+                <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีหมุด</label><input type="color" id="marker-color" value="#E53935" class="w-full h-8 rounded-lg cursor-pointer border-2 border-white shadow-sm"></div>
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button onclick="cancelDraw()" class="px-4 py-2 text-gray-500 text-sm font-bold">ยกเลิก</button>
@@ -879,9 +763,7 @@
     <!-- Confirmation Modal -->
     <div id="modal-confirm" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper w-80 p-6 text-center transform scale-100 transition-all">
-            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span class="material-icons-round text-2xl">priority_high</span>
-            </div>
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3"><span class="material-icons-round text-2xl">priority_high</span></div>
             <h3 class="text-lg font-bold text-[#5D4037] mb-2 cute-font" id="confirm-title">ยืนยัน</h3>
             <p class="text-sm text-gray-600 mb-6" id="confirm-msg">...</p>
             <div class="flex gap-2 justify-center">
@@ -894,36 +776,19 @@
     <!-- War Room Modal -->
     <div id="modal-war" class="fixed inset-0 modal-overlay hidden z-[2100] flex items-center justify-center">
         <div class="modal-paper w-96 p-6 relative">
-            <button onclick="closeModal('modal-war')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
-                <span class="material-icons-round">close</span>
-            </button>
-            <h3 class="text-xl font-bold text-red-800 mb-4 flex items-center gap-2 border-b border-red-200 pb-2 cute-font">
-                <span class="material-icons-round">sports_kabaddi</span> ประกาศสงคราม
-            </h3>
+            <button onclick="closeModal('modal-war')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
+            <h3 class="text-xl font-bold text-red-800 mb-4 flex items-center gap-2 border-b border-red-200 pb-2 cute-font"><span class="material-icons-round">sports_kabaddi</span> ประกาศสงคราม</h3>
             <div class="space-y-4">
-                <div class="bg-red-50 p-3 rounded-xl border border-red-100">
-                    <label class="text-xs font-bold text-red-700 block mb-1">เป้าหมาย</label>
-                    <div id="war-target-name" class="font-bold text-gray-800 text-lg">---</div>
-                    <input type="hidden" id="war-target-id">
-                </div>
+                <div class="bg-red-50 p-3 rounded-xl border border-red-100"><label class="text-xs font-bold text-red-700 block mb-1">เป้าหมาย</label><div id="war-target-name" class="font-bold text-gray-800 text-lg">---</div><input type="hidden" id="war-target-id"></div>
                 <div class="text-center text-gray-300 font-bold text-xl my-1">VS</div>
-                <div>
-                    <label class="text-xs font-bold text-[#5D4037] block mb-1 ml-2">ฝ่ายรุก (เลือกดินแดนของคุณ)</label>
-                    <select id="war-attacker-select" class="input-cute w-full bg-white cursor-pointer"></select>
-                </div>
+                <div><label class="text-xs font-bold text-[#5D4037] block mb-1 ml-2">ฝ่ายรุก (เลือกดินแดนของคุณ)</label><select id="war-attacker-select" class="input-cute w-full bg-white cursor-pointer"></select></div>
             </div>
             <div class="mt-6">
                 <label class="text-xs font-bold text-gray-500 block mb-2 text-center">ผลลัพธ์</label>
                 <div class="grid grid-cols-3 gap-2">
-                    <button onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1">
-                        <span class="material-icons-round text-base">flag</span> ผนวก
-                    </button>
-                    <button onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1">
-                        <span class="material-icons-round text-base">security</span> ประเทศราช
-                    </button>
-                    <button onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1">
-                        <span class="material-icons-round text-base">public</span> อาณานิคม
-                    </button>
+                    <button onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">flag</span> ผนวก</button>
+                    <button onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
+                    <button onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
                 </div>
             </div>
         </div>
@@ -956,8 +821,6 @@
         let selectedMarkerIconUrl = 'https://api.iconify.design/twemoji/round-pushpin.svg';
         let pendingConfirmAction = null; 
         let is3DMode = false;
-        
-        // 3D Interaction Variables
         let selectedCesiumEntity = null;
 
         // Data Models
@@ -982,11 +845,14 @@
             rank: RANK_COLORS
         };
 
-        const COMMON_ICONS = [
-            'twemoji:round-pushpin', 'twemoji:house', 'twemoji:castle', 'twemoji:deciduous-tree', 
-            'twemoji:crossed-swords', 'twemoji:skull-and-crossbones', 'twemoji:crown', 'twemoji:gem-stone',
-            'twemoji:sailboat', 'twemoji:volcano', 'twemoji:tent', 'twemoji:cityscape'
-        ];
+        // Predefined Important Icons
+        const IMPORTANT_ICONS = {
+            "สิ่งปลูกสร้าง": ['twemoji:house', 'twemoji:castle', 'twemoji:japanese-castle', 'twemoji:classical-building', 'twemoji:derelict-house', 'twemoji:hut', 'twemoji:tent', 'twemoji:stadium', 'twemoji:factory', 'twemoji:hospital', 'twemoji:school', 'twemoji:place-of-worship', 'twemoji:shinto-shrine'],
+            "ธรรมชาติ": ['twemoji:deciduous-tree', 'twemoji:evergreen-tree', 'twemoji:palm-tree', 'twemoji:cactus', 'twemoji:sheaf-of-rice', 'twemoji:herb', 'twemoji:mountain', 'twemoji:snow-capped-mountain', 'twemoji:volcano', 'twemoji:rock', 'twemoji:ocean', 'twemoji:water-wave'],
+            "การทหาร & การปกครอง": ['twemoji:crossed-swords', 'twemoji:shield', 'twemoji:bow-and-arrow', 'twemoji:dagger', 'twemoji:crown', 'twemoji:skull-and-crossbones', 'twemoji:flag-in-hole', 'twemoji:chequered-flag', 'twemoji:triangular-flag', 'twemoji:fleur-de-lis'],
+            "ทรัพยากร & สมบัติ": ['twemoji:gem-stone', 'twemoji:coin', 'twemoji:money-bag', 'twemoji:pick', 'twemoji:hammer-and-pick', 'twemoji:wood', 'twemoji:oil-drum', 'twemoji:fishing-pole', 'twemoji:anchor', 'twemoji:compass'],
+            "เวทมนตร์ & แฟนตาซี": ['twemoji:crystal-ball', 'twemoji:magic-wand', 'twemoji:sparkles', 'twemoji:star', 'twemoji:crescent-moon', 'twemoji:scroll', 'twemoji:book', 'twemoji:candle', 'twemoji:amphora', 'twemoji:coffin']
+        };
 
         // --- Initialization ---
         window.onload = async () => {
@@ -1081,7 +947,7 @@
                 vrButton: false,
                 geocoder: false,
                 homeButton: false,
-                infoBox: false, // Disable default infobox
+                infoBox: false,
                 sceneModePicker: false,
                 selectionIndicator: true,
                 timeline: false,
@@ -1094,11 +960,9 @@
             viewer.scene.globe.enableLighting = true;
             viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
             
-            // --- Custom Popup Logic ---
             const popupDiv = document.getElementById('cesium-popup');
             const popupContent = document.getElementById('cesium-popup-content');
             
-            // Click Handler
             viewer.screenSpaceEventHandler.setInputAction((click) => {
                 const pickedObject = viewer.scene.pick(click.position);
                 if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.entityDataId) {
@@ -1116,15 +980,12 @@
                 }
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-            // Update Popup Position
             viewer.scene.postRender.addEventListener(() => {
                 if (selectedCesiumEntity && !popupDiv.classList.contains('hidden')) {
-                    // Try to get position from picked entity
                     let position;
                     if(selectedCesiumEntity.position) {
                         position = selectedCesiumEntity.position.getValue(viewer.clock.currentTime);
-                    } else if(selectedCesiumEntity.polygon) {
-                        // For polygons, we stored a separate centroid position property in the entity object for convenience
+                    } else if(selectedCesiumEntity.centerPosition) {
                         position = selectedCesiumEntity.centerPosition;
                     }
 
@@ -1133,17 +994,11 @@
                         if (canvasPosition) {
                             popupDiv.style.top = (canvasPosition.y - popupDiv.offsetHeight - 20) + 'px';
                             popupDiv.style.left = (canvasPosition.x - popupDiv.offsetWidth / 2) + 'px';
-                        } else {
-                            // If off-screen (e.g. behind camera), hide temporarily? 
-                            // wgs84ToWindowCoordinates returns undefined if behind camera usually.
-                            // But for occlusion by earth, we might need more checks. 
-                            // For now, let it be.
                         }
                     }
                 }
             });
 
-            // Sync Camera on start
             syncCameraTo2D();
         }
 
@@ -1162,19 +1017,16 @@
             const btnIcon = document.getElementById('globe-btn-icon');
             
             if(is3DMode) {
-                // Switch to 3D
                 body.classList.remove('mode-2d'); body.classList.add('mode-3d');
-                btnIcon.src = "https://api.iconify.design/noto:map-of-japan.svg"; // Show map icon to go back
+                btnIcon.src = "https://api.iconify.design/noto:map-of-japan.svg";
                 if(!viewer) initCesium();
                 renderCesium();
-                // Sync Compass Rotation
                 viewer.scene.postRender.addEventListener(updateCompass3D);
             } else {
-                // Switch to 2D
                 body.classList.remove('mode-3d'); body.classList.add('mode-2d');
                 btnIcon.src = "https://api.iconify.design/noto:globe-showing-asia-australia.svg";
                 if(viewer) viewer.scene.postRender.removeEventListener(updateCompass3D);
-                document.getElementById('compass-icon').style.transform = 'rotate(0deg)'; // Reset compass
+                document.getElementById('compass-icon').style.transform = 'rotate(0deg)';
             }
         }
 
@@ -1194,7 +1046,6 @@
                 toggleBtn.innerText = sb.classList.contains('sidebar-collapsed') ? '▶' : '◀';
             };
 
-            // Map Layer Toggles
             document.getElementById('btn-map-nolabels').onclick = (e) => { 
                 map.removeLayer(mapLayers.sat); map.addLayer(mapLayers.nolabels);
                 updateLayerBtnStyle(e.target, document.getElementById('btn-map-sat'));
@@ -1209,7 +1060,6 @@
                 inactive.className = "flex-1 text-xs py-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition";
             }
 
-            // Filters & Events
             document.getElementById('toggle-created-labels')?.addEventListener('change', renderMap);
             document.getElementById('toggle-roads')?.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); });
             document.getElementById('toggle-compass')?.addEventListener('change', (e) => {
@@ -1218,7 +1068,6 @@
                 else compass.classList.add('hidden-compass');
             });
             
-            // Add click event to compass to reset view in 3D
             document.getElementById('compass').onclick = () => {
                 if(is3DMode && viewer) {
                     const center = viewer.camera.positionCartographic;
@@ -1237,11 +1086,9 @@
                 if(is3DMode) renderCesium();
             });
             
-            // Global Stroke Color Change
             document.getElementById('global-stroke-color')?.addEventListener('input', (e) => {
                 globalStrokeColor = e.target.value;
-                renderMap(); // Redraw 2D
-                if(is3DMode) renderCesium(); // Redraw 3D
+                renderMap(); if(is3DMode) renderCesium();
             });
 
             document.getElementById('color-mode-select')?.addEventListener('change', (e) => {
@@ -1256,7 +1103,7 @@
                 if(is3DMode) renderCesium();
             });
 
-            // Hierarchy Filter
+            // Hierarchy Filter Logic
             const filterContainer = document.getElementById('filter-levels-container');
             if(filterContainer && HIERARCHY) {
                 filterContainer.innerHTML = '';
@@ -1268,16 +1115,13 @@
                 document.querySelectorAll('.filter-level').forEach(el => el.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); }));
             }
 
-            // Forms
             const formArea = document.getElementById('form-area');
             if(formArea) formArea.onsubmit = saveArea;
 
-            // Road Weight Slider
             document.getElementById('road-weight')?.addEventListener('input', (e) => {
                 document.getElementById('road-weight-val').innerText = e.target.value;
             });
 
-            // Populate Level Select
             const levelSelect = document.getElementById('inp-level');
             if(levelSelect) {
                 HIERARCHY.forEach(h => {
@@ -1290,14 +1134,18 @@
                 };
             }
 
-            renderCommonIcons();
+            renderImportantIcons(); // New function for curated icons
             document.getElementById('search-input')?.addEventListener('keyup', () => { renderMap(); if(is3DMode) renderCesium(); });
         }
+
+        window.toggleAllLevels = (check) => {
+            document.querySelectorAll('.filter-level').forEach(cb => cb.checked = check);
+            renderMap(); if(is3DMode) renderCesium();
+        };
 
         // --- Helper: Check Mode before Drawing ---
         window.checkModeAndDraw = (type) => {
             if(is3DMode) {
-                // Auto switch to 2D to allow drawing
                 toggleGlobeMode();
                 showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดเครื่องมือวาดอีกครั้ง", null, true);
                 return;
@@ -1307,7 +1155,33 @@
             else if(type === 'marker') window.startDrawMarker();
         }
 
-        // --- Helper: Get Entity Visuals (Color & Context) ---
+        // --- Helper: Hierarchy Logic ---
+        function getAncestors(ent) {
+            const ancestors = [];
+            let current = ent;
+            let depth = 0;
+            while(current.parentId && depth < 20) {
+                const parent = entities.find(e => e.id === current.parentId);
+                if(parent) { ancestors.push(parent); current = parent; } else break;
+                depth++;
+            }
+            return ancestors.reverse();
+        }
+
+        function getDescendants(parentIds) {
+            let descendants = [];
+            let queue = [...parentIds];
+            let visited = new Set(parentIds);
+            while(queue.length > 0) {
+                const pid = queue.shift();
+                const children = entities.filter(e => e.parentId === pid);
+                children.forEach(c => {
+                    if(!visited.has(c.id)) { visited.add(c.id); descendants.push(c); queue.push(c.id); }
+                });
+            }
+            return descendants;
+        }
+
         function getEntityVisuals(ent) {
             const colorMode = document.getElementById('color-mode-select').value;
             let fillColor = ent.color;
@@ -1335,28 +1209,36 @@
             return { fillColor, colorContext };
         }
 
-        // --- Icon System ---
-        function renderCommonIcons() {
-            const container = document.getElementById('common-icons-container');
+        // --- Icon System (Enhanced) ---
+        function renderImportantIcons() {
+            const container = document.getElementById('quick-icons-container');
             container.innerHTML = '';
-            COMMON_ICONS.forEach(iconName => {
-                const url = `https://api.iconify.design/${iconName.replace(':','/')}.svg`;
-                const div = document.createElement('div');
-                div.className = 'icon-option flex-shrink-0';
-                div.innerHTML = `<img src="${url}">`;
-                div.onclick = () => selectIcon(url, div);
-                container.appendChild(div);
-            });
+            
+            for (const [category, icons] of Object.entries(IMPORTANT_ICONS)) {
+                const title = document.createElement('div');
+                title.className = 'icon-category-title col-span-full';
+                title.innerText = category;
+                container.appendChild(title);
+
+                icons.forEach(iconName => {
+                    const url = `https://api.iconify.design/${iconName.replace(':','/')}.svg`;
+                    const div = document.createElement('div');
+                    div.className = 'icon-option flex-shrink-0';
+                    div.innerHTML = `<img src="${url}" title="${iconName}">`;
+                    div.onclick = () => selectIcon(url, div);
+                    container.appendChild(div);
+                });
+            }
         }
 
         window.searchIcons = async () => {
             const query = document.getElementById('icon-search-query').value;
             if(!query) return;
             const container = document.getElementById('icon-results');
-            container.innerHTML = '<div class="col-span-full text-center py-2"><span class="material-icons-round animate-spin">refresh</span> Loading...</div>';
+            container.innerHTML = '<div class="text-xs text-gray-500 p-2">กำลังค้นหา...</div>';
             
             try {
-                const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=50`);
+                const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=30`);
                 const data = await res.json();
                 container.innerHTML = '';
                 
@@ -1364,16 +1246,16 @@
                     data.icons.forEach(iconName => {
                         const url = `https://api.iconify.design/${iconName.replace(':','/')}.svg`;
                         const div = document.createElement('div');
-                        div.className = 'icon-option';
-                        div.innerHTML = `<img src="${url}" title="${iconName}">`;
+                        div.className = 'icon-option flex-shrink-0 w-10 h-10';
+                        div.innerHTML = `<img src="${url}" title="${iconName}" class="w-6 h-6">`;
                         div.onclick = () => selectIcon(url, div);
                         container.appendChild(div);
                     });
                 } else {
-                    container.innerHTML = '<div class="col-span-full text-center text-gray-500 text-xs py-2">ไม่พบไอคอน</div>';
+                    container.innerHTML = '<div class="text-xs text-gray-500 p-2">ไม่พบไอคอน</div>';
                 }
             } catch(e) {
-                container.innerHTML = '<div class="col-span-full text-center text-red-500 text-xs">Error fetching icons</div>';
+                container.innerHTML = '<div class="text-xs text-red-500 p-2">เกิดข้อผิดพลาด</div>';
             }
         }
 
@@ -1388,20 +1270,16 @@
             if(!viewer) return;
             viewer.entities.removeAll();
             
-            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+            // Shared filtering logic
+            const { visibleEntities } = filterEntities();
             const showRoads = document.getElementById('toggle-roads').checked;
             const showLabels = document.getElementById('toggle-created-labels').checked;
-            const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
             
-            entities.forEach(ent => {
-                if (ent.type === 'area' && !selectedLevels.includes(ent.level)) return;
-                if(searchTxt && !ent.name.toLowerCase().includes(searchTxt)) return;
-
+            visibleEntities.forEach(ent => {
                 try {
                     const geoJson = JSON.parse(ent.geoJson);
                     const visuals = getEntityVisuals(ent);
                     
-                    // 1. ROADS
                     if (ent.type === 'road') {
                         if(!showRoads) return;
                         const flatCoords = [];
@@ -1415,11 +1293,10 @@
                             },
                             name: ent.name
                         });
-                        roadEnt.entityDataId = ent.id; // Attach ID
+                        roadEnt.entityDataId = ent.id;
                         return;
                     }
 
-                    // 2. MARKERS
                     if (ent.type === 'marker') {
                         const lon = geoJson.geometry.coordinates[0];
                         const lat = geoJson.geometry.coordinates[1];
@@ -1435,9 +1312,8 @@
                             },
                             name: ent.name
                         });
-                        markerEnt.entityDataId = ent.id; // Attach ID
+                        markerEnt.entityDataId = ent.id;
 
-                        // Marker Label
                         if(showLabels) {
                             markerEnt.label = {
                                 text: ent.name,
@@ -1455,11 +1331,9 @@
                         return;
                     }
 
-                    // 3. AREAS (POLYGONS)
                     if(geoJson.geometry.type === 'Polygon') {
                          const flat = [];
-                         const coords = geoJson.geometry.coordinates;
-                         coords[0].forEach(pt => { flat.push(pt[0], pt[1]); });
+                         geoJson.geometry.coordinates[0].forEach(pt => { flat.push(pt[0], pt[1]); });
                          const hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
                          
                          const polyEnt = viewer.entities.add({
@@ -1472,16 +1346,12 @@
                             },
                             name: ent.name
                          });
-                         polyEnt.entityDataId = ent.id; // Attach ID
+                         polyEnt.entityDataId = ent.id;
 
-                         // Calculate Centroid for Label & Popup Position
                          try {
                             const center = turf.centerOfMass(geoJson);
-                            const cLon = center.geometry.coordinates[0];
-                            const cLat = center.geometry.coordinates[1];
-                            polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(cLon, cLat); // Store for popup
+                            polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1]);
 
-                            // Area Label
                             if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
                                 viewer.entities.add({
                                     position: polyEnt.centerPosition,
@@ -1508,32 +1378,18 @@
             if(!map || !drawnItems) return;
             drawnItems.clearLayers();
             
-            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+            const { visibleEntities } = filterEntities();
             const showRoads = document.getElementById('toggle-roads').checked;
-            const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
 
-            const sortedEntities = [...entities].sort((a, b) => getRank(b.level) - getRank(a.level));
-
-            sortedEntities.forEach(ent => {
-                if (ent.type === 'area' && !selectedLevels.includes(ent.level)) return;
-                
-                if(searchTxt && !ent.name.toLowerCase().includes(searchTxt)) return;
-
+            visibleEntities.forEach(ent => {
                 try {
                     const geoJson = JSON.parse(ent.geoJson);
-                    const visuals = getEntityVisuals(ent); // Use shared logic
+                    const visuals = getEntityVisuals(ent); 
 
-                    // 1. ROADS
                     if (ent.type === 'road') {
                         if(!showRoads) return;
                         L.geoJSON(geoJson, {
-                            style: { 
-                                color: ent.color, 
-                                weight: parseInt(ent.weight) || 4, 
-                                dashArray: ent.roadType === 'army' ? '10, 15' : null, 
-                                opacity: 0.8,
-                                lineCap: 'round'
-                            }
+                            style: { color: ent.color, weight: parseInt(ent.weight) || 4, dashArray: ent.roadType === 'army' ? '10, 15' : null, opacity: 0.8, lineCap: 'round' }
                         }).bindPopup(`
                             <div class="text-center">
                                 <div class="font-bold text-[#5D4037] text-lg cute-font">${ent.name}</div>
@@ -1544,20 +1400,13 @@
                         return;
                     }
                     
-                    // 2. MARKERS
                     if (ent.type === 'marker') {
-                        const iconHtml = `<div style="position:relative; width:30px; height:30px;">
-                                            <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:${ent.color}; opacity:0.3; border-radius:50%; filter:blur(4px);"></div>
-                                            <img src="${ent.iconUrl}" style="width:30px; height:30px; position:relative; z-index:2; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">
-                                          </div>`;
                         const icon = L.divIcon({
                             className: 'custom-marker',
-                            html: iconHtml,
+                            html: `<div style="position:relative; width:30px; height:30px;"><div style="position:absolute; top:0; left:0; width:100%; height:100%; background:${ent.color}; opacity:0.3; border-radius:50%; filter:blur(4px);"></div><img src="${ent.iconUrl}" style="width:30px; height:30px; position:relative; z-index:2; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></div>`,
                             iconSize: [30, 30], iconAnchor: [15, 15]
                         });
-                        L.geoJSON(geoJson, {
-                            pointToLayer: (f, l) => L.marker(l, {icon: icon})
-                        }).bindPopup(`
+                        L.geoJSON(geoJson, { pointToLayer: (f, l) => L.marker(l, {icon: icon}) }).bindPopup(`
                             <div class="text-center font-bold text-[#5D4037]">
                                 <img src="${ent.iconUrl}" class="w-12 h-12 mx-auto mb-2">
                                 <div class="mb-1 text-lg cute-font">${ent.name}</div>
@@ -1567,8 +1416,7 @@
                         return;
                     }
 
-                    // 3. AREAS
-                    const layer = L.geoJSON(geoJson, {
+                    L.geoJSON(geoJson, {
                         style: {
                             color: ent.isWater ? '#29B6F6' : globalStrokeColor,
                             weight: ent.isWater ? 1 : 1.5,
@@ -1579,22 +1427,56 @@
                             l.options.entityId = ent.id;
                             if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
                                 const center = l.getBounds().getCenter();
-                                const label = L.marker(center, {
-                                    icon: L.divIcon({
-                                        className: 'text-center pointer-events-none',
-                                        html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${ent.isAnnexed ? ent.annexedByName : ent.name}</span>`,
-                                        iconSize: [100, 20], iconAnchor: [50, 10]
-                                    })
-                                });
-                                drawnItems.addLayer(label);
+                                drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${ent.isAnnexed ? ent.annexedByName : ent.name}</span>`, iconSize: [100, 20], iconAnchor: [50, 10] }) }));
                             }
                             l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext));
                         }
-                    });
-                    drawnItems.addLayer(layer);
+                    }).addTo(drawnItems);
 
                 } catch (e) { console.error("Render error", e); }
             });
+        }
+
+        // --- Core Filtering Logic ---
+        function filterEntities() {
+            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+            const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
+            
+            // Sort by rank first
+            const sorted = [...entities].sort((a, b) => getRank(b.level) - getRank(a.level));
+            
+            if (!searchTxt) {
+                // If no search, just filter by level
+                return { visibleEntities: sorted.filter(ent => ent.type !== 'area' || selectedLevels.includes(ent.level)) };
+            }
+
+            // --- SMART SEARCH LOGIC ---
+            // 1. Find direct matches (Name or Annexed Name matches)
+            const directMatches = sorted.filter(ent => {
+                const nameMatch = ent.name.toLowerCase().includes(searchTxt);
+                const annexMatch = ent.isAnnexed && ent.annexedByName && ent.annexedByName.toLowerCase().includes(searchTxt);
+                const rulerMatch = ent.ruler && ent.ruler.toLowerCase().includes(searchTxt);
+                const levelMatch = getHierarchyName(ent.level).toLowerCase().includes(searchTxt);
+                return nameMatch || annexMatch || rulerMatch || levelMatch;
+            });
+
+            // 2. Find descendants of matches
+            const directMatchIds = directMatches.map(e => e.id);
+            const descendants = getDescendants(directMatchIds);
+            const descendantIds = new Set(descendants.map(d => d.id));
+
+            // 3. Combine allowed IDs
+            const allowedIds = new Set([...directMatchIds, ...descendantIds]);
+
+            // 4. Final filter: Must be allowed by search AND allowed by level filter
+            const result = sorted.filter(ent => {
+                if (ent.type !== 'area') return true; // Always show markers/roads if search passes? Or maybe filter them too. For now let's assume markers show if name matches.
+                // For areas:
+                if (!allowedIds.has(ent.id)) return false;
+                return selectedLevels.includes(ent.level);
+            });
+
+            return { visibleEntities: result };
         }
 
         function createPopupContent(ent, displayColor, colorContext) {
@@ -1609,6 +1491,17 @@
             else if(colorContext.type === 'rank') colorDesc = `👑 ศักดิ์: ${getHierarchyName(ent.level)}`;
             else if(colorContext.type === 'water') colorDesc = `🌊 พื้นที่: น่านน้ำ`;
 
+            // Hierarchy Trace
+            const ancestors = getAncestors(ent);
+            let hierarchyHtml = '';
+            if(ancestors.length > 0) {
+                hierarchyHtml = `<div class="hierarchy-path">`;
+                ancestors.forEach(a => { hierarchyHtml += `<span class="h-node">${a.name}</span>`; });
+                hierarchyHtml += `<span class="h-node">${ent.name}</span></div>`;
+            } else {
+                hierarchyHtml = `<div class="hierarchy-path"><span class="h-node">${ent.name} (สูงสุด)</span></div>`;
+            }
+
             return `
                 <div class="relative font-sans">
                     <div class="h-16 bg-gradient-to-r from-[#FFF3E0] to-white rounded-t-2xl"></div>
@@ -1617,13 +1510,15 @@
                         <h3 class="text-xl font-bold text-[#5D4037] leading-tight cute-font mt-1">${ent.isAnnexed ? ent.annexedByName : ent.name}</h3>
                         <div class="mt-2 mb-3 flex flex-col justify-center gap-2 items-center">
                             ${statusBadge}
-                            <div class="color-tag" title="Color Meaning">
-                                <span class="swatch-circle" style="background-color:${displayColor}"></span> ${colorDesc}
-                            </div>
+                            <div class="color-tag" title="Color Meaning"><span class="swatch-circle" style="background-color:${displayColor}"></span> ${colorDesc}</div>
                         </div>
                         
                         <div class="text-left text-xs bg-[#FFFBF0] p-3 rounded-xl border border-[#EEE] space-y-2">
-                            <div class="flex justify-between border-b border-dashed border-[#DDD] pb-1">
+                            <div class="pb-1 border-b border-dashed border-[#DDD]">
+                                <span class="text-gray-400 block mb-1 text-[9px] uppercase tracking-wide">🏳️ สายการปกครอง</span>
+                                ${hierarchyHtml}
+                            </div>
+                            <div class="flex justify-between border-b border-dashed border-[#DDD] pb-1 pt-1">
                                 <span class="text-gray-400">ระดับ</span>
                                 <span class="font-bold text-[#8D6E63]">${getHierarchyName(ent.level)}</span>
                             </div>
@@ -1640,10 +1535,7 @@
                         <div class="mt-4 flex gap-2 justify-center border-t border-gray-100 pt-3">
                              <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition"><span class="material-icons-round text-sm">edit</span></button>
                             <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition"><span class="material-icons-round text-sm">delete</span></button>
-                            ${(!ent.isColony && !ent.isVassal && !ent.isAnnexed && !ent.isWater) ? 
-                                `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-sm">⚔️ ยุทธการ</button>` : 
-                                ''
-                            }
+                            ${(!ent.isColony && !ent.isVassal && !ent.isAnnexed && !ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-sm">⚔️ ยุทธการ</button>` : ''}
                             ${(ent.isAnnexed || ent.isVassal) ? `<button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-sm">🚩 กู้เอกราช</button>` : ''}
                         </div>
                     </div>
