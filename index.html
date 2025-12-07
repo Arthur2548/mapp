@@ -361,7 +361,7 @@
                 </h3>
                 <div class="flex gap-2 mb-3">
                     <button id="btn-map-nolabels" class="flex-1 text-xs py-2 rounded-lg bg-[#5D4037] text-white hover:bg-[#4E342E] transition">สะอาด</button>
-                    <button id="btn-map-osm" class="flex-1 text-xs py-2 rounded-lg bg-[#A1887F] text-white hover:bg-[#8D6E63] transition">OSM</button>
+                    <!-- Removed OSM Button -->
                     <button id="btn-map-sat" class="flex-1 text-xs py-2 rounded-lg bg-[#8D6E63] text-white hover:bg-[#5D4037] transition">ดาวเทียม</button>
                 </div>
                 
@@ -787,7 +787,6 @@
                 });
             } catch (err) {
                 console.error("Firebase connection failed:", err);
-                // Removed alert as per request to prevent blocking UI
             }
         };
 
@@ -799,11 +798,6 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
                 maxZoom: 19
-            });
-
-            // 2. Standard OpenStreetMap (Has Labels)
-            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
             });
 
             // 3. Satellite
@@ -820,7 +814,7 @@
             // Set default to No Labels (Clean)
             map = L.map('map', { center: [13.7563, 100.5018], zoom: 6, zoomControl: false, layers: [noLabelsLayer] });
 
-            mapLayers = { nolabels: noLabelsLayer, osm: osmLayer, sat: satLayer, labels: labelsOnlyLayer };
+            mapLayers = { nolabels: noLabelsLayer, sat: satLayer, labels: labelsOnlyLayer };
             drawnItems = L.featureGroup().addTo(map);
 
             map.addControl(new L.Control.Draw({
@@ -841,34 +835,23 @@
 
             // Map Layer Buttons
             document.getElementById('btn-map-nolabels').onclick = () => { 
-                map.removeLayer(mapLayers.osm); 
                 map.removeLayer(mapLayers.sat); 
                 map.addLayer(mapLayers.nolabels); 
                 // Restore label preference
                 if(document.getElementById('toggle-original-labels').checked) map.addLayer(mapLayers.labels);
             };
             
-            document.getElementById('btn-map-osm').onclick = () => { 
-                map.removeLayer(mapLayers.nolabels); 
-                map.removeLayer(mapLayers.sat); 
-                map.removeLayer(mapLayers.labels); // OSM has baked-in labels
-                map.addLayer(mapLayers.osm); 
-            };
             
             document.getElementById('btn-map-sat').onclick = () => { 
                 map.removeLayer(mapLayers.nolabels); 
-                map.removeLayer(mapLayers.osm); 
                 map.removeLayer(mapLayers.labels);
                 map.addLayer(mapLayers.sat); 
             };
             
             // Toggle Original Labels (Only works effectively on Clean Map / Sat)
             document.getElementById('toggle-original-labels').onchange = (e) => {
-                // Only toggle if we aren't on standard OSM (which forces labels)
-                if (!map.hasLayer(mapLayers.osm)) {
-                    if(e.target.checked) map.addLayer(mapLayers.labels); 
-                    else map.removeLayer(mapLayers.labels);
-                }
+                if(e.target.checked) map.addLayer(mapLayers.labels); 
+                else map.removeLayer(mapLayers.labels);
             };
 
             // Filters & Toggles
