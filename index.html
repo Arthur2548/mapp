@@ -95,7 +95,7 @@
             top: 0;
             left: 0;
             height: 100%;
-            width: 340px; /* Slightly wider for hierarchy */
+            width: 340px;
             background: rgba(255, 251, 240, 0.95);
             backdrop-filter: blur(12px);
             border-right: 2px dashed var(--wood-light);
@@ -132,7 +132,7 @@
         }
         .toggle-sidebar-btn:hover { background: var(--wood-dark); color: #fff; }
 
-        /* Modern Toolbar (Vertical, Top Right) */
+        /* Modern Toolbar */
         .toolbar-vertical {
             position: absolute;
             top: 20px;
@@ -168,16 +168,14 @@
         .compass-container {
             position: absolute;
             top: 20px;
-            right: 80px; /* Left of toolbar */
+            right: 80px;
             width: 60px;
             height: 60px;
             z-index: 950;
             transition: all 0.3s;
             cursor: pointer;
         }
-        .compass-container:hover {
-            transform: scale(1.1);
-        }
+        .compass-container:hover { transform: scale(1.1); }
         .compass-img {
             width: 100%;
             height: 100%;
@@ -201,7 +199,7 @@
         }
         .compass-container:hover + .compass-tooltip { opacity: 1; }
 
-        /* Globe Toggle Button (Bottom Right) */
+        /* Globe Toggle Button */
         .globe-toggle-btn {
             position: absolute;
             bottom: 30px;
@@ -244,7 +242,7 @@
 
         .leaflet-draw { display: none !important; } 
         
-        /* Modal Styling - Cute & Beautiful */
+        /* Modal & UI Elements */
         .modal-overlay {
             background-color: rgba(78, 52, 46, 0.4);
             backdrop-filter: blur(8px);
@@ -269,23 +267,12 @@
             position: relative;
         }
 
-        /* Decorative blobs for auth */
-        .blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(40px);
-            z-index: 0;
-            opacity: 0.6;
-        }
-        .blob-1 { top: -50px; left: -50px; width: 150px; height: 150px; background: #FFCCBC; }
-        .blob-2 { bottom: -30px; right: -30px; width: 120px; height: 120px; background: #B3E5FC; }
-
         @keyframes modalPop {
             0% { transform: scale(0.8) translateY(20px); opacity: 0; }
             100% { transform: scale(1) translateY(0); opacity: 1; }
         }
 
-        /* Input Styling - Cute */
+        /* Input Styling */
         .input-cute {
             background: #fff;
             border: 2px solid #EEE;
@@ -351,16 +338,36 @@
             background: #FFF8E1;
         }
 
-        /* Map Popup Customization */
+        /* --- FANTASY POPUP STYLING (NEW) --- */
         .leaflet-popup-content-wrapper {
-            border-radius: 20px;
+            background: rgba(255, 253, 245, 0.95);
+            border-radius: 24px;
             padding: 0;
-            overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            overflow: visible; /* Allow sparkles to float out */
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.2), 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid #FFF;
         }
-        .leaflet-popup-content { margin: 0 !important; width: 300px !important; }
-        .leaflet-popup-tip { background: white; }
+        .leaflet-popup-content { margin: 0 !important; width: 320px !important; }
+        .leaflet-popup-tip { background: #FFF; }
         
+        /* Sparkle Animation */
+        @keyframes floatSparkle {
+            0% { transform: translate(0, 0) scale(0); opacity: 0; }
+            50% { opacity: 1; transform: translate(10px, -10px) scale(1); }
+            100% { transform: translate(20px, -20px) scale(0); opacity: 0; }
+        }
+        .sparkle-icon {
+            position: absolute;
+            color: #FFB74D;
+            font-size: 10px;
+            animation: floatSparkle 2s infinite ease-in-out;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .s1 { top: -5px; left: 10%; animation-delay: 0s; }
+        .s2 { top: 10px; right: 5%; animation-delay: 0.5s; font-size: 14px; color: #FFD54F; }
+        .s3 { bottom: 20%; left: -5px; animation-delay: 1s; font-size: 8px; }
+
         /* Icon Grid */
         .icon-grid {
             display: grid;
@@ -368,34 +375,21 @@
             gap: 8px;
         }
         .icon-option {
-            width: 40px; 
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: white;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #eee; border-radius: 12px;
+            cursor: pointer; transition: all 0.2s; background: white;
         }
         .icon-option img { width: 24px; height: 24px; object-fit: contain; }
         .icon-option:hover { background-color: #FFF3E0; border-color: #FFCC80; }
         .icon-option.selected {
-            border-color: #6D4C41;
-            background-color: #FFE0B2;
-            transform: scale(1.1);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-color: #6D4C41; background-color: #FFE0B2;
+            transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .icon-category-title {
-            font-size: 11px;
-            font-weight: bold;
-            color: #8D6E63;
-            margin-top: 8px;
-            margin-bottom: 4px;
-            border-bottom: 1px dashed #D7CCC8;
-            padding-bottom: 2px;
+            font-size: 11px; font-weight: bold; color: #8D6E63;
+            margin-top: 8px; margin-bottom: 4px; border-bottom: 1px dashed #D7CCC8; padding-bottom: 2px;
         }
 
         /* Scrollbar */
@@ -406,41 +400,24 @@
 
         /* Color Swatch in Popup */
         .color-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            background: #F5F5F5;
-            border-radius: 12px;
-            font-size: 11px;
-            color: #616161;
-            border: 1px solid #EEEEEE;
-            font-weight: 600;
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; background: #FFF; border-radius: 12px;
+            font-size: 11px; color: #616161; border: 1px solid #F0F0F0;
+            font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .swatch-circle {
             width: 12px; height: 12px; border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.1);
-            display: inline-block;
+            border: 1px solid rgba(0,0,0,0.1); display: inline-block;
         }
 
         /* Hierarchy Path in Popup */
         .hierarchy-path {
-            font-size: 10px;
-            color: #795548;
-            background-color: #EFEBE9;
-            padding: 4px 8px;
-            border-radius: 8px;
-            margin-top: 4px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            align-items: center;
+            font-size: 10px; color: #795548; background-color: #FFF8E1;
+            padding: 4px 8px; border-radius: 8px; margin-top: 4px;
+            display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+            border: 1px dashed #FFE0B2;
         }
-        .h-node::after {
-            content: "›";
-            margin-left: 4px;
-            color: #BCAAA4;
-        }
+        .h-node::after { content: "›"; margin-left: 4px; color: #BCAAA4; }
         .h-node:last-child::after { content: ""; }
         .h-node:last-child { font-weight: bold; color: #5D4037; }
 
@@ -466,7 +443,6 @@
             
             <!-- Auth Status -->
             <div id="auth-container">
-                <!-- Logged In -->
                 <div id="logged-in-view" class="hidden animate-fade-in">
                     <div class="bg-white/50 rounded-2xl p-3 border border-white shadow-sm mb-2">
                          <p id="user-display-name" class="text-sm font-bold text-[#5D4037]">Lord ...</p>
@@ -474,22 +450,15 @@
                     </div>
                     <button onclick="window.logoutUser()" class="text-xs text-red-400 hover:text-red-600 font-bold bg-red-50 px-3 py-1 rounded-full transition">ออกจากระบบ</button>
                 </div>
-
-                <!-- Logged Out -->
                 <div id="logged-out-view" class="space-y-2 px-2">
-                    <button onclick="document.getElementById('modal-login').classList.remove('hidden')" class="btn-cute w-full text-sm py-2">
-                        <span class="material-icons-round text-sm">login</span> เข้าสู่ระบบ
-                    </button>
-                    <button onclick="document.getElementById('modal-register').classList.remove('hidden')" class="btn-cute btn-cute-outline w-full text-sm py-2">
-                        <span class="material-icons-round text-sm">person_add</span> สมัครสมาชิก
-                    </button>
+                    <button onclick="document.getElementById('modal-login').classList.remove('hidden')" class="btn-cute w-full text-sm py-2"><span class="material-icons-round text-sm">login</span> เข้าสู่ระบบ</button>
+                    <button onclick="document.getElementById('modal-register').classList.remove('hidden')" class="btn-cute btn-cute-outline w-full text-sm py-2"><span class="material-icons-round text-sm">person_add</span> สมัครสมาชิก</button>
                 </div>
             </div>
         </div>
 
         <!-- Tools / Filters -->
         <div class="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
-            
             <!-- Layer Control -->
             <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md">
                 <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2 text-sm">
@@ -523,7 +492,6 @@
                     <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="0.6" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#5D4037]">
                 </div>
 
-                <!-- Global Stroke Color -->
                 <div class="mt-3">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-[#5D4037]">สีเส้นขอบ (ทั้งหมด)</span>
@@ -549,9 +517,7 @@
                          <span>กรองตามศักดิ์ปกครอง</span>
                          <button onclick="toggleAllLevels(true)" class="text-[9px] text-blue-500 hover:underline">เลือกทั้งหมด</button>
                      </div>
-                     <div id="filter-levels-container" class="grid grid-cols-1 gap-1 max-h-40 overflow-y-auto custom-scrollbar pl-1">
-                         <!-- JS Populates this -->
-                     </div>
+                     <div id="filter-levels-container" class="grid grid-cols-1 gap-1 max-h-40 overflow-y-auto custom-scrollbar pl-1"></div>
                 </div>
             </div>
 
@@ -593,7 +559,7 @@
         </div>
     </div>
 
-    <!-- Map Area (Leaflet + Cesium) -->
+    <!-- Map Area -->
     <div id="map-container">
         <div id="map"></div>
         <div id="cesiumContainer"></div>
@@ -601,12 +567,11 @@
         <!-- CUSTOM CESIUM POPUP -->
         <div id="cesium-popup" class="absolute hidden bg-white rounded-2xl shadow-2xl z-[2000] w-[300px] pointer-events-auto transition-opacity duration-200 border-2 border-white/50">
             <div id="cesium-popup-content"></div>
-            <!-- Arrow -->
             <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white transform rotate-45 border-b-2 border-r-2 border-gray-100"></div> 
         </div>
     </div>
 
-    <!-- Globe Toggle Button -->
+    <!-- Globe Toggle -->
     <div class="globe-toggle-btn" onclick="toggleGlobeMode()">
         <img src="https://api.iconify.design/noto:globe-showing-asia-australia.svg" id="globe-btn-icon">
     </div>
@@ -621,7 +586,7 @@
         <div id="legend-content" class="space-y-1.5 text-[11px]"></div>
     </div>
 
-    <!-- Modal: Login (CUTE VERSION) -->
+    <!-- Modal: Login -->
     <div id="modal-login" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper modal-paper-auth w-[380px] p-8">
             <button onclick="closeModal('modal-login')" class="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition z-10"><span class="material-icons-round">close</span></button>
@@ -640,7 +605,7 @@
         </div>
     </div>
 
-    <!-- Modal: Register (CUTE VERSION) -->
+    <!-- Modal: Register -->
     <div id="modal-register" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper modal-paper-auth w-[420px] p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button onclick="closeModal('modal-register')" class="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition z-10"><span class="material-icons-round">close</span></button>
@@ -725,7 +690,7 @@
         </div>
     </div>
 
-    <!-- Modal Marker (Enhanced with Quick Select) -->
+    <!-- Modal Marker -->
     <div id="modal-marker" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
         <div class="modal-paper w-[500px] p-6 relative max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('modal-marker')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
@@ -733,15 +698,11 @@
             <div class="space-y-4">
                 <div class="input-group"><span class="material-icons-round icon">edit</span><input type="text" id="marker-name" placeholder="ชื่อสถานที่..." class="input-cute font-bold text-[#5D4037]"></div>
                 
-                <!-- Quick Icon Select -->
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <label class="text-xs font-bold text-[#8D6E63] ml-1 mb-2 block">เลือกไอคอนด่วน (ไม่ต้องพิมพ์)</label>
-                    <div id="quick-icons-container" class="h-48 overflow-y-auto custom-scrollbar p-1 icon-grid">
-                        <!-- Populated by JS -->
-                    </div>
+                    <div id="quick-icons-container" class="h-48 overflow-y-auto custom-scrollbar p-1 icon-grid"></div>
                 </div>
 
-                <!-- API Search -->
                 <div class="bg-white p-3 rounded-xl border border-gray-200">
                     <label class="text-[10px] font-bold text-gray-400 ml-1 mb-1 block">หรือค้นหาเพิ่มเติม (Iconify)</label>
                     <div class="flex gap-2 mb-2">
@@ -823,7 +784,6 @@
         let is3DMode = false;
         let selectedCesiumEntity = null;
 
-        // Data Models
         const HIERARCHY = [
             { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51' },
             { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#AD8B73' },
@@ -845,7 +805,6 @@
             rank: RANK_COLORS
         };
 
-        // Predefined Important Icons
         const IMPORTANT_ICONS = {
             "สิ่งปลูกสร้าง": ['twemoji:house', 'twemoji:castle', 'twemoji:japanese-castle', 'twemoji:classical-building', 'twemoji:derelict-house', 'twemoji:hut', 'twemoji:tent', 'twemoji:stadium', 'twemoji:factory', 'twemoji:hospital', 'twemoji:school', 'twemoji:place-of-worship', 'twemoji:shinto-shrine'],
             "ธรรมชาติ": ['twemoji:deciduous-tree', 'twemoji:evergreen-tree', 'twemoji:palm-tree', 'twemoji:cactus', 'twemoji:sheaf-of-rice', 'twemoji:herb', 'twemoji:mountain', 'twemoji:snow-capped-mountain', 'twemoji:volcano', 'twemoji:rock', 'twemoji:ocean', 'twemoji:water-wave'],
@@ -1134,7 +1093,7 @@
                 };
             }
 
-            renderImportantIcons(); // New function for curated icons
+            renderImportantIcons(); 
             document.getElementById('search-input')?.addEventListener('keyup', () => { renderMap(); if(is3DMode) renderCesium(); });
         }
 
@@ -1143,7 +1102,6 @@
             renderMap(); if(is3DMode) renderCesium();
         };
 
-        // --- Helper: Check Mode before Drawing ---
         window.checkModeAndDraw = (type) => {
             if(is3DMode) {
                 toggleGlobeMode();
@@ -1204,12 +1162,17 @@
                 colorContext = { type: 'water', value: 'น่านน้ำ' };
             }
             
-            if (colorMode === 'entity' && (ent.isAnnexed || ent.isVassal)) fillColor = ent.color;
+            if (colorMode === 'entity') {
+                if (ent.isColony) {
+                    fillColor = ent.originalColor || ent.color; 
+                } else if (ent.isAnnexed || ent.isVassal) {
+                    fillColor = ent.color; 
+                }
+            }
             
             return { fillColor, colorContext };
         }
 
-        // --- Icon System (Enhanced) ---
         function renderImportantIcons() {
             const container = document.getElementById('quick-icons-container');
             container.innerHTML = '';
@@ -1270,7 +1233,6 @@
             if(!viewer) return;
             viewer.entities.removeAll();
             
-            // Shared filtering logic
             const { visibleEntities } = filterEntities();
             const showRoads = document.getElementById('toggle-roads').checked;
             const showLabels = document.getElementById('toggle-created-labels').checked;
@@ -1313,7 +1275,7 @@
                             name: ent.name
                         });
                         markerEnt.entityDataId = ent.id;
-
+                        
                         if(showLabels) {
                             markerEnt.label = {
                                 text: ent.name,
@@ -1336,28 +1298,43 @@
                          geoJson.geometry.coordinates[0].forEach(pt => { flat.push(pt[0], pt[1]); });
                          const hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
                          
+                         let outlineColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
+                         if (ent.isAnnexed) outlineColor = visuals.fillColor; 
+
                          const polyEnt = viewer.entities.add({
                             polygon: {
                                 hierarchy: hierarchy,
                                 material: Cesium.Color.fromCssColorString(visuals.fillColor).withAlpha(ent.isWater ? 0.5 : globalOpacity),
-                                outline: true,
-                                outlineColor: Cesium.Color.fromCssColorString(ent.isWater ? '#29B6F6' : globalStrokeColor),
+                                outline: !ent.isColony,
+                                outlineColor: Cesium.Color.fromCssColorString(outlineColor),
                                 outlineWidth: 2
                             },
                             name: ent.name
                          });
                          polyEnt.entityDataId = ent.id;
+                         
+                         if (ent.isColony) {
+                             viewer.entities.add({
+                                 polyline: {
+                                     positions: hierarchy,
+                                     width: 2,
+                                     material: new Cesium.PolylineDashMaterialProperty({
+                                         color: Cesium.Color.fromCssColorString(globalStrokeColor),
+                                         dashLength: 16.0
+                                     }),
+                                     clampToGround: true
+                                 }
+                             });
+                         }
 
                          try {
                             const center = turf.centerOfMass(geoJson);
                             polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1]);
 
                             if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
-                                let labelText = ent.isAnnexed ? ent.annexedByName : ent.name;
-                                if (ent.isColony && ent.colonyOfName) {
-                                    labelText += `\n(อาณานิคมของ ${ent.colonyOfName})`;
-                                }
-
+                                let labelText = ent.name;
+                                if (ent.isColony) labelText += ` (อาณานิคมของ ${ent.annexedByName})`;
+                                
                                 viewer.entities.add({
                                     position: polyEnt.centerPosition,
                                     label: {
@@ -1421,30 +1398,31 @@
                         return;
                     }
 
+                    let strokeColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
+                    if (ent.isAnnexed) strokeColor = visuals.fillColor; 
+
                     L.geoJSON(geoJson, {
                         style: {
-                            color: ent.isWater ? '#29B6F6' : globalStrokeColor,
+                            color: strokeColor,
                             weight: ent.isWater ? 1 : 1.5,
                             fillColor: visuals.fillColor,
-                            fillOpacity: ent.isWater ? 0.5 : globalOpacity
+                            fillOpacity: ent.isWater ? 0.5 : globalOpacity,
+                            dashArray: ent.isColony ? '5, 10' : null 
                         },
                         onEachFeature: (f, l) => {
                             l.options.entityId = ent.id;
                             if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
                                 const center = l.getBounds().getCenter();
-                                let labelText = ent.isAnnexed ? ent.annexedByName : ent.name;
-                                let subLabel = '';
-                                if (ent.isColony && ent.colonyOfName) {
-                                    subLabel = `<br><span class="text-[8px] font-normal opacity-90">(อาณานิคมของ ${ent.colonyOfName})</span>`;
+                                let labelHtml = ent.name;
+                                if (ent.isColony) {
+                                    // UPDATED: Red and Bold for Colony text
+                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(อาณานิคมของ ${ent.annexedByName})</div>`;
+                                } else if (ent.isVassal) {
+                                    // UPDATED: Red and Bold for Vassal text
+                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${ent.annexedByName})</div>`;
                                 }
-                                drawnItems.addLayer(L.marker(center, { 
-                                    icon: L.divIcon({ 
-                                        className: 'text-center pointer-events-none', 
-                                        html: `<div class="flex flex-col items-center justify-center"><span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelText}</span>${subLabel}</div>`, 
-                                        iconSize: [120, 40], 
-                                        iconAnchor: [60, 20] 
-                                    }) 
-                                }));
+
+                                drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
                             }
                             l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext));
                         }
@@ -1458,17 +1436,12 @@
         function filterEntities() {
             const searchTxt = document.getElementById('search-input').value.toLowerCase();
             const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
-            
-            // Sort by rank first
             const sorted = [...entities].sort((a, b) => getRank(b.level) - getRank(a.level));
             
             if (!searchTxt) {
-                // If no search, just filter by level
                 return { visibleEntities: sorted.filter(ent => ent.type !== 'area' || selectedLevels.includes(ent.level)) };
             }
 
-            // --- SMART SEARCH LOGIC ---
-            // 1. Find direct matches (Name or Annexed Name matches)
             const directMatches = sorted.filter(ent => {
                 const nameMatch = ent.name.toLowerCase().includes(searchTxt);
                 const annexMatch = ent.isAnnexed && ent.annexedByName && ent.annexedByName.toLowerCase().includes(searchTxt);
@@ -1477,18 +1450,13 @@
                 return nameMatch || annexMatch || rulerMatch || levelMatch;
             });
 
-            // 2. Find descendants of matches
             const directMatchIds = directMatches.map(e => e.id);
             const descendants = getDescendants(directMatchIds);
             const descendantIds = new Set(descendants.map(d => d.id));
-
-            // 3. Combine allowed IDs
             const allowedIds = new Set([...directMatchIds, ...descendantIds]);
 
-            // 4. Final filter: Must be allowed by search AND allowed by level filter
             const result = sorted.filter(ent => {
-                if (ent.type !== 'area') return true; // Always show markers/roads if search passes? Or maybe filter them too. For now let's assume markers show if name matches.
-                // For areas:
+                if (ent.type !== 'area') return true; 
                 if (!allowedIds.has(ent.id)) return false;
                 return selectedLevels.includes(ent.level);
             });
@@ -1498,26 +1466,33 @@
 
         function createPopupContent(ent, displayColor, colorContext) {
             const flag = ent.flag || 'https://cdn-icons-png.flaticon.com/512/1458/1458514.png';
+            
+            let mainTitle = ent.name;
+            let subStatus = "";
             let statusBadge = '<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full border border-emerald-200">รัฐอิสระ</span>';
-            if (ent.isAnnexed) statusBadge = '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-200">ถูกผนวก</span>';
-            if (ent.isVassal) statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
-            if (ent.isColony) statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200 font-bold">🏳️ อาณานิคม</span>';
-            if (ent.isWater) statusBadge = '<span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">น่านน้ำ</span>';
+            
+            if (ent.isAnnexed) {
+                statusBadge = '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-200">ถูกผนวก</span>';
+                mainTitle = ent.annexedByName; 
+                subStatus = `<div class="text-[10px] text-gray-500 mt-1">ผนวกดินแดนจาก ${ent.originalName || ent.name}</div>`;
+            } else if (ent.isVassal) {
+                statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
+                // UPDATED: Red and Bold
+                subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(ประเทศราชของ ${ent.annexedByName})</div>`;
+            } else if (ent.isColony) {
+                statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">อาณานิคม</span>';
+                // UPDATED: Red and Bold
+                subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(อาณานิคมของ ${ent.annexedByName})</div>`;
+            } else if (ent.isWater) {
+                statusBadge = '<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full border border-blue-100">น่านน้ำ</span>';
+            }
 
             let colorDesc = "สีประจำเขต";
             if(colorContext.type === 'religion') colorDesc = `☸️ ศาสนา: ${colorContext.value}`;
             else if(colorContext.type === 'gov') colorDesc = `⚖️ ปกครอง: ${colorContext.value}`;
             else if(colorContext.type === 'rank') colorDesc = `👑 ศักดิ์: ${getHierarchyName(ent.level)}`;
             else if(colorContext.type === 'water') colorDesc = `🌊 พื้นที่: น่านน้ำ`;
-            
-            // Override display logic for colony label in popup
-            let displayName = ent.isAnnexed ? ent.annexedByName : ent.name;
-            let subText = "";
-            if (ent.isColony && ent.colonyOfName) {
-                subText = `<div class="text-[10px] text-gray-500">(อาณานิคมของ ${ent.colonyOfName})</div>`;
-            }
 
-            // Hierarchy Trace
             const ancestors = getAncestors(ent);
             let hierarchyHtml = '';
             if(ancestors.length > 0) {
@@ -1529,41 +1504,57 @@
             }
 
             return `
-                <div class="relative font-sans">
-                    <div class="h-16 bg-gradient-to-r from-[#FFF3E0] to-white rounded-t-2xl"></div>
-                    <img src="${flag}" class="absolute top-4 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full border-4 border-white shadow-md object-cover bg-white">
-                    <div class="pt-6 px-5 pb-5 text-center">
-                        <h3 class="text-xl font-bold text-[#5D4037] leading-tight cute-font mt-1">${displayName}</h3>
-                        ${subText}
-                        <div class="mt-2 mb-3 flex flex-col justify-center gap-2 items-center">
+                <div class="relative font-sans overflow-visible group">
+                    <!-- Sparkles for Magical Feel -->
+                    <span class="sparkle-icon s1">✨</span>
+                    <span class="sparkle-icon s2">✨</span>
+                    <span class="sparkle-icon s3">✦</span>
+                    
+                    <div class="h-20 bg-gradient-to-r from-[#FFF8E1] to-white rounded-t-2xl relative overflow-hidden">
+                        <div class="absolute inset-0 bg-white/30 backdrop-blur-[1px]"></div>
+                    </div>
+                    
+                    <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
+                        <div class="w-20 h-20 rounded-full p-1 bg-white shadow-lg relative z-10">
+                            <img src="${flag}" class="w-full h-full rounded-full object-cover border border-gray-100">
+                        </div>
+                    </div>
+
+                    <div class="pt-10 px-6 pb-6 text-center relative z-10">
+                        <h3 class="text-xl font-bold text-[#5D4037] leading-tight cute-font mt-1 drop-shadow-sm">${mainTitle}</h3>
+                        ${subStatus}
+                        <div class="mt-2 mb-4 flex flex-col justify-center gap-2 items-center">
                             ${statusBadge}
-                            <div class="color-tag" title="Color Meaning"><span class="swatch-circle" style="background-color:${displayColor}"></span> ${colorDesc}</div>
+                            <div class="color-tag"><span class="swatch-circle" style="background-color:${displayColor}"></span> ${colorDesc}</div>
                         </div>
                         
-                        <div class="text-left text-xs bg-[#FFFBF0] p-3 rounded-xl border border-[#EEE] space-y-2">
-                            <div class="pb-1 border-b border-dashed border-[#DDD]">
-                                <span class="text-gray-400 block mb-1 text-[9px] uppercase tracking-wide">🏳️ สายการปกครอง</span>
+                        <div class="text-left text-xs bg-white/80 p-3 rounded-xl border border-[#EEE] space-y-2 shadow-sm">
+                            <div class="pb-2 border-b border-dashed border-[#DDD]">
+                                <span class="text-[#A1887F] block mb-1 text-[9px] uppercase tracking-wide font-bold">🏳️ สายการปกครอง</span>
                                 ${hierarchyHtml}
                             </div>
-                            <div class="flex justify-between border-b border-dashed border-[#DDD] pb-1 pt-1">
+                            <div class="flex justify-between border-b border-dashed border-[#DDD] pb-2 pt-1">
                                 <span class="text-gray-400">ระดับ</span>
                                 <span class="font-bold text-[#8D6E63]">${getHierarchyName(ent.level)}</span>
                             </div>
-                            <div>
+                            <div class="pt-1">
                                 <span class="text-gray-400 block text-[10px]">ผู้ปกครอง</span>
-                                <span class="font-bold text-[#5D4037] truncate block">${ent.ruler}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 pt-1">
-                                <span class="material-icons-round text-[14px] text-amber-500">self_improvement</span>
-                                <span>${ent.religion}</span>
+                                <span class="font-bold text-[#5D4037] truncate block text-sm">${ent.ruler}</span>
                             </div>
                         </div>
                         
-                        <div class="mt-4 flex gap-2 justify-center border-t border-gray-100 pt-3">
-                             <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition"><span class="material-icons-round text-sm">edit</span></button>
-                            <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition"><span class="material-icons-round text-sm">delete</span></button>
-                            ${(!ent.isColony && !ent.isVassal && !ent.isAnnexed && !ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-sm">⚔️ ยุทธการ</button>` : ''}
-                            ${(ent.isAnnexed || ent.isVassal || ent.isColony) ? `<button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-sm">🚩 กู้เอกราช</button>` : ''}
+                        <div class="mt-5 flex gap-2 justify-center pt-2">
+                            ${(!ent.isWater) ? `
+                                <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition shadow-sm hover:scale-110"><span class="material-icons-round text-sm">edit</span></button>
+                                <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm hover:scale-110"><span class="material-icons-round text-sm">delete</span></button>
+                            ` : ''}
+
+                            <!-- Logic Update: Show War button even if Annexed/Vassal/Colony to allow re-conquest -->
+                            ${(!ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">⚔️ ยุทธการ</button>` : ''}
+                            
+                            ${(ent.isAnnexed || ent.isVassal || ent.isColony) ? `
+                                <button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">🚩 กู้เอกราช</button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -1590,7 +1581,6 @@
             }
         }
 
-        // --- Drawing Events ---
         window.startDrawPolygon = () => new L.Draw.Polygon(map).enable();
         window.startDrawPolyline = () => new L.Draw.Polyline(map).enable();
         window.startDrawMarker = () => new L.Draw.Marker(map).enable();
@@ -1624,7 +1614,6 @@
             });
         }
 
-        // --- Actions ---
         window.saveRoad = async () => {
             if(!validateAuth()) return;
             const weight = document.getElementById('road-weight').value;
@@ -1677,14 +1666,18 @@
             if(!id) {
                 data.geoJson = JSON.stringify(currentDrawLayer.toGeoJSON());
                 data.createdAt = new Date().toISOString();
-                data.originalName = data.name; data.originalRuler = data.ruler; data.originalColor = data.color;
+                data.originalName = data.name; 
+                data.originalRuler = data.ruler; 
+                data.originalColor = data.color; 
+            } else {
+                 const oldEnt = entities.find(e => e.id === id);
+                 if(oldEnt && !oldEnt.originalColor) data.originalColor = oldEnt.color;
             }
 
             await saveToFirestore(data, id);
             closeModal('modal-area'); currentDrawLayer = null;
         }
 
-        // --- Helpers ---
         function validateAuth() {
             if (!window.userId) {
                 showConfirmModal("ยังไม่เข้าสู่ระบบ", "กรุณาเข้าสู่ระบบเพื่อบันทึกข้อมูล", null, true);
@@ -1704,9 +1697,10 @@
         window.openWarModal = (tid) => {
             const t = entities.find(e => e.id === tid);
             document.getElementById('war-target-id').value = tid;
-            document.getElementById('war-target-name').innerText = t.name;
+            document.getElementById('war-target-name').innerText = t.name; 
             const sel = document.getElementById('war-attacker-select'); sel.innerHTML = '';
-            entities.filter(e => !e.isWater && !e.isAnnexed && e.type === 'area' && e.id !== tid).forEach(e => {
+            
+            entities.filter(e => !e.isWater && e.type === 'area' && e.id !== tid).forEach(e => {
                 const opt = document.createElement('option'); opt.value = e.id; opt.text = e.name; sel.appendChild(opt);
             });
             document.getElementById('modal-war').classList.remove('hidden');
@@ -1716,21 +1710,22 @@
             const tid = document.getElementById('war-target-id').value;
             const aid = document.getElementById('war-attacker-select').value;
             const attacker = entities.find(e => e.id === aid);
+            const target = entities.find(e => e.id === tid);
             
-            const updates = { 
-                isAnnexed: type==='annex', 
-                isVassal: type==='vassal', 
-                isColony: type==='colony' 
-            };
+            const updates = { isAnnexed: false, isVassal: false, isColony: false };
+            
+            if(type === 'annex') updates.isAnnexed = true;
+            if(type === 'vassal') updates.isVassal = true;
+            if(type === 'colony') updates.isColony = true;
 
-            if(type === 'annex') { 
-                updates.color = attacker.color; 
-                updates.annexedByName = attacker.name; 
-                updates.ruler = attacker.ruler; 
-            } else if (type === 'vassal') {
-                updates.vassalOfName = attacker.name;
-            } else if (type === 'colony') {
-                updates.colonyOfName = attacker.name;
+            updates.annexedByName = attacker.name; 
+            updates.occupiedBy = attacker.id; 
+            updates.ruler = attacker.ruler;
+
+            if(type === 'colony') {
+                updates.color = target.originalColor || target.color;
+            } else {
+                updates.color = attacker.color;
             }
             
             await setDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', tid), updates, {merge: true});
@@ -1738,11 +1733,13 @@
         }
 
         window.declareIndependence = (id) => {
-            showConfirmModal("กู้เอกราช", "ต้องการประกาศอิสรภาพหรือไม่?", async () => {
+            showConfirmModal("กู้เอกราช", "ต้องการประกาศอิสรภาพหรือไม่? พื้นที่จะกลับสู่สถานะเดิม", async () => {
                 const ent = entities.find(e => e.id === id);
                 await setDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', id), {
                     isAnnexed: false, isVassal: false, isColony: false,
-                    color: ent.originalColor || ent.color, ruler: ent.originalRuler || ent.ruler
+                    color: ent.originalColor || ent.color, 
+                    ruler: ent.originalRuler || ent.ruler,
+                    occupiedBy: null, annexedByName: null
                 }, {merge: true});
             });
         }
@@ -1753,15 +1750,15 @@
             const ent = entities.find(e => e.id === id);
             document.getElementById('modal-area').classList.remove('hidden');
             document.getElementById('area-id').value = ent.id;
-            document.getElementById('inp-name').value = ent.name;
+            document.getElementById('inp-name').value = ent.originalName || ent.name; 
             document.getElementById('inp-custom-id').value = ent.customId || '';
             document.getElementById('inp-level').value = ent.level;
             updateParentSelect(getRank(ent.level));
             document.getElementById('inp-parent').value = ent.parentId || "";
-            document.getElementById('inp-ruler').value = ent.ruler;
+            document.getElementById('inp-ruler').value = ent.originalRuler || ent.ruler;
             document.getElementById('inp-religion').value = ent.religion;
             document.getElementById('inp-gov').value = ent.government;
-            document.getElementById('inp-color').value = ent.color;
+            document.getElementById('inp-color').value = ent.originalColor || ent.color;
             if(ent.flag) {
                 document.getElementById('preview-flag').src = ent.flag;
                 document.getElementById('preview-flag').classList.remove('hidden');
