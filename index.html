@@ -563,6 +563,13 @@
     <div id="map-container">
         <div id="map"></div>
         <div id="cesiumContainer"></div>
+        
+        <!-- CUSTOM CESIUM POPUP -->
+        <div id="cesium-popup" class="absolute hidden bg-white rounded-2xl shadow-2xl z-[2000] w-[300px] pointer-events-auto transition-opacity duration-200 border-2 border-white/50">
+            <div id="cesium-popup-content"></div>
+            <!-- Arrow -->
+            <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white transform rotate-45 border-b-2 border-r-2 border-gray-100"></div> 
+        </div>
     </div>
 
     <!-- Globe Toggle Button -->
@@ -949,6 +956,9 @@
         let selectedMarkerIconUrl = 'https://api.iconify.design/twemoji/round-pushpin.svg';
         let pendingConfirmAction = null; 
         let is3DMode = false;
+        
+        // 3D Interaction Variables
+        let selectedCesiumEntity = null;
 
         // Data Models
         const HIERARCHY = [
@@ -1064,7 +1074,6 @@
         function initCesium() {
             if(viewer) return;
 
-            // Updated Imagery Provider for Satellite View (ArcGIS World Imagery)
             viewer = new Cesium.Viewer('cesiumContainer', {
                 animation: false,
                 baseLayerPicker: false,
@@ -1072,9 +1081,9 @@
                 vrButton: false,
                 geocoder: false,
                 homeButton: false,
-                infoBox: false,
+                infoBox: false, // Disable default infobox
                 sceneModePicker: false,
-                selectionIndicator: false,
+                selectionIndicator: true,
                 timeline: false,
                 navigationHelpButton: false,
                 imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
@@ -1085,6 +1094,55 @@
             viewer.scene.globe.enableLighting = true;
             viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
             
+            // --- Custom Popup Logic ---
+            const popupDiv = document.getElementById('cesium-popup');
+            const popupContent = document.getElementById('cesium-popup-content');
+            
+            // Click Handler
+            viewer.screenSpaceEventHandler.setInputAction((click) => {
+                const pickedObject = viewer.scene.pick(click.position);
+                if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.entityDataId) {
+                    selectedCesiumEntity = pickedObject.id;
+                    const ent = entities.find(e => e.id === selectedCesiumEntity.entityDataId);
+                    
+                    if (ent) {
+                        const visuals = getEntityVisuals(ent);
+                        popupContent.innerHTML = createPopupContent(ent, visuals.fillColor, visuals.colorContext);
+                        popupDiv.classList.remove('hidden');
+                    }
+                } else {
+                    selectedCesiumEntity = null;
+                    popupDiv.classList.add('hidden');
+                }
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+            // Update Popup Position
+            viewer.scene.postRender.addEventListener(() => {
+                if (selectedCesiumEntity && !popupDiv.classList.contains('hidden')) {
+                    // Try to get position from picked entity
+                    let position;
+                    if(selectedCesiumEntity.position) {
+                        position = selectedCesiumEntity.position.getValue(viewer.clock.currentTime);
+                    } else if(selectedCesiumEntity.polygon) {
+                        // For polygons, we stored a separate centroid position property in the entity object for convenience
+                        position = selectedCesiumEntity.centerPosition;
+                    }
+
+                    if (position) {
+                        const canvasPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, position);
+                        if (canvasPosition) {
+                            popupDiv.style.top = (canvasPosition.y - popupDiv.offsetHeight - 20) + 'px';
+                            popupDiv.style.left = (canvasPosition.x - popupDiv.offsetWidth / 2) + 'px';
+                        } else {
+                            // If off-screen (e.g. behind camera), hide temporarily? 
+                            // wgs84ToWindowCoordinates returns undefined if behind camera usually.
+                            // But for occlusion by earth, we might need more checks. 
+                            // For now, let it be.
+                        }
+                    }
+                }
+            });
+
             // Sync Camera on start
             syncCameraTo2D();
         }
@@ -1249,6 +1307,34 @@
             else if(type === 'marker') window.startDrawMarker();
         }
 
+        // --- Helper: Get Entity Visuals (Color & Context) ---
+        function getEntityVisuals(ent) {
+            const colorMode = document.getElementById('color-mode-select').value;
+            let fillColor = ent.color;
+            let colorContext = { type: 'entity', value: 'สีประจำเขต' };
+
+            if (colorMode === 'religion') {
+                fillColor = COLORS.religion[ent.religion] || '#ccc';
+                colorContext = { type: 'religion', value: ent.religion };
+            } else if (colorMode === 'government') {
+                fillColor = COLORS.gov[ent.government] || '#ccc';
+                colorContext = { type: 'gov', value: ent.government };
+            } else if (colorMode === 'rank') {
+                const h = HIERARCHY.find(x => x.id === ent.level);
+                fillColor = h ? h.defaultColor : '#ccc';
+                colorContext = { type: 'rank', value: h ? h.name : 'Unknown' };
+            }
+
+            if (ent.isWater) {
+                fillColor = '#81D4FA';
+                colorContext = { type: 'water', value: 'น่านน้ำ' };
+            }
+            
+            if (colorMode === 'entity' && (ent.isAnnexed || ent.isVassal)) fillColor = ent.color;
+            
+            return { fillColor, colorContext };
+        }
+
         // --- Icon System ---
         function renderCommonIcons() {
             const container = document.getElementById('common-icons-container');
@@ -1302,9 +1388,9 @@
             if(!viewer) return;
             viewer.entities.removeAll();
             
-            const colorMode = document.getElementById('color-mode-select').value;
             const searchTxt = document.getElementById('search-input').value.toLowerCase();
             const showRoads = document.getElementById('toggle-roads').checked;
+            const showLabels = document.getElementById('toggle-created-labels').checked;
             const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
             
             entities.forEach(ent => {
@@ -1313,16 +1399,15 @@
 
                 try {
                     const geoJson = JSON.parse(ent.geoJson);
+                    const visuals = getEntityVisuals(ent);
                     
                     // 1. ROADS
                     if (ent.type === 'road') {
                         if(!showRoads) return;
-                        const coords = geoJson.geometry.coordinates.map(c => Number(c[0]), Number(c[1])).flat(); // Simplified
-                        // Extract coords from LineString
                         const flatCoords = [];
                         geoJson.geometry.coordinates.forEach(pt => { flatCoords.push(pt[0], pt[1]); });
                         
-                        viewer.entities.add({
+                        const roadEnt = viewer.entities.add({
                             polyline: {
                                 positions: Cesium.Cartesian3.fromDegreesArray(flatCoords),
                                 width: parseInt(ent.weight) || 4,
@@ -1330,6 +1415,7 @@
                             },
                             name: ent.name
                         });
+                        roadEnt.entityDataId = ent.id; // Attach ID
                         return;
                     }
 
@@ -1337,49 +1423,81 @@
                     if (ent.type === 'marker') {
                         const lon = geoJson.geometry.coordinates[0];
                         const lat = geoJson.geometry.coordinates[1];
-                        viewer.entities.add({
+                        
+                        const markerEnt = viewer.entities.add({
                             position: Cesium.Cartesian3.fromDegrees(lon, lat),
                             billboard: {
                                 image: ent.iconUrl,
                                 scale: 1.0,
-                                color: Cesium.Color.fromCssColorString(ent.color)
+                                color: Cesium.Color.fromCssColorString(ent.color),
+                                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
                             },
                             name: ent.name
                         });
+                        markerEnt.entityDataId = ent.id; // Attach ID
+
+                        // Marker Label
+                        if(showLabels) {
+                            markerEnt.label = {
+                                text: ent.name,
+                                font: 'bold 16px "Mali", sans-serif',
+                                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                fillColor: Cesium.Color.WHITE,
+                                outlineColor: Cesium.Color.fromCssColorString('#5D4037'),
+                                outlineWidth: 4,
+                                verticalOrigin: Cesium.VerticalOrigin.TOP,
+                                pixelOffset: new Cesium.Cartesian2(0, 5),
+                                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 1000000),
+                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                            };
+                        }
                         return;
                     }
 
                     // 3. AREAS (POLYGONS)
-                    let fillColor = ent.color;
-                    if (colorMode === 'religion') fillColor = COLORS.religion[ent.religion] || '#ccc';
-                    if (colorMode === 'government') fillColor = COLORS.gov[ent.government] || '#ccc';
-                    if (colorMode === 'rank') {
-                        const h = HIERARCHY.find(x => x.id === ent.level);
-                        fillColor = h ? h.defaultColor : '#ccc';
-                    }
-                    if (ent.isWater) fillColor = '#81D4FA';
-                    if (colorMode === 'entity' && (ent.isAnnexed || ent.isVassal)) fillColor = ent.color;
-
-                    // Convert GeoJSON Polygon to Cesium Hierarchy
-                    // Handling simple Polygon only for this demo (Exterior ring)
-                    let hierarchy;
-                    const coords = geoJson.geometry.coordinates;
                     if(geoJson.geometry.type === 'Polygon') {
                          const flat = [];
+                         const coords = geoJson.geometry.coordinates;
                          coords[0].forEach(pt => { flat.push(pt[0], pt[1]); });
-                         hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
+                         const hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
                          
-                         viewer.entities.add({
+                         const polyEnt = viewer.entities.add({
                             polygon: {
                                 hierarchy: hierarchy,
-                                material: Cesium.Color.fromCssColorString(fillColor).withAlpha(ent.isWater ? 0.5 : globalOpacity),
+                                material: Cesium.Color.fromCssColorString(visuals.fillColor).withAlpha(ent.isWater ? 0.5 : globalOpacity),
                                 outline: true,
-                                outlineColor: Cesium.Color.fromCssColorString(ent.isWater ? '#29B6F6' : globalStrokeColor), // USE GLOBAL STROKE
+                                outlineColor: Cesium.Color.fromCssColorString(ent.isWater ? '#29B6F6' : globalStrokeColor),
                                 outlineWidth: 2
                             },
-                            name: ent.name,
-                            description: `<b>${ent.name}</b><br>${ent.ruler}`
+                            name: ent.name
                          });
+                         polyEnt.entityDataId = ent.id; // Attach ID
+
+                         // Calculate Centroid for Label & Popup Position
+                         try {
+                            const center = turf.centerOfMass(geoJson);
+                            const cLon = center.geometry.coordinates[0];
+                            const cLat = center.geometry.coordinates[1];
+                            polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(cLon, cLat); // Store for popup
+
+                            // Area Label
+                            if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
+                                viewer.entities.add({
+                                    position: polyEnt.centerPosition,
+                                    label: {
+                                        text: ent.isAnnexed ? ent.annexedByName : ent.name,
+                                        font: 'bold 14px "Mali", sans-serif',
+                                        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                        fillColor: Cesium.Color.fromCssColorString(ent.labelColor || '#4E342E'),
+                                        outlineColor: Cesium.Color.WHITE,
+                                        outlineWidth: 3,
+                                        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2000000)
+                                    }
+                                });
+                            }
+                         } catch(e) {}
                     }
                 } catch(e) { console.error("Cesium render error", e); }
             });
@@ -1390,7 +1508,6 @@
             if(!map || !drawnItems) return;
             drawnItems.clearLayers();
             
-            const colorMode = document.getElementById('color-mode-select').value;
             const searchTxt = document.getElementById('search-input').value.toLowerCase();
             const showRoads = document.getElementById('toggle-roads').checked;
             const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
@@ -1404,6 +1521,7 @@
 
                 try {
                     const geoJson = JSON.parse(ent.geoJson);
+                    const visuals = getEntityVisuals(ent); // Use shared logic
 
                     // 1. ROADS
                     if (ent.type === 'road') {
@@ -1450,35 +1568,11 @@
                     }
 
                     // 3. AREAS
-                    let fillColor = ent.color;
-                    let colorContext = { type: 'entity', value: 'สีประจำเขต' };
-
-                    if (colorMode === 'religion') {
-                        fillColor = COLORS.religion[ent.religion] || '#ccc';
-                        colorContext = { type: 'religion', value: ent.religion };
-                    }
-                    if (colorMode === 'government') {
-                        fillColor = COLORS.gov[ent.government] || '#ccc';
-                        colorContext = { type: 'gov', value: ent.government };
-                    }
-                    if (colorMode === 'rank') {
-                        const h = HIERARCHY.find(x => x.id === ent.level);
-                        fillColor = h ? h.defaultColor : '#ccc';
-                        colorContext = { type: 'rank', value: h ? h.name : 'Unknown' };
-                    }
-
-                    if (ent.isWater) {
-                        fillColor = '#81D4FA';
-                        colorContext = { type: 'water', value: 'น่านน้ำ' };
-                    }
-                    
-                    if (colorMode === 'entity' && (ent.isAnnexed || ent.isVassal)) fillColor = ent.color;
-
                     const layer = L.geoJSON(geoJson, {
                         style: {
-                            color: ent.isWater ? '#29B6F6' : globalStrokeColor, // USE GLOBAL STROKE
+                            color: ent.isWater ? '#29B6F6' : globalStrokeColor,
                             weight: ent.isWater ? 1 : 1.5,
-                            fillColor: fillColor,
+                            fillColor: visuals.fillColor,
                             fillOpacity: ent.isWater ? 0.5 : globalOpacity
                         },
                         onEachFeature: (f, l) => {
@@ -1494,7 +1588,7 @@
                                 });
                                 drawnItems.addLayer(label);
                             }
-                            l.bindPopup(createPopupContent(ent, fillColor, colorContext));
+                            l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext));
                         }
                     });
                     drawnItems.addLayer(layer);
