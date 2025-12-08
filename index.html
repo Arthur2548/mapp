@@ -76,7 +76,7 @@
             cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height=32') 0 32, crosshair !important;
         }
         .cursor-pen .leaflet-interactive {
-            cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height=32') 0 32, crosshair !important;
+            cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height:32') 0 32, crosshair !important;
         }
 
         #cesiumContainer {
@@ -838,6 +838,39 @@
         <div id="legend-content" class="space-y-1.5 text-[11px]"></div>
     </div>
 
+    <!-- Modal: Player Setup (NEW) -->
+    <div id="modal-player-setup" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
+        <div class="modal-paper w-96 p-8 relative text-center">
+             <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white"><span class="material-icons-round text-3xl">account_circle</span></div>
+            <h2 class="text-2xl text-[#5D4037] font-bold mb-2 cute-font">กำหนดตัวตนของท่าน</h2>
+            <p class="text-sm text-gray-500 mb-6">ท่านคือผู้สถาปนาอาณาจักรนี้! กรุณาตั้งชื่อตนเองเพื่อใช้ในการปกครอง</p>
+            <form id="form-player-setup" onsubmit="setPlayerName(event)" class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block text-left">ชื่อผู้เล่น/ชื่อผู้ปกครอง</label>
+                    <input type="text" id="player-name-input" class="input-cute font-bold text-[#5D4037] text-center" required placeholder="ชื่อของท่าน">
+                </div>
+                <button type="submit" class="btn-cute w-full mt-2 bg-gradient-to-r from-amber-600 to-red-600">เริ่มการปกครอง</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal: Village Ruler Naming (NEW) -->
+    <div id="modal-village-ruler" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
+        <div class="modal-paper w-96 p-8 relative text-center">
+             <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white"><span class="material-icons-round text-3xl">village</span></div>
+            <h2 class="text-2xl text-[#5D4037] font-bold mb-2 cute-font">แต่งตั้งผู้ใหญ่บ้าน</h2>
+            <p class="text-sm text-gray-500 mb-6">ท่านได้เลื่อนเป็น <span id="new-player-title" class="font-bold text-emerald-600"></span> แล้ว! กรุณาตั้งชื่อผู้ใหญ่บ้านของ <span id="village-to-rename" class="font-bold text-[#5D4037]"></span> แทนท่าน</p>
+            <form id="form-village-ruler" onsubmit="saveNewVillageRuler(event)" class="space-y-4">
+                <input type="hidden" id="village-id-to-rename">
+                <div>
+                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block text-left">ชื่อผู้ใหญ่บ้านคนใหม่</label>
+                    <input type="text" id="village-ruler-name-input" class="input-cute font-bold text-[#5D4037] text-center" required placeholder="ชื่อผู้ใหญ่บ้าน">
+                </div>
+                <button type="submit" class="btn-cute w-full mt-2 bg-gradient-to-r from-emerald-600 to-teal-600">บันทึก</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal: Login -->
     <div id="modal-login" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper modal-paper-auth w-[380px] p-8">
@@ -902,6 +935,7 @@
                              <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">เขตปกครองแม่</label><select id="inp-parent" class="input-cute text-sm cursor-pointer"><option value="">-- เป็นอิสระ / สูงสุด --</option></select></div>
                         </div>
                          <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ผู้ปกครอง</label><input type="text" id="inp-ruler" class="input-cute" required></div>
+                         <p id="ruler-name-note" class="text-xs text-red-500 hidden">⚠️ ท่านคือผู้ใหญ่บ้านของหมู่บ้านแรกนี้ ชื่อผู้ปกครองจะถูกตั้งเป็น: <span class="font-bold" id="ruler-name-display"></span></p>
                     </div>
                 </div>
                 <div class="grid grid-cols-3 gap-4 pt-2">
@@ -1034,6 +1068,7 @@
                                 <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ระดับศักดิ์</label><select id="merge-level" class="input-cute"></select></div>
                             </div>
                             <div><label class="text-xs font-bold text-[#8D6E63] ml-2">สีประจำเขต</label><input type="color" id="merge-color" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm"></div>
+                            <p id="merge-level-note" class="text-xs text-red-500 hidden">⚠️ การหลอมรวมหมู่บ้านจะบังคับเป็นตำบล และเปลี่ยนสถานะผู้เล่นเป็นกำนัน</p>
                         </div>
                         <button type="submit" class="btn-cute w-full mt-6 bg-gradient-to-r from-amber-600 to-orange-600">✨ ร่ายเวทย์หลอมรวม</button>
                     </form>
@@ -1096,7 +1131,7 @@
             </div>
 
             <div class="mt-4 pt-4 border-t border-dashed">
-                <h4 class="font-bold text-[#5D4037] text-sm mb-2 flex items-center gap-2"><span class="material-icons-round text-purple-500 text-xl">fork_right</span> ย้ายสังกัด/ผนวกเขตย่อย</h4>
+                <h4 class="font-bold text-[#5D4037] text-sm mb-2 flex items-center gap-2"><span class="material-icons-round text-purple-500">fork_right</span> ย้ายสังกัด/ผนวกเขตย่อย</h4>
                 <div class="flex gap-2">
                     <select id="transfer-child-select" class="input-cute flex-1 text-sm"><option value="">-- เลือกเขตย่อย --</option></select>
                     <select id="transfer-target-select" class="input-cute flex-1 text-sm"><option value="">-- เลือกเขตแม่ปลายทาง --</option></select>
@@ -1162,17 +1197,23 @@
         let mapSheets = [];           // Array of all map sheets for the current user
         let unsubscribeMapListener = null; // To manage the dynamic map data listener
 
+        // --- NEW GLOBAL for Player Management ---
+        let playerState = {
+            name: '',
+            title: 'ผู้ใหญ่บ้าน', // Default title
+            highestRank: 'muban' // Highest rank of area player is ruler of, initialized to muban
+        }; 
 
         const HIERARCHY = [
-            { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51' },
-            { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#F1C40F' },
-            { id: 'prathet', name: 'ประเทศ/ราชรัฐ (State)', rank: 7, defaultColor: '#E74C3C' },
-            { id: 'monrath', name: 'มณรัฐ (Region)', rank: 6, defaultColor: '#F39C12' },
-            { id: 'monthon', name: 'มณฑล (Province)', rank: 5, defaultColor: '#E91E63' },
-            { id: 'jangwat', name: 'จังหวัด/นคร (City)', rank: 4, defaultColor: '#2ECC71' },
-            { id: 'amphoe', name: 'อำเภอ (District)', rank: 3, defaultColor: '#8E44AD' },
-            { id: 'tambon', name: 'ตำบล (Sub-district)', rank: 2, defaultColor: '#95A5A6' },
-            { id: 'muban', name: 'หมู่บ้าน (Village)', rank: 1, defaultColor: '#3498DB' }
+            { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51', rulerTitle: 'พระจักรพรรดิ' },
+            { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#F1C40F', rulerTitle: 'พระราชา' },
+            { id: 'prathet', name: 'ประเทศ/ราชรัฐ (State)', rank: 7, defaultColor: '#E74C3C', rulerTitle: 'กษัตริย์' },
+            { id: 'monrath', name: 'มณรัฐ (Region)', rank: 6, defaultColor: '#F39C12', rulerTitle: 'เจ้าเมือง' },
+            { id: 'monthon', name: 'มณฑล (Province)', rank: 5, defaultColor: '#E91E63', rulerTitle: 'ผู้ว่าการ' },
+            { id: 'jangwat', name: 'จังหวัด/นคร (City)', rank: 4, defaultColor: '#2ECC71', rulerTitle: 'นายกเทศมนตรี' },
+            { id: 'amphoe', name: 'อำเภอ (District)', rank: 3, defaultColor: '#8E44AD', rulerTitle: 'นายอำเภอ' },
+            { id: 'tambon', name: 'ตำบล (Sub-district)', rank: 2, defaultColor: '#95A5A6', rulerTitle: 'กำนัน' },
+            { id: 'muban', name: 'หมู่บ้าน (Village)', rank: 1, defaultColor: '#3498DB', rulerTitle: 'ผู้ใหญ่บ้าน' }
         ];
 
         const RANK_COLORS = {};
@@ -1204,6 +1245,12 @@
             return collection(db, 'artifacts', appId, 'users', window.userId, 'map_sheets', currentMapSheetId, 'fantasy_empires');
         }
 
+        // Helper function to get the player state document reference
+        function getPlayerStateDocRef() {
+             if (!window.userId) return null;
+             return doc(db, 'artifacts', appId, 'users', window.userId, 'player_state', 'data');
+        }
+
 
         // --- Initialization ---
         window.onload = async () => {
@@ -1227,6 +1274,9 @@
                         document.getElementById('user-display-name').innerText = `Lord ${user.displayName || user.email}`;
                         document.getElementById('user-id-display').innerText = `ID: ${window.userId.substring(0,6)}`;
                         
+                        // Load player state first
+                        await loadPlayerState();
+
                         // Start listening for map sheets when user logs in
                         subscribeToMapSheets(); 
 
@@ -1238,10 +1288,32 @@
                         if (unsubscribeMapListener) unsubscribeMapListener();
                         drawnItems.clearLayers();
                         entities = [];
+                        playerState = { name: '', title: 'ผู้ใหญ่บ้าน', highestRank: 'muban' }; // Reset state
                     }
                 });
             } catch (err) { console.error("Firebase connection failed:", err); }
         };
+
+        // --- Player State Management (NEW) ---
+        async function loadPlayerState() {
+             if (!window.userId) return;
+             try {
+                 const docRef = getPlayerStateDocRef();
+                 const docSnap = await getDoc(docRef);
+                 if (docSnap.exists()) {
+                     playerState = { ...playerState, ...docSnap.data() };
+                     console.log("Player State Loaded:", playerState);
+                 }
+             } catch (err) { console.error("Error loading player state:", err); }
+        }
+        
+        async function savePlayerState(merge = true) {
+            if (!window.userId) return;
+            try {
+                const docRef = getPlayerStateDocRef();
+                await setDoc(docRef, playerState, { merge: merge });
+            } catch (err) { console.error("Error saving player state:", err); }
+        }
 
         function toggleAuthUI(user) {
             const loggedInView = document.getElementById('logged-in-view');
@@ -1338,6 +1410,10 @@
             // Set up new listener
             unsubscribeMapListener = onSnapshot(areasRef, (snap) => {
                 entities = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                
+                // NEW: Update player's highest rank based on created areas (for management mode)
+                updatePlayerHighestRank(); 
+
                 renderMap(); // 2D
                 if(is3DMode) renderCesium(); // 3D
                 calculateAggregateStats(); // NEW: Update stats
@@ -1347,6 +1423,36 @@
                 renderMap();
             });
         }
+
+        // NEW: Function to check and update player's highest owned rank
+        function updatePlayerHighestRank() {
+             if (currentMode !== 'management' || !playerState.name) return;
+
+             const ownedAreas = entities.filter(e => e.type === 'area' && !e.isWater && e.ruler === playerState.name);
+             if (ownedAreas.length === 0) return; // No owned areas yet
+
+             let maxRank = 0;
+             let highestRankId = 'muban';
+             let highestRankTitle = 'ผู้ใหญ่บ้าน';
+
+             ownedAreas.forEach(area => {
+                 const rank = getRank(area.level);
+                 if (rank > maxRank) {
+                     maxRank = rank;
+                     highestRankId = area.level;
+                     highestRankTitle = HIERARCHY.find(h => h.id === highestRankId)?.rulerTitle || 'ผู้นำ';
+                 }
+             });
+             
+             // Check for promotion only if the current title is lower
+             if (maxRank > getRank(playerState.highestRank)) {
+                 playerState.highestRank = highestRankId;
+                 playerState.title = highestRankTitle;
+                 savePlayerState(); // Save the new state
+                 showToast(`🎉 สถานะเลื่อนขึ้นเป็น ${playerState.title}!`);
+             }
+        }
+
 
         window.createNewMapSheet = async (e, defaultName = null) => {
             if (e) e.preventDefault();
@@ -1410,7 +1516,10 @@
 
         // --- NEW FEATURE 1: Management HUD Logic (Placeholder Stats) ---
         function calculateAggregateStats() {
-            if (currentMode !== 'management') return;
+            if (currentMode !== 'management') {
+                document.getElementById('management-hud').classList.add('hidden');
+                return;
+            }
 
             let totalGold = 0;
             let totalPop = 0;
@@ -1719,11 +1828,58 @@
                 document.getElementById('btn-mode-creative').classList.remove('bg-gray-100', 'text-gray-500');
                 document.getElementById('management-hud').classList.add('hidden');
             } else if (mode === 'management') {
+                // NEW MANAGEMENT MODE LOGIC
                 document.getElementById('btn-mode-management').classList.add('active', 'bg-[#5D4037]', 'text-white');
                 document.getElementById('btn-mode-management').classList.remove('bg-gray-100', 'text-gray-500');
-                calculateAggregateStats(); // Show HUD when entering management mode
+                
+                if (!playerState.name) {
+                    // Open setup modal if name is not set
+                    document.getElementById('modal-player-setup').classList.remove('hidden');
+                } else {
+                    calculateAggregateStats(); // Show HUD when entering management mode
+                }
             }
             currentMode = mode;
+        }
+        
+        // NEW: Function to handle player name setup
+        window.setPlayerName = (e) => {
+            e.preventDefault();
+            const name = document.getElementById('player-name-input').value.trim();
+            if (!name) return;
+
+            playerState.name = name;
+            playerState.title = 'ผู้ใหญ่บ้าน'; // Reset title if needed, or ensure it's set
+            playerState.highestRank = 'muban';
+            savePlayerState();
+
+            closeModal('modal-player-setup');
+            calculateAggregateStats();
+            
+            // Show welcome popup with player's name
+            const welcomeMsg = `ยินดีต้อนรับสู่ปฐมบทแห่งการปกครอง ท่าน${playerState.title} ${playerState.name} "เส้นทางสู่มหาอาณาจักร มิอาจสร้างได้ในวันเดียว และมิอาจลัดขั้นตอน ท่านยังไม่มีอำนาจเหนือแผ่นดินกว้างใหญ่ จงปักหมุดสร้าง 'หมู่บ้าน' ของท่านรวมหมู่บ้านเหล่านั้นเหล่านั้น แล้วยกสถานะขึ้นเป็นตำบล ก่อนที่ท่านจะใฝ่ฝันถึงสิ่งใดที่สูงเกินใจปอง"`;
+            showConfirmModal("ปฐมบทแห่งการปกครอง", welcomeMsg, null, true);
+        }
+        
+        // NEW: Function to save the new ruler name for a village after promotion
+        window.saveNewVillageRuler = async (e) => {
+            e.preventDefault();
+            if(!validateAuth()) return;
+            const villageId = document.getElementById('village-id-to-rename').value;
+            const newRulerName = document.getElementById('village-ruler-name-input').value.trim();
+            
+            if (!villageId || !newRulerName) return;
+            
+            try {
+                // Update the single village's ruler name
+                const docRef = doc(getEntityCollectionRef(), villageId);
+                await setDoc(docRef, { ruler: newRulerName, originalRuler: newRulerName }, { merge: true });
+                showToast(`แต่งตั้งผู้ใหญ่บ้าน ${newRulerName} แห่งหมู่บ้าน ${document.getElementById('village-to-rename').innerText} สำเร็จ`);
+            } catch (error) {
+                 console.error("Error setting new village ruler:", error);
+                 showToast("เกิดข้อผิดพลาดในการบันทึกชื่อผู้ใหญ่บ้าน");
+            }
+            closeModal('modal-village-ruler');
         }
 
         window.toggleAllLevels = (check) => {
@@ -2286,6 +2442,12 @@
                 // ปิดโหมดแก้ไขก่อน
                 toggleEditGeometry();
             }
+            
+            if (currentMode === 'management' && playerState.name === '') {
+                 showToast("กรุณาตั้งชื่อผู้เล่นในโหมดบริหารก่อนใช้งาน");
+                 document.getElementById('modal-player-setup').classList.remove('hidden');
+                 return;
+            }
 
             isMultiSelectMode = !isMultiSelectMode;
             selectedIds.clear();
@@ -2323,16 +2485,61 @@
             const modal = document.getElementById('modal-union');
             modal.classList.remove('hidden');
             
-            // Setup Tab 1: Merge Level Dropdown
+            const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
+            const allVillages = selectedEnts.every(e => e.level === 'muban');
             const mergeLevelSelect = document.getElementById('merge-level');
+            const mergeLevelNote = document.getElementById('merge-level-note');
+            const highestRank = playerState.highestRank;
+            const highestRankObj = HIERARCHY.find(h => h.id === highestRank);
+            
+            // Setup Tab 1: Merge Level Dropdown
             mergeLevelSelect.innerHTML = '';
             HIERARCHY.forEach(h => {
                 const opt = document.createElement('option'); opt.value = h.id; opt.text = h.name;
-                if(h.rank >= 7) opt.selected = true; // Suggest higher rank
+                
+                // Management Mode: Only allow promotion to the next rank up from the currently selected lowest rank
+                if(currentMode === 'management') {
+                     // If all selected are villages, force target rank to 'tambon'
+                     if (allVillages) {
+                         if (h.id === 'tambon') opt.selected = true;
+                         // Restrict options to tambon or higher only if player is not yet tambon ruler
+                         if (getRank(h.id) < getRank('tambon') || getRank(h.id) > getRank(highestRank)) opt.disabled = true;
+                     } else {
+                         // Default logic: suggest Kingdom/State for non-village merges
+                         if(h.rank >= 7) opt.selected = true;
+                     }
+
+                } else if(h.rank >= 7) { // Creative mode default
+                     opt.selected = true; 
+                }
+                
+                // Restrict selection to ranks higher than current highest owned rank
+                if(currentMode === 'management' && getRank(h.id) > getRank(highestRankObj.id) + 1) {
+                     opt.disabled = true;
+                }
+
                 mergeLevelSelect.appendChild(opt);
             });
 
-            // Setup Tab 2: Annex Leader Selector
+            // Update merge ruler/color defaults
+            document.getElementById('merge-ruler').value = playerState.name || selectedEnts[0].ruler || '';
+            document.getElementById('merge-color').value = highestRankObj.defaultColor;
+
+            // Show note if it's a village-to-tambon promotion
+            if (currentMode === 'management' && allVillages) {
+                 mergeLevelSelect.value = 'tambon'; // Force select
+                 mergeLevelSelect.disabled = true; // Lock selection
+                 document.getElementById('merge-ruler').value = playerState.name; // Force ruler name
+                 document.getElementById('merge-ruler').disabled = true;
+                 mergeLevelNote.classList.remove('hidden');
+            } else {
+                 mergeLevelSelect.disabled = false;
+                 document.getElementById('merge-ruler').disabled = false;
+                 mergeLevelNote.classList.add('hidden');
+            }
+
+
+            // Setup Tab 2: Annex Leader Selector (unchanged)
             const leaderSelect = document.getElementById('annex-leader-select');
             leaderSelect.innerHTML = '';
             selectedIds.forEach(id => {
@@ -2371,8 +2578,27 @@
             e.preventDefault();
             if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
 
+            const newLevel = document.getElementById('merge-level').value;
+            const newRuler = document.getElementById('merge-ruler').value;
+            const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
+            const allVillages = selectedEnts.every(e => e.level === 'muban');
+            let villageToRename = null;
+
+            if (currentMode === 'management' && allVillages && newLevel === 'tambon') {
+                // If the player is merging villages into a Sub-district
+                // Find one village that was previously ruled by the player to rename its ruler
+                villageToRename = selectedEnts.find(e => e.ruler === playerState.name);
+                if (villageToRename) {
+                     playerState.title = HIERARCHY.find(h => h.id === 'tambon')?.rulerTitle || 'กำนัน';
+                     playerState.highestRank = 'tambon';
+                     document.getElementById('village-id-to-rename').value = villageToRename.id;
+                     document.getElementById('village-to-rename').innerText = villageToRename.name;
+                     document.getElementById('new-player-title').innerText = playerState.title;
+                }
+            }
+
+
             try {
-                const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
                 const polys = selectedEnts.map(ent => JSON.parse(ent.geoJson));
 
                 // Turf Union Logic
@@ -2383,8 +2609,6 @@
 
                 const newName = document.getElementById('merge-name').value;
                 const newColor = document.getElementById('merge-color').value;
-                const newRuler = document.getElementById('merge-ruler').value;
-                const newLevel = document.getElementById('merge-level').value;
 
                 const newDoc = {
                     name: newName,
@@ -2410,15 +2634,39 @@
 
                 // Delete old
                 selectedIds.forEach(id => {
+                    // Skip deleting the single village that will be renamed (if it exists)
+                    if (villageToRename && id === villageToRename.id) return;
+
                     const oldRef = doc(colRef, id);
                     batch.delete(oldRef);
                 });
+                
+                // If a village needs renaming, update it in the batch instead of deleting
+                if (villageToRename) {
+                     const renameRef = doc(colRef, villageToRename.id);
+                     batch.update(renameRef, { 
+                         // Change the ruler to the new ruler's name (which will trigger the naming modal later)
+                         ruler: newRuler, // Temporary ruler before player names the replacement
+                         // Crucial: Set its parent to the new merged entity ID
+                         parentId: newRef.id,
+                         // Change the level of the renamed village to a lower or equivalent level 
+                         // In this case, it remains a muban, but its ruler will change.
+                     });
+                     
+                     // And now update the player state (done outside batch for real-time promotion)
+                     await savePlayerState();
+                }
 
                 await batch.commit();
                 
                 closeModal('modal-union');
                 toggleMultiSelectMode();
                 showConfirmModal("สำเร็จ", `อาณาจักร ${newName} ได้รับการสถาปนาแล้ว!`, null, true);
+
+                // If a village needs renaming, open the modal for the user to set the new ruler
+                if (villageToRename) {
+                     document.getElementById('modal-village-ruler').classList.remove('hidden');
+                }
 
             } catch (err) {
                 console.error(err);
@@ -2659,7 +2907,7 @@
             }
         }
 
-        window.startDrawPolygon = () => new L.Draw.Polygon(map).enable();
+        window.startDrawPolygon = () => openAreaModal(); // Use the logic to open the modal
         window.startDrawPolyline = () => new L.Draw.Polyline(map).enable();
         window.startDrawMarker = () => new L.Draw.Marker(map).enable();
         window.toggleFullScreen = async () => {
@@ -2741,6 +2989,79 @@
                 onDrawCreated(event);
             }
         }
+        
+        // NEW: Function to open modal area with checks
+        function openAreaModal(id = null) {
+            if (currentMode === 'management' && playerState.name === '') {
+                 showToast("กรุณาตั้งชื่อผู้เล่นในโหมดบริหารก่อนวาดแผนที่");
+                 document.getElementById('modal-player-setup').classList.remove('hidden');
+                 return;
+            }
+            document.getElementById('modal-area').classList.remove('hidden');
+            document.getElementById('form-area').reset();
+            
+            const isCreation = !id;
+            const levelSelect = document.getElementById('inp-level');
+            const rulerInput = document.getElementById('inp-ruler');
+            const rulerNote = document.getElementById('ruler-name-note');
+            const existingAreas = entities.filter(e => e.type === 'area' && !e.isWater);
+            
+            // Reset all options to enabled/visible
+            Array.from(levelSelect.options).forEach(opt => opt.disabled = false);
+            rulerInput.disabled = false;
+            rulerNote.classList.add('hidden');
+            
+            if (currentMode === 'management' && isCreation) {
+                // Determine the maximum available rank to create
+                let maxRankToCreate = playerState.highestRank; // Max rank user currently owns
+                if (existingAreas.length === 0) {
+                     maxRankToCreate = 'muban'; // Must start with village
+                }
+                
+                // Restrict Level Selection
+                const maxRankVal = getRank(maxRankToCreate);
+                let highestAllowedLevelId = HIERARCHY.find(h => h.rank === maxRankVal + 1)?.id || maxRankToCreate;
+                
+                // Allow creation of same rank or next rank up, up to the max rank already owned.
+                Array.from(levelSelect.options).forEach(opt => {
+                    const rank = getRank(opt.value);
+                    if (opt.value === 'muban' || rank > getRank(highestAllowedLevelId)) {
+                        opt.disabled = true; // Disable ranks higher than next rank up
+                    }
+                });
+
+                // Set initial values based on first creation vs. subsequent creation
+                if (existingAreas.length === 0) {
+                     // FIRST MUBAN CREATION
+                     levelSelect.value = 'muban';
+                     levelSelect.disabled = true; // Lock to Village
+                     
+                     rulerInput.value = playerState.name; // Set ruler name to player name
+                     rulerInput.disabled = true; // Lock ruler name
+                     
+                     document.getElementById('ruler-name-display').innerText = playerState.name;
+                     rulerNote.classList.remove('hidden'); // Show note
+                } else {
+                     // SUBSEQUENT CREATION (use player's name but allow editing)
+                     levelSelect.value = highestAllowedLevelId;
+                     rulerInput.value = playerState.name;
+                }
+                
+            } else {
+                 // Creative Mode Defaults
+                 levelSelect.value = 'mahaAnachak';
+            }
+            
+            if (id) {
+                 // Open Edit Modal Logic (Same as before)
+                 window.openEditModal(id);
+                 document.getElementById('modal-title').innerText = "แก้ไขเขตปกครอง";
+            } else {
+                 document.getElementById('area-id').value = '';
+                 document.getElementById('modal-title').innerText = "สร้างเขตปกครอง";
+                 document.getElementById('inp-level').dispatchEvent(new Event('change')); // Set default color/parent list
+            }
+        }
 
 
         function onDrawCreated(e) {
@@ -2753,10 +3074,8 @@
             currentDrawLayer = e.layer;
             drawnItems.addLayer(currentDrawLayer); 
             if (e.layerType === 'polygon') {
-                document.getElementById('modal-area').classList.remove('hidden');
-                document.getElementById('form-area').reset();
-                document.getElementById('area-id').value = '';
-                document.getElementById('inp-level').dispatchEvent(new Event('change'));
+                // Instead of opening modal directly, call openAreaModal with logic
+                openAreaModal(); 
             } else if (e.layerType === 'polyline') {
                 document.getElementById('modal-road').classList.remove('hidden');
             } else if (e.layerType === 'marker') {
@@ -2802,12 +3121,14 @@
             e.preventDefault();
             if(!validateAuth()) return;
             const id = document.getElementById('area-id').value;
+            const isFirstMuban = currentMode === 'management' && id === '' && entities.filter(e => e.type === 'area' && !e.isWater).length === 0;
+
             const data = {
                 name: document.getElementById('inp-name').value,
                 customId: document.getElementById('inp-custom-id').value,
                 level: document.getElementById('inp-level').value,
                 parentId: document.getElementById('inp-parent').value,
-                ruler: document.getElementById('inp-ruler').value,
+                ruler: isFirstMuban ? playerState.name : document.getElementById('inp-ruler').value, // Use player name if first muban
                 religion: document.getElementById('inp-religion').value,
                 government: document.getElementById('inp-gov').value,
                 color: document.getElementById('inp-color').value,
