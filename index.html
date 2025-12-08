@@ -489,6 +489,15 @@
         .leaflet-editing {
             cursor: default !important; /* Reset cursor when handles are active */
         }
+
+        /* Custom style for selected path in edit mode (simulate gold dashed line) */
+        /* NOTE: Leaflet Draw uses L.Path.SVG.prototype.setStyles, which overwrites these.
+           The main logic must be applied via selectedPathOptions during L.Control.Draw init.
+        */
+        .leaflet-edit-marker-selected {
+            /* This is the class for the vertices, not the path itself */
+            border: 2px solid #FFD700 !important;
+        }
         
     </style>
 </head>
@@ -636,9 +645,10 @@
                 <div class="tool-btn tool-btn-sub" onclick="startPointMode()" title="วาดเส้นจุด (ทีละจุด)">
                     <span class="material-icons-round text-blue-600">timeline</span>
                 </div>
+                <!-- ปุ่มแก้ไขรูปทรง -->
                 <div id="btn-edit-geom" class="tool-btn tool-btn-sub" onclick="toggleEditGeometry()" title="แก้ไขรูปทรง (ดึงเส้น/ขยาย)">
-    <span class="material-icons-round text-pink-600">architecture</span>
-</div>
+                    <span class="material-icons-round text-pink-600">architecture</span>
+                </div>
             </div>
             
             <div class="tool-btn" onclick="toggleDrawMenu()" title="สร้างเขตพื้นที่ (เลือกแบบ)">
@@ -964,6 +974,7 @@
         // ** NEW GLOBALS FOR EDIT MODE **
         let isEditMode = false;     // เช็คว่ากดปุ่มแก้ไขอยู่ไหม
         let editingLayer = null;    // เก็บว่ากำลังแก้ไข Layer ไหนอยู่
+        let editingLayerId = null;  // ID ของ Layer ที่กำลังแก้ไข (เพิ่มเข้ามาเพื่อใช้ในการทำ highlight)
         // ********************************
 
         let entities = []; 
@@ -1097,15 +1108,27 @@
             map.on(L.Draw.Event.EDITED, onDrawEdited);
             
            // โค้ดส่วนนี้สำคัญมาก เพื่อให้ Leaflet Draw ผสมคุณสมบัติ .editing ให้ Layer ใน drawnItems
+           // ** ปรับ style ให้เป็นสีทองกระพริบตามที่ผู้ใช้ต้องการ **
            new L.EditToolbar.Edit(map, {
                 featureGroup: drawnItems,
                 selectedPathOptions: {
-                    dashArray: '10, 10',
+                    dashArray: '10, 10', // เส้นประกระพริบ
                     fill: true,
-                    fillColor: '#fe57a1',
-                    fillOpacity: 0.1,
+                    fillColor: '#FFD700', // สีทอง
+                    fillOpacity: 0.1, // ใสเล็กน้อย
+                    color: '#FFD700', // สีเส้นขอบเป็นสีทอง
+                    weight: 3, // ความหนา
                     maintainColor: false
                 }
+            });
+
+            // ตรวจจับการสิ้นสุดการแก้ไขโดยผู้ใช้กด ESC หรือเมื่อ Layer ถูกปิด (เพื่อให้แน่ใจว่า editingLayer ถูก reset)
+            map.on('editable:disable', (e) => {
+                 if (e.layer === editingLayer) {
+                    editingLayer = null;
+                    editingLayerId = null;
+                    renderMap(); // Force re-render to remove highlight
+                 }
             });
         }
 
@@ -1335,6 +1358,10 @@
                 showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดเครื่องมือวาดอีกครั้ง", null, true);
                 return;
             }
+            // ถ้าอยู่ในโหมดแก้ไขอยู่ ให้ปิดก่อน
+            if (isEditMode) {
+                toggleEditGeometry();
+            }
             if(type === 'polygon') window.toggleDrawMenu(); 
             else if(type === 'polyline') window.startDrawPolyline();
             else if(type === 'marker') window.startDrawMarker();
@@ -1403,6 +1430,14 @@
                 }
             }
             
+            // Check if current entity is the one being edited
+            if (isEditMode && ent.id === editingLayerId) {
+                // When actively editing, Leaflet Draw will handle the styling (gold dashed line)
+                // We return the base color here, as the styling logic below is for non-edited state.
+                // However, the L.EditToolbar.Edit setup now ensures the gold dashed line appears when enabled.
+                // This ensures the fill and color are preserved while not selected for editing.
+            }
+
             return { fillColor, colorContext };
         }
 
@@ -1626,7 +1661,7 @@
 
                     if (ent.type === 'road') {
                         if(!showRoads) return;
-                        L.geoJSON(geoJson, {
+                        const roadLayer = L.geoJSON(geoJson, {
                             style: { color: ent.color, weight: parseInt(ent.weight) || 4, dashArray: ent.roadType === 'army' ? '10, 15' : null, opacity: 0.8, lineCap: 'round' }
                         }).bindPopup(`
                             <div class="text-center">
@@ -1635,6 +1670,7 @@
                                 <button onclick="window.confirmDelete('${ent.id}')" class="text-red-400 text-xs underline cursor-pointer">ลบเส้นทาง</button>
                             </div>
                         `).addTo(drawnItems);
+                        roadLayer.eachLayer(l => l.options.entityId = ent.id);
                         return;
                     }
                     
@@ -1658,32 +1694,53 @@
                     let strokeColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
                     if (ent.isAnnexed) strokeColor = visuals.fillColor; 
                     
-                    // Logic for Selection Highlight
+                    // Logic for Selection Highlight (Used for Multi-Select Mode)
                     const isSelected = selectedIds.has(ent.id);
                     
+                    // Style for the layer
+                    const layerStyle = {
+                        color: isSelected ? '#FFD700' : strokeColor, // Gold if selected (Multi-Select)
+                        weight: isSelected ? 4 : (ent.isWater ? 1 : 1.5),
+                        fillColor: visuals.fillColor,
+                        fillOpacity: ent.isWater ? 0.5 : globalOpacity,
+                        dashArray: isSelected ? '8, 8' : (ent.isColony ? '5, 10' : null)
+                    };
+                    
+                    // Override stroke color/style if currently being edited
+                    if (isEditMode && ent.id === editingLayerId) {
+                         // Leaflet Draw handles the highlight (gold dash) when editing is enabled
+                         // If it's the layer being edited, we don't apply the selection style from here
+                         // This is primarily for the vertex markers and the dash array applied by L.EditToolbar
+                         layerStyle.color = strokeColor; // Use original color when not selected in multi-select mode
+                         layerStyle.weight = ent.isWater ? 1 : 1.5;
+                         layerStyle.dashArray = ent.isColony ? '5, 10' : null;
+                    }
+
+
                     L.geoJSON(geoJson, {
-                        style: {
-                            color: isSelected ? '#FFD700' : strokeColor, // Gold if selected
-                            weight: isSelected ? 4 : (ent.isWater ? 1 : 1.5),
-                            fillColor: visuals.fillColor,
-                            fillOpacity: ent.isWater ? 0.5 : globalOpacity,
-                            dashArray: isSelected ? '8, 8' : (ent.isColony ? '5, 10' : null)
-                        },
+                        style: layerStyle,
                          onEachFeature: (f, l) => {
                             l.options.entityId = ent.id;
 
-                            // *** โค้ดที่ได้รับการแก้ไข: จัดการการคลิกใหม่ทั้งหมด ***
+                            // ** ถ้าเป็น Layer ที่กำลังถูกแก้ไขอยู่ ให้เก็บ Layer reference ไว้ **
+                            if (isEditMode && ent.id === editingLayerId) {
+                                window.editingLayer = l;
+                                l.editing.enable();
+                            }
+                            
                             l.on('click', async (e) => {
                                 // 1. Pop-up Blocking: ปิด Popup ที่อาจเปิดอยู่ก่อนเสมอ
                                 map.closePopup();
 
                                 // 2. Check Edit Mode: กรณี 1: โหมดแก้ไข (Click to Edit)
                                 if (window.isEditMode) {
-                                    L.DomEvent.stopPropagation(e); // สำคัญ: หยุดการกระจาย Event เพื่อไม่ให้เกิด Popup ซ้อน
-                                    // ⚠️ ลบ L.DomEvent.preventDefault(e) ออกเพื่อไม่ให้ขัดแย้งกับ Leaflet Edit
+                                    L.DomEvent.stopPropagation(e); 
                                     
                                     // แก้ไขได้เฉพาะ Area (Polygon) และ Road (Polyline)
-                                    if (ent.type !== 'area' && ent.type !== 'road') return;
+                                    if (ent.type !== 'area' && ent.type !== 'road') {
+                                        showToast("ไม่สามารถแก้ไขหมุดหรือจุดได้ในโหมดนี้");
+                                        return;
+                                    }
 
                                     // ถ้ามี Layer อื่นกำลังถูกแก้อยู่ ให้ปิดการแก้ไขตัวนั้นและบันทึกก่อน
                                     if (window.editingLayer && window.editingLayer !== l) {
@@ -1691,19 +1748,26 @@
                                         const oldRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
                                         // ใช้วิธี save แบบเงียบๆ ไม่ต้องรอ
                                         setDoc(oldRef, { geoJson: JSON.stringify(window.editingLayer.toGeoJSON()) }, { merge: true }).then(() => console.log("Old entity saved")).catch(e => console.error("Error saving old entity:", e));
+                                        window.editingLayerId = null;
+                                        window.editingLayer = null;
                                     }
 
                                     // เปิดใช้งานการแก้ไข Layer ที่คลิก
                                     l.editing.enable();
                                     window.editingLayer = l;
-                                    showToast(`กำลังแก้ไข: ${ent.name}`);
-                                    return; // ออกจากฟังก์ชัน ไม่ต้องไปเรียกเงื่อนไขอื่น
+                                    window.editingLayerId = ent.id; // บันทึก ID ของ Layer ที่กำลังแก้ไข
+                                    
+                                    // Force re-render เพื่อให้ Leaflet Draw ใช้ style ที่กำหนด (gold dashed line)
+                                    // และเพื่อให้ Layer อื่นๆ กลับไปใช้ style ปกติ
+                                    renderMap(); 
+                                    
+                                    showToast(`กำลังแก้ไข: ${ent.name} (ดึงจุดเพื่อปรับรูปทรง)`);
+                                    return; 
                                 }
 
                                 // 3. Check Multi-Select Mode: กรณี 2: โหมดเลือกหลายอัน (Multi-Select เดิม)
                                 if (isMultiSelectMode && ent.type === 'area' && !ent.isWater) {
-                                    L.DomEvent.stopPropagation(e); // สำคัญ: หยุดการกระจาย Event เพื่อไม่ให้เกิด Popup ซ้อน
-                                    // ⚠️ ลบ L.DomEvent.preventDefault(e) ออก
+                                    L.DomEvent.stopPropagation(e); 
                                     
                                     if (selectedIds.has(ent.id)) selectedIds.delete(ent.id);
                                     else selectedIds.add(ent.id);
@@ -1713,10 +1777,8 @@
                                 }
 
                                 // 4. Default Mode: กรณี 3: โหมดปกติ (แสดง Popup Info)
-                                // ถ้าไม่เข้าโหมด 1 หรือ 2 ให้แสดง Popup
                                 l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext)).openPopup();
                             });
-                            // *******************************************************
 
 
                             if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
@@ -1736,7 +1798,6 @@
                                 drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
                             }
                             
-                            // ⚠️ โค้ดเดิมที่ bind Popup นอก l.on('click') ถูกลบออกไปแล้ว
                         }
                     }).addTo(drawnItems);
 
@@ -1747,6 +1808,11 @@
         // --- NEW: Unification / Multi-Select Logic ---
 
         window.toggleMultiSelectMode = () => {
+            if (isEditMode) {
+                // ปิดโหมดแก้ไขก่อน
+                toggleEditGeometry();
+            }
+
             isMultiSelectMode = !isMultiSelectMode;
             selectedIds.clear();
             
@@ -1759,7 +1825,7 @@
                 bar.classList.add('flex');
                 
                 if(currentDrawLayer) cancelDraw();
-                showToast("💡 คลิกที่พื้นที่บนแผนที่เพื่อเลือก");
+                showToast("💡 เปิดโหมดเลือกหลายพื้นที่: คลิกที่พื้นที่บนแผนที่เพื่อเลือก");
             } else {
                 btn.classList.remove('bg-purple-100', 'text-purple-700', 'ring-2', 'ring-purple-400');
                 bar.classList.add('hidden');
@@ -2370,7 +2436,11 @@
         }
         window.logoutUser = () => signOut(auth);
 
-        window.cancelDraw = () => { if(currentDrawLayer && !document.getElementById('area-id').value) drawnItems.removeLayer(currentDrawLayer); document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden')); currentDrawLayer=null; }
+        window.cancelDraw = () => { 
+            if(currentDrawLayer && !document.getElementById('area-id').value) drawnItems.removeLayer(currentDrawLayer); 
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden')); 
+            currentDrawLayer=null; 
+        }
         window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
         window.showConfirmModal = (t, m, fn, alert=false) => {
             document.getElementById('confirm-title').innerText = t; document.getElementById('confirm-msg').innerText = m; pendingConfirmAction = fn;
@@ -2382,7 +2452,13 @@
         }
         window.executePendingConfirm = async () => { if(pendingConfirmAction) await pendingConfirmAction(); closeModal('modal-confirm'); }
         
+        /**
+         * Toggles the geometry editing mode.
+         * Enters/Exits edit mode and handles saving the currently edited layer.
+         */
         window.toggleEditGeometry = async () => {
+            if (!validateAuth()) return;
+
             // 1. ตรวจสอบว่ามีพื้นที่ให้แก้ไขไหม
             const hasLayers = entities.some(e => e.type === 'area' || e.type === 'road');
             if (!hasLayers) {
@@ -2396,10 +2472,11 @@
             if (isEditMode) {
                 // --- เปิดใช้งาน ---
                 if(document.getElementById('draw-submenu').classList.contains('active')) window.toggleDrawMenu();
+                if(isMultiSelectMode) toggleMultiSelectMode(); // ปิดโหมด Multi-Select ถ้าเปิดอยู่
                 
                 btn.classList.add('bg-pink-100', 'ring-2', 'ring-pink-300');
-                showToast("🔧 เปิดโหมดแก้ไข: จิ้มที่พื้นที่ที่ต้องการแก้เส้นได้เลย");
-                map.closePopup(); // ⬅️ เพิ่มโค้ดนี้เพื่อให้มั่นใจว่า Pop-up ถูกปิดเมื่อเข้าโหมดแก้ไข
+                showToast("🔧 เปิดโหมดแก้ไข: จิ้มที่พื้นที่หรือเส้นทางที่ต้องการแก้เส้นได้เลย");
+                map.closePopup(); 
             } else {
                 // --- ปิดใช้งาน (บันทึก) ---
                 if (window.editingLayer) {
@@ -2410,13 +2487,17 @@
                         const geoJson = JSON.stringify(window.editingLayer.toGeoJSON());
                         const docRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
                         await setDoc(docRef, { geoJson: geoJson }, { merge: true });
-                        showToast("บันทึกเรียบร้อย ✅");
+                        showToast("บันทึกรูปทรงเรียบร้อย ✅");
                     } catch(e) {
                         console.error(e);
                         showToast("เกิดข้อผิดพลาดในการบันทึก");
                     }
-                    window.editingLayer = null;
                 }
+                
+                // Clear state and re-render the map to ensure all layers are in normal mode
+                window.editingLayer = null;
+                window.editingLayerId = null;
+                renderMap();
 
                 btn.classList.remove('bg-pink-100', 'ring-2', 'ring-pink-300');
                 showToast("ปิดโหมดแก้ไข");
