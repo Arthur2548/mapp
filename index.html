@@ -631,6 +631,9 @@
                 <div class="tool-btn tool-btn-sub" onclick="startPointMode()" title="วาดเส้นจุด (ทีละจุด)">
                     <span class="material-icons-round text-blue-600">timeline</span>
                 </div>
+                <div id="btn-edit-geom" class="tool-btn tool-btn-sub" onclick="toggleEditGeometry()" title="แก้ไขรูปทรง (ดึงเส้น/ขยาย)">
+    <span class="material-icons-round text-pink-600">architecture</span>
+</div>
             </div>
             
             <div class="tool-btn" onclick="toggleDrawMenu()" title="สร้างเขตพื้นที่ (เลือกแบบ)">
@@ -951,6 +954,9 @@
         // Globals
         let db, auth, userId;
         let map, drawnItems; // Leaflet
+        let editHandler = null;
+        let isEditMode = false;     // เช็คว่ากดปุ่มแก้ไขอยู่ไหม
+        let editingLayer = null;    // เก็บว่ากำลังแก้ไข Layer ไหนอยู่
         let viewer; // Cesium
         let entities = []; 
         let currentDrawLayer = null;
@@ -961,6 +967,7 @@
         let pendingConfirmAction = null; 
         let is3DMode = false;
         let selectedCesiumEntity = null;
+        
 
         // --- NEW GLOBALS for Freehand ---
         let isFreehand = false;
@@ -1080,6 +1087,17 @@
 
             map.on(L.Draw.Event.CREATED, onDrawCreated);
             map.on(L.Draw.Event.EDITED, onDrawEdited);
+            
+            editHandler = new L.EditToolbar.Edit(map, {
+        featureGroup: drawnItems,
+        selectedPathOptions: {
+            dashArray: '10, 10',
+            fill: true,
+            fillColor: '#fe57a1', // สีชมพูขณะแก้ไข
+            fillOpacity: 0.1,
+            maintainColor: false
+        }
+    });
         }
 
         // --- Cesium Setup (3D) ---
@@ -1642,22 +1660,44 @@
                             fillOpacity: ent.isWater ? 0.5 : globalOpacity,
                             dashArray: isSelected ? '8, 8' : (ent.isColony ? '5, 10' : null)
                         },
-                        onEachFeature: (f, l) => {
-                            l.options.entityId = ent.id;
-                            
-                            // *** SELECTION CLICK HANDLER ***
-                            l.on('click', (e) => {
-                                if (isMultiSelectMode && ent.type === 'area' && !ent.isWater) {
-                                    L.DomEvent.stopPropagation(e);
-                                    L.DomEvent.preventDefault(e);
-                                    
-                                    if (selectedIds.has(ent.id)) selectedIds.delete(ent.id);
-                                    else selectedIds.add(ent.id);
-                                    
-                                    updateSelectionUI();
-                                    renderMap();
-                                }
-                            });
+                         onEachFeature: (f, l) => {
+                        l.options.entityId = ent.id;
+
+                     // --- เริ่มชุดคำสั่งคลิกแบบใหม่ ---
+                          l.on('click', async (e) => {
+                          L.DomEvent.stopPropagation(e);
+                          L.DomEvent.preventDefault(e);
+
+                 // กรณี 1: โหมดแก้ไข (Click to Edit)
+                    if (window.isEditMode) {
+                    if (ent.type !== 'area' && ent.type !== 'road') return;
+
+                     // ถ้ามีตัวอื่นแก้ค้างอยู่ ให้บันทึกตัวนั้นก่อน
+                   if (window.editingLayer && window.editingLayer !== l) {
+                       window.editingLayer.editing.disable();
+                const oldRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
+                setDoc(oldRef, { geoJson: JSON.stringify(window.editingLayer.toGeoJSON()) }, { merge: true });
+            }
+
+            // เริ่มแก้ไขตัวปัจจุบัน
+            l.editing.enable();
+            window.editingLayer = l;
+            showToast(`กำลังแก้ไข: ${ent.name}`);
+            return;
+        }
+
+        // กรณี 2: โหมดเลือกหลายอัน (Multi-Select)
+        if (isMultiSelectMode && ent.type === 'area' && !ent.isWater) {
+            if (selectedIds.has(ent.id)) selectedIds.delete(ent.id);
+            else selectedIds.add(ent.id);
+            updateSelectionUI();
+            renderMap();
+            return;
+        }
+
+        // กรณี 3: ปกติ (แสดง Popup)
+        l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext)).openPopup();
+    });
                             // *******************************
 
                             if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
@@ -2326,6 +2366,38 @@
         }
         window.executePendingConfirm = async () => { if(pendingConfirmAction) await pendingConfirmAction(); closeModal('modal-confirm'); }
         
+        window.toggleEditGeometry = async () => {
+    const btn = document.getElementById('btn-edit-geom');
+    isEditMode = !isEditMode; // สลับสถานะ เปิด/ปิด
+
+    if (isEditMode) {
+        // --- เปิดใช้งาน ---
+        if(document.getElementById('draw-submenu').classList.contains('active')) window.toggleDrawMenu();
+        
+        btn.classList.add('bg-pink-100', 'ring-2', 'ring-pink-300');
+        showToast("🔧 เปิดโหมดแก้ไข: จิ้มที่พื้นที่ที่ต้องการแก้เส้นได้เลย");
+    } else {
+        // --- ปิดใช้งาน (บันทึก) ---
+        if (window.editingLayer) {
+            window.editingLayer.editing.disable(); // ปิดการแก้ไขบนแผนที่
+            
+            // บันทึกลง Firebase
+            try {
+                const geoJson = JSON.stringify(window.editingLayer.toGeoJSON());
+                const docRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
+                await setDoc(docRef, { geoJson: geoJson }, { merge: true });
+                showToast("บันทึกเรียบร้อย ✅");
+            } catch(e) {
+                console.error(e);
+                showToast("เกิดข้อผิดพลาดในการบันทึก");
+            }
+            window.editingLayer = null;
+        }
+
+        btn.classList.remove('bg-pink-100', 'ring-2', 'ring-pink-300');
+        showToast("ปิดโหมดแก้ไข");
+    }
+};
         function updateParentSelect(rank) {
             const s = document.getElementById('inp-parent'); s.innerHTML = '<option value="">-- เป็นอิสระ --</option>';
             entities.filter(e => getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value="${p.id}">${p.name}</option>`);
