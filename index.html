@@ -1674,11 +1674,14 @@
 
                             // *** โค้ดที่ได้รับการแก้ไข: จัดการการคลิกใหม่ทั้งหมด ***
                             l.on('click', async (e) => {
-                                L.DomEvent.stopPropagation(e); // สำคัญ: หยุดการกระจาย Event เพื่อไม่ให้เกิด Popup ซ้อน
-                                L.DomEvent.preventDefault(e);
+                                // 1. Pop-up Blocking: ปิด Popup ที่อาจเปิดอยู่ก่อนเสมอ
+                                map.closePopup();
 
-                                // กรณี 1: โหมดแก้ไข (Click to Edit)
+                                // 2. Check Edit Mode: กรณี 1: โหมดแก้ไข (Click to Edit)
                                 if (window.isEditMode) {
+                                    L.DomEvent.stopPropagation(e); // สำคัญ: หยุดการกระจาย Event เพื่อไม่ให้เกิด Popup ซ้อน
+                                    L.DomEvent.preventDefault(e);
+
                                     // แก้ไขได้เฉพาะ Area (Polygon) และ Road (Polyline)
                                     if (ent.type !== 'area' && ent.type !== 'road') return;
 
@@ -1686,11 +1689,9 @@
                                     if (window.editingLayer && window.editingLayer !== l) {
                                         window.editingLayer.editing.disable();
                                         const oldRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
-                                        setDoc(oldRef, { geoJson: JSON.stringify(window.editingLayer.toGeoJSON()) }, { merge: true });
+                                        // ใช้วิธี save แบบเงียบๆ ไม่ต้องรอ
+                                        setDoc(oldRef, { geoJson: JSON.stringify(window.editingLayer.toGeoJSON()) }, { merge: true }).then(() => console.log("Old entity saved")).catch(e => console.error("Error saving old entity:", e));
                                     }
-
-                                    // ปิด Popup ที่อาจเปิดอยู่
-                                    map.closePopup();
 
                                     // เปิดใช้งานการแก้ไข Layer ที่คลิก
                                     l.editing.enable();
@@ -1699,8 +1700,11 @@
                                     return; // ออกจากฟังก์ชัน ไม่ต้องไปเรียกเงื่อนไขอื่น
                                 }
 
-                                // กรณี 2: โหมดเลือกหลายอัน (Multi-Select เดิม)
+                                // 3. Check Multi-Select Mode: กรณี 2: โหมดเลือกหลายอัน (Multi-Select เดิม)
                                 if (isMultiSelectMode && ent.type === 'area' && !ent.isWater) {
+                                    L.DomEvent.stopPropagation(e); // สำคัญ: หยุดการกระจาย Event เพื่อไม่ให้เกิด Popup ซ้อน
+                                    L.DomEvent.preventDefault(e);
+                                    
                                     if (selectedIds.has(ent.id)) selectedIds.delete(ent.id);
                                     else selectedIds.add(ent.id);
                                     updateSelectionUI();
@@ -1708,7 +1712,7 @@
                                     return;
                                 }
 
-                                // กรณี 3: โหมดปกติ (แสดง Popup Info)
+                                // 4. Default Mode: กรณี 3: โหมดปกติ (แสดง Popup Info)
                                 // ถ้าไม่เข้าโหมด 1 หรือ 2 ให้แสดง Popup
                                 l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext)).openPopup();
                             });
@@ -2396,7 +2400,8 @@
                 btn.classList.add('bg-pink-100', 'ring-2', 'ring-pink-300');
                 showToast("🔧 เปิดโหมดแก้ไข: จิ้มที่พื้นที่ที่ต้องการแก้เส้นได้เลย");
                 // ปิดการคลิก 2D Map เพื่อป้องกันการซ้อนทับ (Leaflet Map Click)
-                map.off('click');
+                // ไม่จำเป็นต้องปิด map.off('click') เนื่องจากเราใช้ stopPropagation ใน l.on('click') แล้ว
+                // map.off('click'); 
             } else {
                 // --- ปิดใช้งาน (บันทึก) ---
                 if (window.editingLayer) {
@@ -2418,7 +2423,7 @@
                 btn.classList.remove('bg-pink-100', 'ring-2', 'ring-pink-300');
                 showToast("ปิดโหมดแก้ไข");
                 // คืนค่าคลิก 2D Map (ถ้ามี)
-                map.on('click', () => { /* Handle default map click if needed */ });
+                // map.on('click', () => { /* Handle default map click if needed */ });
             }
         };
         
