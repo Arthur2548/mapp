@@ -156,7 +156,7 @@
             position: relative;
             display: flex;
             align-items: center;
-            flex-direction: row-reverse;
+            flex-direction: row;
             gap: 10px;
         }
 
@@ -211,10 +211,10 @@
             transform: scale(1.1);
         }
 
-        /* Compass */
+        /* Compass - Moved down to allow Draw menu to open freely */
         .compass-container {
             position: absolute;
-            top: 20px;
+            top: 90px; /* Moved down from 20px */
             right: 80px;
             width: 60px;
             height: 60px;
@@ -233,7 +233,7 @@
         
         .compass-tooltip {
             position: absolute;
-            top: 70px;
+            top: 140px; /* Adjusted position */
             right: 80px;
             background: rgba(0,0,0,0.7);
             color: white;
@@ -604,6 +604,12 @@
                     <option value="government">แยกตามระบอบปกครอง</option>
                     <option value="rank">แยกตามศักดิ์ (ระดับชั้น)</option>
                 </select>
+            </div>
+
+            <!-- New Credit Section -->
+            <div class="mt-6 pt-4 border-t border-dashed border-[#E0E0E0] text-center opacity-70 pb-4">
+                <div class="text-[10px] text-[#8D6E63] font-mono">จัดทำโดย</div>
+                <div class="text-sm font-bold text-[#5D4037] mt-1">นายวิทยา หมายมั่น</div>
             </div>
         </div>
     </div>
