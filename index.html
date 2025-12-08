@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Map Creator: Enchanted Realm (Unification Edition)</title>
+    <title>Fantasy Map Creator: Enchanted Realm (Map Sheet Edition)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -529,6 +529,29 @@
             </div>
         </div>
 
+        <!-- NEW: Map Sheet Management -->
+        <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md mb-4">
+            <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2 text-sm">
+                <span class="material-icons-round text-blue-500">article</span> กระดาษแผนที่ (Map Sheet)
+            </h3>
+            <div class="space-y-3">
+                <div class="flex gap-2">
+                    <select id="map-sheet-select" class="input-cute cursor-pointer text-sm flex-1" onchange="switchMapSheet(this.value)">
+                        <option value="">กำลังโหลด...</option>
+                    </select>
+                    <!-- ปุ่มลบ (โลโก้เล็ก) -->
+                    <button id="btn-delete-map" onclick="confirmDeleteMapSheet()" class="w-10 h-10 rounded-xl bg-red-100 text-red-500 flex items-center justify-center hover:bg-red-200 transition" title="ลบกระดาษแผนที่นี้" disabled>
+                        <span class="material-icons-round text-xl">delete</span>
+                    </button>
+                    <!-- ปุ่มเพิ่ม (+) -->
+                    <button onclick="document.getElementById('modal-new-map').classList.remove('hidden')" class="w-10 h-10 rounded-xl bg-[#5D4037] text-white flex items-center justify-center hover:bg-[#4E342E] transition" title="สร้างแผนที่ใหม่">
+                        <span class="material-icons-round text-xl">add</span>
+                    </button>
+                </div>
+                <!-- ปุ่มเปลี่ยนชื่อถูกนำออกไปแล้ว -->
+            </div>
+        </div>
+
         <!-- Tools / Filters -->
         <div class="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             <!-- Layer Control -->
@@ -762,7 +785,7 @@
     <!-- Modal: Create/Edit Area -->
     <div id="modal-area" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
         <div class="modal-paper w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal('modal-area')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition border-2 border-transparent hover:border-red-200 rounded-full w-8 h-8 flex items-center justify-center" title="ปิดหน้าต่าง"><span class="material-icons-round text-2xl">close</span></button>
+            <button onclick="cancelDraw()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition border-2 border-transparent hover:border-red-200 rounded-full w-8 h-8 flex items-center justify-center" title="ปิดหน้าต่าง"><span class="material-icons-round text-2xl">close</span></button>
             <h2 class="text-2xl text-[#5D4037] font-bold mb-6 flex items-center gap-2 border-b border-dashed border-[#E0E0E0] pb-3 cute-font"><span class="material-icons-round text-3xl text-amber-400">edit_location_alt</span><span id="modal-title">สร้างเขตปกครอง</span></h2>
             <form id="form-area" class="space-y-5">
                 <input type="hidden" id="area-id">
@@ -806,7 +829,7 @@
     <!-- Modal: Road -->
     <div id="modal-road" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
         <div class="modal-paper w-96 p-6 relative">
-            <button onclick="closeModal('modal-road')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
+            <button onclick="cancelDraw()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
             <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font"><span class="material-icons-round text-amber-700">add_road</span> สร้างเส้นทาง</h3>
             <div class="space-y-3">
                 <input type="hidden" id="road-id-hidden">
@@ -827,7 +850,7 @@
     <!-- Modal Marker -->
     <div id="modal-marker" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
         <div class="modal-paper w-[500px] p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal('modal-marker')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
+            <button onclick="cancelDraw()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
             <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font"><span class="material-icons-round text-rose-500">place</span> ปักหมุดสถานที่</h3>
             <div class="space-y-4">
                 <div class="input-group"><span class="material-icons-round icon">edit</span><input type="text" id="marker-name" placeholder="ชื่อสถานที่..." class="input-cute font-bold text-[#5D4037]"></div>
@@ -950,12 +973,29 @@
             <button onclick="closeModal('modal-union')" class="absolute top-2 right-2 text-gray-400 hover:text-red-500"><span class="material-icons-round">close</span></button>
         </div>
     </div>
+    
+    <!-- Modal: New Map Sheet -->
+    <div id="modal-new-map" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
+        <div class="modal-paper w-96 p-6 relative">
+            <button onclick="closeModal('modal-new-map')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
+            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 cute-font"><span class="material-icons-round text-blue-500">add_to_photos</span> สร้างกระดาษแผนที่ใหม่</h3>
+            <form id="form-new-map" onsubmit="createNewMapSheet(event)">
+                <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อกระดาษแผนที่</label>
+                <input type="text" id="new-map-name" placeholder="เช่น แผ่นที่หลัก, ยุคสงคราม..." class="input-cute mb-4" required>
+                <button type="submit" class="btn-cute w-full">สร้าง</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Rename Map Sheet ถูกนำออก -->
 
     <!-- Firebase SDK & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, onSnapshot, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        setLogLevel('Debug');
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyAaHROgav2BOEsqTZRNhTVdJPSKZoYoIVI",
@@ -996,6 +1036,12 @@
         // --- NEW GLOBALS for Unification ---
         let isMultiSelectMode = false;
         let selectedIds = new Set();
+        
+        // --- NEW GLOBALS for Map Sheets ---
+        let currentMapSheetId = null; // ID of the currently selected map sheet
+        let mapSheets = [];           // Array of all map sheets for the current user
+        let unsubscribeMapListener = null; // To manage the dynamic map data listener
+
 
         const HIERARCHY = [
             { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51' },
@@ -1025,6 +1071,19 @@
             "ทรัพยากร & สมบัติ": ['twemoji:gem-stone', 'twemoji:coin', 'twemoji:money-bag', 'twemoji:pick', 'twemoji:hammer-and-pick', 'twemoji:wood', 'twemoji:oil-drum', 'twemoji:fishing-pole', 'twemoji:anchor', 'twemoji:compass'],
             "เวทมนตร์ & แฟนตาซี": ['twemoji:crystal-ball', 'twemoji:magic-wand', 'twemoji:sparkles', 'twemoji:star', 'twemoji:crescent-moon', 'twemoji:scroll', 'twemoji:book', 'twemoji:candle', 'twemoji:amphora', 'twemoji:coffin']
         };
+        
+        // Helper function to get the base collection reference for map sheets
+        function getMapSheetCollectionRef() {
+            if (!window.userId) return null;
+            return collection(db, 'artifacts', appId, 'users', window.userId, 'map_sheets');
+        }
+
+        // Helper function to get the data collection reference for the current map sheet
+        function getEntityCollectionRef() {
+            if (!window.userId || !currentMapSheetId) return null;
+            return collection(db, 'artifacts', appId, 'users', window.userId, 'map_sheets', currentMapSheetId, 'fantasy_empires');
+        }
+
 
         // --- Initialization ---
         window.onload = async () => {
@@ -1047,13 +1106,18 @@
                         window.userId = user.uid;
                         document.getElementById('user-display-name').innerText = `Lord ${user.displayName || user.email}`;
                         document.getElementById('user-id-display').innerText = `ID: ${window.userId.substring(0,6)}`;
+                        
+                        // Start listening for map sheets when user logs in
+                        subscribeToMapSheets(); 
 
-                        const areasRef = collection(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires');
-                        onSnapshot(areasRef, (snap) => {
-                            entities = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                            renderMap(); // 2D
-                            if(is3DMode) renderCesium(); // 3D
-                        });
+                    } else {
+                        // Clear map when user logs out
+                        mapSheets = [];
+                        currentMapSheetId = null;
+                        renderMapSheetSelect();
+                        if (unsubscribeMapListener) unsubscribeMapListener();
+                        drawnItems.clearLayers();
+                        entities = [];
                     }
                 });
             } catch (err) { console.error("Firebase connection failed:", err); }
@@ -1062,14 +1126,167 @@
         function toggleAuthUI(user) {
             const loggedInView = document.getElementById('logged-in-view');
             const loggedOutView = document.getElementById('logged-out-view');
+            const sheetSelect = document.getElementById('map-sheet-select');
             if(user) {
                 loggedInView.classList.remove('hidden');
                 loggedOutView.classList.add('hidden');
+                sheetSelect.disabled = false;
             } else {
                 loggedInView.classList.add('hidden');
                 loggedOutView.classList.remove('hidden');
+                sheetSelect.disabled = true;
             }
         }
+
+        // --- Map Sheet Management ---
+
+        function subscribeToMapSheets() {
+            const sheetsRef = getMapSheetCollectionRef();
+            if(!sheetsRef) return;
+
+            onSnapshot(sheetsRef, (snap) => {
+                mapSheets = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a, b) => a.name.localeCompare(b.name));
+                
+                let shouldSwitch = false;
+                
+                if (mapSheets.length > 0) {
+                    const currentSheetExists = mapSheets.find(s => s.id === currentMapSheetId);
+                    if (!currentMapSheetId || !currentSheetExists) {
+                        // Automatically select the first map sheet if none is active or the current one was deleted
+                        currentMapSheetId = mapSheets[0].id;
+                        shouldSwitch = true;
+                    }
+                    document.getElementById('btn-delete-map').disabled = false;
+                } else {
+                    // Create a default sheet if none exist (Only if the user is logged in)
+                    if (window.userId) {
+                        createNewMapSheet(null, "แผนที่หลักของฉัน");
+                    }
+                    document.getElementById('btn-delete-map').disabled = true;
+                    currentMapSheetId = null; 
+                }
+                
+                renderMapSheetSelect();
+                if (shouldSwitch || (mapSheets.length > 0 && !unsubscribeMapListener)) {
+                    switchMapSheet(currentMapSheetId);
+                }
+            });
+        }
+        
+        function renderMapSheetSelect() {
+            const select = document.getElementById('map-sheet-select');
+            select.innerHTML = '';
+            
+            if (mapSheets.length === 0) {
+                 select.innerHTML = '<option value="">สร้างแผนที่ใหม่</option>';
+                 return;
+            }
+
+            mapSheets.forEach(sheet => {
+                const opt = document.createElement('option');
+                opt.value = sheet.id;
+                opt.innerText = sheet.name;
+                if (sheet.id === currentMapSheetId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        window.switchMapSheet = (newId) => {
+            if (!newId) return;
+            if (newId === currentMapSheetId) return;
+            
+            currentMapSheetId = newId;
+            // Clear map visuals immediately
+            drawnItems.clearLayers();
+            entities = [];
+            
+            // Re-subscribe to the new map's data
+            subscribeToMapData();
+            showToast(`เปิดกระดาษแผนที่: ${mapSheets.find(s => s.id === newId)?.name}`);
+        };
+
+        function subscribeToMapData() {
+            // Unsubscribe from old listener if exists
+            if (unsubscribeMapListener) unsubscribeMapListener();
+            
+            const areasRef = getEntityCollectionRef();
+            if (!areasRef) {
+                // If no currentMapSheetId (e.g., waiting for first sheet creation), do nothing
+                return; 
+            }
+            
+            // Set up new listener
+            unsubscribeMapListener = onSnapshot(areasRef, (snap) => {
+                entities = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderMap(); // 2D
+                if(is3DMode) renderCesium(); // 3D
+            }, (error) => {
+                console.error("Error subscribing to map data:", error);
+                entities = [];
+                renderMap();
+            });
+        }
+
+        window.createNewMapSheet = async (e, defaultName = null) => {
+            if (e) e.preventDefault();
+            if(!window.userId) { showConfirmModal("แจ้งเตือน", "กรุณาเข้าสู่ระบบก่อนสร้างแผนที่", null, true); return; }
+
+            const nameInput = document.getElementById('new-map-name');
+            const newName = defaultName || nameInput.value;
+            
+            if (!newName) return;
+            
+            closeModal('modal-new-map');
+            if (e) nameInput.value = ''; // Only clear if not default creation
+            
+            try {
+                const sheetsRef = getMapSheetCollectionRef();
+                await addDoc(sheetsRef, { 
+                    name: newName, 
+                    createdAt: new Date().toISOString()
+                });
+                showToast(`สร้างแผนที่ใหม่: ${newName} สำเร็จ`);
+            } catch (err) {
+                showConfirmModal("สร้างไม่สำเร็จ", err.message, null, true);
+            }
+        };
+        
+        // ฟังก์ชัน renameMapModal และ renameMapSheet ถูกนำออก
+
+        window.confirmDeleteMapSheet = () => {
+             if (mapSheets.length <= 1) {
+                  showConfirmModal("ลบไม่ได้", "ต้องมีกระดาษแผนที่เหลืออย่างน้อย 1 แผ่น", null, true);
+                  return;
+             }
+             const currentSheet = mapSheets.find(s => s.id === currentMapSheetId);
+             if (!currentSheet) return;
+             
+             showConfirmModal(`ลบ '${currentSheet.name}'`, "ข้อมูลทั้งหมดบนแผนที่นี้จะถูกลบออกอย่างถาวร ยืนยันหรือไม่?", 
+                 () => deleteMapSheet(currentSheet.id)
+             );
+        }
+
+        async function deleteMapSheet(sheetId) {
+             if(!window.userId) return;
+             
+             try {
+                // 1. Delete all entities in the sheet's subcollection
+                const entityDocs = await getDocs(collection(db, 'artifacts', appId, 'users', window.userId, 'map_sheets', sheetId, 'fantasy_empires'));
+                const batch = writeBatch(db);
+                entityDocs.forEach((d) => batch.delete(d.ref));
+                await batch.commit();
+
+                // 2. Delete the map sheet document itself
+                await deleteDoc(doc(getMapSheetCollectionRef(), sheetId));
+                
+                showToast("ลบกระดาษแผนที่เรียบร้อย");
+                
+                // onSnapshot will handle switching to the next available sheet
+             } catch (err) {
+                 showConfirmModal("ลบไม่สำเร็จ", `เกิดข้อผิดพลาดในการลบ: ${err.message}`, null, true);
+             }
+        }
+
 
         // --- Map Setup (2D) ---
         function initMap() {
@@ -1349,6 +1566,10 @@
         };
 
         window.checkModeAndDraw = (type) => {
+            if (!currentMapSheetId) {
+                showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด");
+                return;
+            }
             if(isMultiSelectMode) {
                  showToast("กรุณาปิดโหมดเลือกหลายพื้นที่ก่อนวาด");
                  return;
@@ -1432,10 +1653,7 @@
             
             // Check if current entity is the one being edited
             if (isEditMode && ent.id === editingLayerId) {
-                // When actively editing, Leaflet Draw will handle the styling (gold dashed line)
-                // We return the base color here, as the styling logic below is for non-edited state.
-                // However, the L.EditToolbar.Edit setup now ensures the gold dashed line appears when enabled.
-                // This ensures the fill and color are preserved while not selected for editing.
+                // Leaflet Draw handles the styling when enabled.
             }
 
             return { fillColor, colorContext };
@@ -1710,7 +1928,6 @@
                     if (isEditMode && ent.id === editingLayerId) {
                          // Leaflet Draw handles the highlight (gold dash) when editing is enabled
                          // If it's the layer being edited, we don't apply the selection style from here
-                         // This is primarily for the vertex markers and the dash array applied by L.EditToolbar
                          layerStyle.color = strokeColor; // Use original color when not selected in multi-select mode
                          layerStyle.weight = ent.isWater ? 1 : 1.5;
                          layerStyle.dashArray = ent.isColony ? '5, 10' : null;
@@ -1745,7 +1962,7 @@
                                     // ถ้ามี Layer อื่นกำลังถูกแก้อยู่ ให้ปิดการแก้ไขตัวนั้นและบันทึกก่อน
                                     if (window.editingLayer && window.editingLayer !== l) {
                                         window.editingLayer.editing.disable();
-                                        const oldRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
+                                        const oldRef = doc(getEntityCollectionRef(), window.editingLayer.options.entityId);
                                         // ใช้วิธี save แบบเงียบๆ ไม่ต้องรอ
                                         setDoc(oldRef, { geoJson: JSON.stringify(window.editingLayer.toGeoJSON()) }, { merge: true }).then(() => console.log("Old entity saved")).catch(e => console.error("Error saving old entity:", e));
                                         window.editingLayerId = null;
@@ -1808,6 +2025,10 @@
         // --- NEW: Unification / Multi-Select Logic ---
 
         window.toggleMultiSelectMode = () => {
+            if (!currentMapSheetId) {
+                showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนใช้งานโหมดเลือกหลายพื้นที่");
+                return;
+            }
             if (isEditMode) {
                 // ปิดโหมดแก้ไขก่อน
                 toggleEditGeometry();
@@ -1895,7 +2116,7 @@
 
         window.executeMerge = async (e) => {
             e.preventDefault();
-            if(!window.userId) return;
+            if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
 
             try {
                 const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
@@ -1928,7 +2149,7 @@
                 };
 
                 const batch = writeBatch(db);
-                const colRef = collection(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires');
+                const colRef = getEntityCollectionRef();
 
                 // Create new
                 const newRef = doc(colRef); 
@@ -1953,7 +2174,7 @@
         };
 
         window.executeAnnex = async (type) => {
-            if(!window.userId) return;
+            if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
             
             const leaderId = document.getElementById('annex-leader-select').value;
             const leader = entities.find(e => e.id === leaderId);
@@ -1961,7 +2182,7 @@
             if(!leader) return;
 
             const batch = writeBatch(db);
-            const colRef = collection(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires');
+            const colRef = getEntityCollectionRef();
 
             selectedIds.forEach(id => {
                 if(id === leaderId) return;
@@ -2180,6 +2401,7 @@
         
         // --- NEW: Custom Draw Modes ---
         window.startPointMode = () => {
+             if (!currentMapSheetId) { showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด"); return; }
              window.toggleDrawMenu();
              const drawer = new L.Draw.Polygon(map, {
                  shapeOptions: {
@@ -2205,6 +2427,7 @@
         };
 
         window.startFreehandMode = () => {
+            if (!currentMapSheetId) { showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด"); return; }
             window.toggleDrawMenu();
             isFreehand = true;
             map.dragging.disable();
@@ -2249,6 +2472,12 @@
 
 
         function onDrawCreated(e) {
+            if (!currentMapSheetId) { 
+                drawnItems.removeLayer(e.layer);
+                showToast("⚠️ กรุณาเลือกกระดาษแผนที่ก่อนวาด"); 
+                return;
+            }
+
             currentDrawLayer = e.layer;
             drawnItems.addLayer(currentDrawLayer); 
             if (e.layerType === 'polygon') {
@@ -2265,7 +2494,7 @@
 
         function onDrawEdited(e) {
             e.layers.eachLayer(async (layer) => {
-                if(layer.options.entityId) await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'fantasy_empires', layer.options.entityId), { geoJson: JSON.stringify(layer.toGeoJSON()) }, { merge: true });
+                if(layer.options.entityId) await setDoc(doc(getEntityCollectionRef(), layer.options.entityId), { geoJson: JSON.stringify(layer.toGeoJSON()) }, { merge: true });
             });
         }
 
@@ -2338,12 +2567,17 @@
                 showConfirmModal("ยังไม่เข้าสู่ระบบ", "กรุณาเข้าสู่ระบบเพื่อบันทึกข้อมูล", null, true);
                 return false;
             }
+            if (!currentMapSheetId) {
+                showConfirmModal("ยังไม่เลือกแผนที่", "กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนบันทึกข้อมูล", null, true);
+                return false;
+            }
             return true;
         }
 
         async function saveToFirestore(data, id = null) {
+            if (!currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนบันทึก", null, true); return; }
             try {
-                const colRef = collection(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires');
+                const colRef = getEntityCollectionRef();
                 if(id) await setDoc(doc(colRef, id), data, {merge: true});
                 else await addDoc(colRef, data);
             } catch(e) { showConfirmModal("Error", e.message, null, true); }
@@ -2383,14 +2617,14 @@
                 updates.color = attacker.color;
             }
             
-            await setDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', tid), updates, {merge: true});
+            await setDoc(doc(getEntityCollectionRef(), tid), updates, {merge: true});
             closeModal('modal-war');
         }
 
         window.declareIndependence = (id) => {
             showConfirmModal("กู้เอกราช", "ต้องการประกาศอิสรภาพหรือไม่? พื้นที่จะกลับสู่สถานะเดิม", async () => {
                 const ent = entities.find(e => e.id === id);
-                await setDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', id), {
+                await setDoc(doc(getEntityCollectionRef(), id), {
                     isAnnexed: false, isVassal: false, isColony: false,
                     color: ent.originalColor || ent.color, 
                     ruler: ent.originalRuler || ent.ruler,
@@ -2399,7 +2633,10 @@
             });
         }
 
-        window.confirmDelete = (id) => showConfirmModal("ลบข้อมูล", "ยืนยันการลบ?", async () => await deleteDoc(doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', id)));
+        window.confirmDelete = (id) => {
+             if (!currentMapSheetId) return;
+             showConfirmModal("ลบข้อมูล", "ยืนยันการลบ?", async () => await deleteDoc(doc(getEntityCollectionRef(), id)));
+        }
 
         window.openEditModal = (id) => {
             const ent = entities.find(e => e.id === id);
@@ -2485,7 +2722,7 @@
                     // บันทึกลง Firebase
                     try {
                         const geoJson = JSON.stringify(window.editingLayer.toGeoJSON());
-                        const docRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
+                        const docRef = doc(getEntityCollectionRef(), window.editingLayer.options.entityId);
                         await setDoc(docRef, { geoJson: geoJson }, { merge: true });
                         showToast("บันทึกรูปทรงเรียบร้อย ✅");
                     } catch(e) {
