@@ -21,7 +21,7 @@
 
     <!-- CesiumJS (3D Globe) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.105.0/Cesium.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libsium/1.105.0/Widgets/widgets.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.105.0/Widgets/widgets.css" rel="stylesheet">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
@@ -200,8 +200,7 @@
         .tool-btn span { font-size: 26px; }
 
         .tool-btn-sub {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border-radius: 12px;
             background: #FFF8E1;
             border: 2px solid #FFE0B2;
@@ -270,6 +269,7 @@
             transform: scale(1.1) rotate(10deg);
             box-shadow: 0 8px 30px rgba(0,0,0,0.4);
         }
+        .globe-toggle-btn img { width: 100%; height: 100%; object-fit: cover; }
         .globe-tooltip {
             position: absolute;
             bottom: 100px;
@@ -433,34 +433,21 @@
             gap: 8px;
         }
         .icon-option {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: white;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #eee; border-radius: 12px;
+            cursor: pointer; transition: all 0.2s; background: white;
         }
         .icon-option img { width: 24px; height: 24px; object-fit: contain; }
         .icon-option:hover { background-color: #FFF3E0; border-color: #FFCC80; }
         .icon-option.selected {
-            border-color: #6D4C41;
-            background-color: #FFE0B2;
-            transform: scale(1.1);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-color: #6D4C41; background-color: #FFE0B2;
+            transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .icon-category-title {
-            font-size: 11px;
-            font-weight: bold;
-            color: #8D6E63;
-            margin-top: 8px;
-            margin-bottom: 4px;
-            border-bottom: 1px dashed #D7CCC8;
-            padding-bottom: 2px;
+            font-size: 11px; font-weight: bold; color: #8D6E63;
+            margin-top: 8px; margin-bottom: 4px; border-bottom: 1px dashed #D7CCC8; padding-bottom: 2px;
         }
 
         /* Scrollbar */
@@ -471,38 +458,21 @@
 
         /* Color Swatch in Popup */
         .color-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            background: #FFF;
-            border-radius: 12px;
-            font-size: 11px;
-            color: #616161;
-            border: 1px solid #F0F0F0;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; background: #FFF; border-radius: 12px;
+            font-size: 11px; color: #616161; border: 1px solid #F0F0F0;
+            font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .swatch-circle {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.1);
-            display: inline-block;
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1); display: inline-block;
         }
 
         /* Hierarchy Path in Popup */
         .hierarchy-path {
-            font-size: 10px;
-            color: #795548;
-            background-color: #FFF8E1;
-            padding: 4px 8px;
-            border-radius: 8px;
-            margin-top: 4px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            align-items: center;
+            font-size: 10px; color: #795548; background-color: #FFF8E1;
+            padding: 4px 8px; border-radius: 8px; margin-top: 4px;
+            display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
             border: 1px dashed #FFE0B2;
         }
         .h-node::after { content: "›"; margin-left: 4px; color: #BCAAA4; }
@@ -529,58 +499,10 @@
             border: 2px solid #FFD700 !important;
         }
         
-        /* New Management HUD */
-        #management-hud {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 900;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 10px 20px;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border: 2px solid #EEE;
-        }
-        .stat-item {
-            text-align: center;
-            border-right: 1px solid #EEE;
-            padding: 0 15px;
-        }
-        .stat-item:last-child { border-right: none; }
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            font-family: 'Mali', cursive;
-            line-height: 1;
-        }
-        .stat-label {
-            font-size: 0.75rem;
-            color: #8D6E63;
-        }
     </style>
 </head>
 <body class="mode-2d">
 
-    <!-- Management HUD (NEW FEATURE 1) -->
-    <div id="management-hud" class="hidden">
-        <div class="flex gap-4 items-center">
-            <div class="stat-item text-green-600">
-                <div class="stat-value" id="hud-gold">0</div>
-                <div class="stat-label">💰 ทองคำหลวง</div>
-            </div>
-            <div class="stat-item text-blue-600">
-                <div class="stat-value" id="hud-pop">0</div>
-                <div class="stat-label">👥 ประชากร (K)</div>
-            </div>
-            <div class="stat-item text-purple-600">
-                <div class="stat-value" id="hud-mana">0</div>
-                <div class="stat-label">✨ มานาสะสม</div>
-            </div>
-        </div>
-    </div>
-    
     <!-- Left Sidebar -->
     <div id="sidebar-left" class="sidebar-left p-5">
         <div class="toggle-sidebar-btn" id="toggle-sidebar">◀</div>
@@ -632,18 +554,6 @@
 
         <!-- Tools / Filters -->
         <div class="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
-            <!-- Mode Switcher (NEW: เพื่อให้ Management HUD แสดง) -->
-            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md">
-                 <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2 text-sm">
-                    <span class="material-icons-round text-purple-500">all_inclusive</span> โหมดการใช้งาน
-                </h3>
-                 <div class="flex gap-2">
-                    <button onclick="setMode('creative')" id="btn-mode-creative" class="flex-1 text-xs py-2 rounded-xl bg-[#5D4037] text-white shadow-sm font-bold active">🎨 สร้างสรรค์</button>
-                    <button onclick="setMode('management')" id="btn-mode-management" class="flex-1 text-xs py-2 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition">👑 บริหาร</button>
-                    <button class="flex-1 text-xs py-2 rounded-xl bg-gray-100 text-gray-400 cursor-not-allowed">⚔️ เกม</button>
-                </div>
-            </div>
-
             <!-- Layer Control -->
             <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md">
                 <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2 text-sm">
@@ -726,8 +636,7 @@
                     <span class="material-icons-round text-pink-400">palette</span> โหมดสีแผนที่
                 </h3>
                 <select id="color-mode-select" class="input-cute text-sm cursor-pointer py-2">
-                    <option value="entity">สีตามเขตพื้นที่ (Original/Local)</option>
-                    <option value="political">สีตามผู้ครอบครอง (Political State)</option> <!-- NEW MODE -->
+                    <option value="entity">สีตามเขตพื้นที่ (ปกติ)</option>
                     <option value="religion">แยกตามศาสนา</option>
                     <option value="government">แยกตามระบอบปกครอง</option>
                     <option value="rank">แยกตามศักดิ์ (ระดับชั้น)</option>
@@ -1003,7 +912,7 @@
         </div>
     </div>
 
-    <!-- Modal: The Grand Unification (Merge/Annex) -->
+    <!-- Modal: The Grand Unification (New Feature) -->
     <div id="modal-union" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper w-[500px] p-0 overflow-hidden">
             <!-- Header Tabs -->
@@ -1078,30 +987,7 @@
         </div>
     </div>
 
-    <!-- Modal: Sub-Region Management (NEW FEATURE 2) -->
-    <div id="modal-sub-regions" class="fixed inset-0 modal-overlay hidden z-[2100] flex items-center justify-center">
-        <div class="modal-paper w-[600px] p-6 relative">
-            <button onclick="closeModal('modal-sub-regions')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
-            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 border-b border-dashed pb-2 cute-font">
-                <span class="material-icons-round text-amber-600">account_balance_wallet</span> จัดการเขตย่อยของ <span id="sub-region-parent-name" class="text-amber-600"></span>
-            </h3>
-            <input type="hidden" id="sub-region-parent-id">
-            
-            <div id="sub-region-list" class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar p-2 border rounded-xl bg-gray-50">
-                <div class="text-center text-gray-400 p-4">ไม่มีเขตย่อยในสังกัด</div>
-            </div>
-
-            <div class="mt-4 pt-4 border-t border-dashed">
-                <h4 class="font-bold text-[#5D4037] text-sm mb-2 flex items-center gap-2"><span class="material-icons-round text-purple-500 text-xl">fork_right</span> ย้ายสังกัด/ผนวกเขตย่อย</h4>
-                <div class="flex gap-2">
-                    <select id="transfer-child-select" class="input-cute flex-1 text-sm"><option value="">-- เลือกเขตย่อย --</option></select>
-                    <select id="transfer-target-select" class="input-cute flex-1 text-sm"><option value="">-- เลือกเขตแม่ปลายทาง --</option></select>
-                    <button onclick="executeTransfer()" class="btn-cute bg-purple-600 px-4 text-sm"><span class="material-icons-round text-sm">swap_horiz</span> ย้ายสังกัด</button>
-                </div>
-                <p class="text-[10px] text-gray-500 mt-1 pl-1">เลือกเขตย่อยในสังกัดนี้ และย้ายไปเป็นเขตย่อยของเขตปกครองอื่นที่มีศักดิ์สูงกว่า</p>
-            </div>
-        </div>
-    </div>
+    <!-- Modal: Rename Map Sheet ถูกนำออก -->
 
     <!-- Firebase SDK & Logic -->
     <script type="module">
@@ -1141,8 +1027,6 @@
         let is3DMode = false;
         let selectedCesiumEntity = null;
         
-        // ** FIX: Declare currentMode and initialize it **
-        let currentMode = 'creative'; 
 
         // --- NEW GLOBALS for Freehand ---
         let isFreehand = false;
@@ -1336,7 +1220,6 @@
                 entities = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderMap(); // 2D
                 if(is3DMode) renderCesium(); // 3D
-                calculateAggregateStats(); // NEW: Update stats
             }, (error) => {
                 console.error("Error subscribing to map data:", error);
                 entities = [];
@@ -1404,37 +1287,6 @@
              }
         }
 
-        // --- NEW FEATURE 1: Management HUD Logic (Placeholder Stats) ---
-        function calculateAggregateStats() {
-            if (currentMode !== 'management') return;
-
-            let totalGold = 0;
-            let totalPop = 0;
-            let totalMana = 0;
-
-            // Simplified placeholder calculation:
-            entities.forEach(ent => {
-                if (ent.type === 'area' && !ent.isWater) {
-                    const rank = getRank(ent.level);
-                    const isAnnexed = ent.isAnnexed || ent.isVassal || ent.isColony;
-                    
-                    // Pop: Base 10k + (Rank * 5k)
-                    totalPop += (10 + (rank * 5)); 
-                    
-                    // Gold: Rank * 1000. Double if independent.
-                    totalGold += (rank * 1000) * (isAnnexed ? 1 : 2); 
-                    
-                    // Mana: Small bonus for high rank
-                    if (rank >= 5) totalMana += rank * 100;
-                }
-            });
-            
-            // Update HUD
-            document.getElementById('hud-gold').innerText = (totalGold / 1000).toFixed(1) + 'K';
-            document.getElementById('hud-pop').innerText = (totalPop).toFixed(1);
-            document.getElementById('hud-mana').innerText = (totalMana / 1000).toFixed(1) + 'K';
-            document.getElementById('management-hud').classList.remove('hidden');
-        }
 
         // --- Map Setup (2D) ---
         function initMap() {
@@ -1655,7 +1507,7 @@
             document.getElementById('color-mode-select')?.addEventListener('change', (e) => {
                 const mode = e.target.value;
                 const legendBox = document.getElementById('legend-box');
-                if (mode === 'religion' || mode === 'government' || mode === 'rank' || mode === 'political') {
+                if (mode === 'religion' || mode === 'government' || mode === 'rank') {
                     legendBox.classList.remove('hidden'); updateLegend(mode);
                 } else {
                     legendBox.classList.add('hidden');
@@ -1701,25 +1553,6 @@
 
             renderImportantIcons(); 
             document.getElementById('search-input')?.addEventListener('keyup', () => { renderMap(); if(is3DMode) renderCesium(); });
-        }
-
-        window.setMode = (mode) => {
-            document.getElementById('btn-mode-creative').classList.remove('active', 'bg-[#5D4037]', 'text-white');
-            document.getElementById('btn-mode-creative').classList.add('bg-gray-100', 'text-gray-500');
-            document.getElementById('btn-mode-management').classList.remove('active', 'bg-[#5D4037]', 'text-white');
-            document.getElementById('btn-mode-management').classList.add('bg-gray-100', 'text-gray-500');
-            document.getElementById('management-hud').classList.add('hidden');
-
-            if (mode === 'creative') {
-                document.getElementById('btn-mode-creative').classList.add('active', 'bg-[#5D4037]', 'text-white');
-                document.getElementById('btn-mode-creative').classList.remove('bg-gray-100', 'text-gray-500');
-                document.getElementById('management-hud').classList.add('hidden');
-            } else if (mode === 'management') {
-                document.getElementById('btn-mode-management').classList.add('active', 'bg-[#5D4037]', 'text-white');
-                document.getElementById('btn-mode-management').classList.remove('bg-gray-100', 'text-gray-500');
-                calculateAggregateStats(); // Show HUD when entering management mode
-            }
-            currentMode = mode;
         }
 
         window.toggleAllLevels = (check) => {
@@ -1788,15 +1621,6 @@
             return descendants;
         }
 
-        function getHighestOwner(entity) {
-             let owner = entity;
-             if(entity.occupiedBy) {
-                owner = entities.find(e => e.id === entity.occupiedBy) || entity;
-             }
-             return owner;
-        }
-        
-        // --- UPDATED FEATURE 2: New Color Mode Logic ---
         function getEntityVisuals(ent) {
             const colorMode = document.getElementById('color-mode-select').value;
             let fillColor = ent.color;
@@ -1812,15 +1636,19 @@
                 const h = HIERARCHY.find(x => x.id === ent.level);
                 fillColor = h ? h.defaultColor : '#ccc';
                 colorContext = { type: 'rank', value: h ? h.name : 'Unknown' };
-            } else if (colorMode === 'political') { // NEW MODE
-                const owner = getHighestOwner(ent);
-                fillColor = owner.color || '#ccc';
-                colorContext = { type: 'political', value: `ผู้ครอบครอง: ${owner.name}` };
             }
 
             if (ent.isWater) {
                 fillColor = '#81D4FA';
                 colorContext = { type: 'water', value: 'น่านน้ำ' };
+            }
+            
+            if (colorMode === 'entity') {
+                if (ent.isColony) {
+                    fillColor = ent.originalColor || ent.color; 
+                } else if (ent.isAnnexed || ent.isVassal) {
+                    fillColor = ent.color; 
+                }
             }
             
             // Check if current entity is the one being edited
@@ -1965,7 +1793,7 @@
                     if(geoJson.geometry.type === 'Polygon' || geoJson.geometry.type === 'MultiPolygon') {
                          if(geoJson.geometry.type === 'Polygon') {
                              const flat = [];
-                             // Safety Check: Ensure coordinates exist
+                             // Safety Check
                              if (!geoJson.geometry.coordinates || !geoJson.geometry.coordinates[0]) return;
                              
                              geoJson.geometry.coordinates[0].forEach(pt => { if(pt.length >= 2) flat.push(pt[0], pt[1]); });
@@ -2012,17 +1840,8 @@
 
                                 if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
                                     let labelText = ent.name;
-                                    let owner = getHighestOwner(ent);
-
-                                    if (ent.isAnnexed) {
-                                        labelText = owner.name;
-                                    }
-
-                                    if (ent.isColony) {
-                                        labelText += ` (อาณานิคมของ ${owner.name})`;
-                                    } else if (ent.isVassal) {
-                                        labelText += ` (ประเทศราชของ ${owner.name})`;
-                                    }
+                                    if (ent.isAnnexed) labelText = ent.annexedByName; // Main name becomes conqueror
+                                    if (ent.isColony) labelText += ` (อาณานิคมของ ${ent.annexedByName})`;
                                     
                                     viewer.entities.add({
                                         position: polyEnt.centerPosition,
@@ -2183,16 +2002,14 @@
                                 const center = l.getBounds().getCenter();
                                 let labelHtml = ent.name;
                                 
-                                let owner = getHighestOwner(ent);
-
                                 if (ent.isAnnexed) {
-                                    labelHtml = owner.name;
+                                    labelHtml = ent.annexedByName;
                                 }
 
                                 if (ent.isColony) {
-                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(อาณานิคมของ ${owner.name})</div>`;
+                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(อาณานิคมของ ${ent.annexedByName})</div>`;
                                 } else if (ent.isVassal) {
-                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${owner.name})</div>`;
+                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${ent.annexedByName})</div>`;
                                 } 
 
                                 drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
@@ -2205,74 +2022,8 @@
             });
         }
 
-        // --- Mode Switching ---
-        // Moved window.setMode definition above for correct hoisting (function declaration is better)
+        // --- NEW: Unification / Multi-Select Logic ---
 
-        // --- NEW: Sub-Region Manager Logic (FEATURE 3) ---
-        window.openSubRegionManager = (parentId) => {
-            const parentEnt = entities.find(e => e.id === parentId);
-            const children = entities.filter(e => e.parentId === parentId && !e.isWater).sort((a,b) => a.name.localeCompare(b.name));
-            
-            document.getElementById('sub-region-parent-id').value = parentId;
-            document.getElementById('sub-region-parent-name').innerText = parentEnt.name;
-
-            const listContainer = document.getElementById('sub-region-list');
-            listContainer.innerHTML = '';
-
-            if (children.length === 0) {
-                listContainer.innerHTML = '<div class="text-center text-gray-400 p-4">ไม่มีเขตย่อยในสังกัด</div>';
-                document.getElementById('transfer-child-select').innerHTML = '<option value="">-- ไม่มีเขตย่อย --</option>';
-            } else {
-                let childOptions = '<option value="">-- เลือกเขตย่อย --</option>';
-                children.forEach(c => {
-                    listContainer.innerHTML += `
-                        <div class="flex justify-between items-center p-2 rounded-lg bg-white shadow-sm border border-gray-100">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full" style="background-color:${c.color}"></span>
-                                <span class="font-bold text-sm">${c.name}</span>
-                                <span class="text-xs text-gray-500">(${getHierarchyName(c.level)})</span>
-                            </div>
-                            <button onclick="window.confirmDelete('${c.id}')" class="text-red-400 hover:text-red-600"><span class="material-icons-round text-sm">delete</span></button>
-                        </div>
-                    `;
-                    childOptions += `<option value="${c.id}">${c.name} (${getHierarchyName(c.level)})</option>`;
-                });
-                document.getElementById('transfer-child-select').innerHTML = childOptions;
-            }
-
-            // Setup Target Selector (All areas with higher rank)
-            const targetSelect = document.getElementById('transfer-target-select');
-            targetSelect.innerHTML = '<option value="">-- เลือกเขตแม่ปลายทาง --</option>';
-            const currentRank = getRank(parentEnt.level);
-            
-            entities.filter(e => getRank(e.level) > currentRank && !e.isWater && e.id !== parentId).forEach(p => {
-                 targetSelect.innerHTML += `<option value="${p.id}">${p.name} (${getHierarchyName(p.level)})</option>`;
-            });
-
-            document.getElementById('modal-sub-regions').classList.remove('hidden');
-        }
-
-        window.executeTransfer = async () => {
-            const childId = document.getElementById('transfer-child-select').value;
-            const targetId = document.getElementById('transfer-target-select').value;
-            
-            if (!childId || !targetId) {
-                showToast("กรุณาเลือกเขตย่อยและเขตแม่ปลายทาง");
-                return;
-            }
-
-            const childEnt = entities.find(e => e.id === childId);
-            const targetEnt = entities.find(e => e.id === targetId);
-
-            showConfirmModal("ยืนยันการย้ายสังกัด", `ต้องการย้าย ${childEnt.name} ไปเป็นเขตย่อยของ ${targetEnt.name} ใช่หรือไม่?`, async () => {
-                await setDoc(doc(getEntityCollectionRef(), childId), { parentId: targetId }, { merge: true });
-                showToast(`ย้าย ${childEnt.name} ไปสังกัด ${targetEnt.name} เรียบร้อย`);
-                closeModal('modal-sub-regions');
-            });
-        }
-
-
-        // --- Multi-Select & Promotion ---
         window.toggleMultiSelectMode = () => {
             if (!currentMapSheetId) {
                 showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนใช้งานโหมดเลือกหลายพื้นที่");
@@ -2530,19 +2281,16 @@
             let subStatus = "";
             let statusBadge = '<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full border border-emerald-200">รัฐอิสระ</span>';
             
-            let owner = getHighestOwner(ent);
-            let hasChildren = entities.some(e => e.parentId === ent.id && !e.isWater);
-            
             if (ent.isAnnexed) {
                 statusBadge = '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-200">ถูกผนวก</span>';
-                mainTitle = owner.name; 
+                mainTitle = ent.annexedByName; 
                 subStatus = `<div class="text-[10px] text-gray-500 mt-1">ผนวกดินแดนจาก ${ent.originalName || ent.name}</div>`;
             } else if (ent.isVassal) {
                 statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
-                subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(ประเทศราชของ ${owner.name})</div>`;
+                subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(ประเทศราชของ ${ent.annexedByName})</div>`;
             } else if (ent.isColony) {
                 statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">อาณานิคม</span>';
-                subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(อาณานิคมของ ${owner.name})</div>`;
+                subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(อาณานิคมของ ${ent.annexedByName})</div>`;
             } else if (ent.isWater) {
                 statusBadge = '<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full border border-blue-100">น่านน้ำ</span>';
             }
@@ -2551,7 +2299,6 @@
             if(colorContext.type === 'religion') colorDesc = `☸️ ศาสนา: ${colorContext.value}`;
             else if(colorContext.type === 'gov') colorDesc = `⚖️ ปกครอง: ${colorContext.value}`;
             else if(colorContext.type === 'rank') colorDesc = `👑 ศักดิ์: ${getHierarchyName(ent.level)}`;
-            else if(colorContext.type === 'political') colorDesc = `🔴 ผู้ครอบครอง: ${colorContext.value}`;
             else if(colorContext.type === 'water') colorDesc = `🌊 พื้นที่: น่านน้ำ`;
 
             const ancestors = getAncestors(ent);
@@ -2609,11 +2356,7 @@
                                 <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm hover:scale-110"><span class="material-icons-round text-sm">delete</span></button>
                             ` : ''}
 
-                            ${(hasChildren && !ent.isWater) ? `
-                                <button onclick="window.openSubRegionManager('${ent.id}')" class="px-3 h-8 rounded-full bg-amber-500 text-white text-[10px] hover:bg-amber-600 flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">🏛️ จัดการเขตย่อย</button>
-                            ` : ''}
-                            
-                            ${(!ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E3423] flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">⚔️ ยุทธการ</button>` : ''}
+                            ${(!ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">⚔️ ยุทธการ</button>` : ''}
                             
                             ${(ent.isAnnexed || ent.isVassal || ent.isColony) ? `
                                 <button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">🚩 กู้เอกราช</button>
@@ -2636,17 +2379,6 @@
                 data = {};
                 HIERARCHY.forEach(h => data[h.name] = h.defaultColor);
                 title = 'แยกตามศักดิ์ปกครอง';
-            } else if (mode === 'political') { // NEW MODE
-                title = 'แยกตามผู้ครอบครอง';
-                // Collect unique owners
-                const ownerColors = new Map();
-                entities.forEach(ent => {
-                    if (ent.type === 'area' && !ent.isWater) {
-                        const owner = getHighestOwner(ent);
-                        ownerColors.set(owner.name, owner.color);
-                    }
-                });
-                data = Object.fromEntries(ownerColors);
             }
 
             document.getElementById('legend-title').innerText = title;
@@ -3010,8 +2742,8 @@
         };
         
         function updateParentSelect(rank) {
-            const s = document.getElementById('inp-parent'); s.innerHTML = '<option value=\"\">-- เป็นอิสระ --</option>';
-            entities.filter(e => getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value=\"${p.id}\">${p.name}</option>`);
+            const s = document.getElementById('inp-parent'); s.innerHTML = '<option value="">-- เป็นอิสระ --</option>';
+            entities.filter(e => getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value="${p.id}\">${p.name}</option>`);
         }
         function getRank(id) { return HIERARCHY.find(x=>x.id===id)?.rank || 0; }
         function getHierarchyName(id) { return HIERARCHY.find(x=>x.id===id)?.name || id; }
