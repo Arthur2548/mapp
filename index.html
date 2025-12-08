@@ -24,7 +24,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.105.0/Widgets/widgets.css" rel="stylesheet">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&family=Sarabun:wght[300;400;600]&display=swap" rel="stylesheet">
     
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -579,49 +579,6 @@
              color: #ffd700;
              text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
         }
-
-        /* New Royal Decree Style (Custom) */
-        .modal-paper-decree {
-            background: linear-gradient(to bottom, #FFFBF0, #F3E5D8);
-            border: 6px double #A1887F;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
-            font-family: 'Sarabun', serif; /* Use Sarabun for readability of the decree text */
-            font-size: 1.1rem;
-            color: #4E342E;
-        }
-        .decree-header {
-            font-family: 'Mali', cursive;
-            color: #6D4C41;
-            border-bottom: 2px solid #A1887F;
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-        .decree-icon {
-            color: #FFB74D;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-            font-size: 3rem;
-            line-height: 1;
-        }
-        .decree-content p {
-            line-height: 1.8;
-            margin-bottom: 1rem;
-            text-indent: 1.5rem;
-            text-align: justify;
-        }
-        .decree-content strong {
-            color: #8D6E63;
-        }
-        .decree-footer {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 2px dotted #A1887F;
-            color: #795548;
-            font-style: italic;
-            font-size: 0.9rem;
-        }
-        
     </style>
 </head>
 <body class="mode-2d">
@@ -960,24 +917,6 @@
         </div>
     </div>
 
-    <!-- Modal: Royal Decree (NEW) -->
-    <div id="modal-royal-decree" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
-        <div class="modal-paper modal-paper-decree w-full max-w-xl p-8 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <button onclick="closeModal('modal-royal-decree')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition border-2 border-transparent hover:border-red-200 rounded-full w-8 h-8 flex items-center justify-center" title="ปิดหน้าต่าง"><span class="material-icons-round text-2xl">close</span></button>
-            <div class="decree-header">
-                <div class="decree-icon" id="decree-icon"></div>
-                <h2 class="text-3xl font-bold mt-2" id="decree-title">...</h2>
-            </div>
-            <div class="decree-content" id="decree-content">
-                <!-- Content will be injected by JavaScript -->
-            </div>
-            <div class="decree-footer">
-                ขออำนาจแห่งฟ้าดินและเทพารักษ์ จงคุ้มครองท่านผู้ปกครองทุกประการ
-            </div>
-        </div>
-    </div>
-
-
     <!-- Modal: Login -->
     <div id="modal-login" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper modal-paper-auth w-[380px] p-8">
@@ -1154,47 +1093,31 @@
             <!-- Header Tabs -->
             <div class="flex bg-gray-50 border-b border-gray-200">
                 <button onclick="switchUnionTab('merge')" id="tab-merge" class="flex-1 py-4 text-sm font-bold text-[#5D4037] border-b-2 border-[#5D4037] bg-white transition flex items-center justify-center gap-2">
-                    <span class="material-icons-round text-amber-500">category</span> รวมดินแดน
+                    <span class="material-icons-round text-amber-500">category</span> หลอมรวมดินแดน (Merge)
                 </button>
                 <button onclick="switchUnionTab('annex')" id="tab-annex" class="flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2">
-                    <span class="material-icons-round text-red-500">flag</span> ผนวก/เปลี่ยนเจ้าของ
+                    <span class="material-icons-round text-red-500">flag</span> ผนวก/เปลี่ยนเจ้าของ (Annex)
                 </button>
             </div>
 
             <div class="p-6">
-                <!-- Content: Merge / Promotion -->
+                <!-- Content: Merge -->
                 <div id="content-merge" class="space-y-4">
-                    <div id="merge-mode-selection">
-                         <label class="text-xs font-bold text-[#8D6E63] ml-2 block mb-2">เลือกประเภทการรวม (โหมดสร้างสรรค์)</label>
-                         <div class="flex gap-4">
-                            <label class="flex-1 bg-white p-3 rounded-xl border-2 border-amber-500/50 hover:border-amber-500 transition cursor-pointer">
-                                <input type="radio" name="mergeType" value="destructive" id="merge-type-destructive" checked class="accent-amber-600 mr-2">
-                                <span class="text-sm font-bold text-gray-700">หลอมรวมดินแดน</span>
-                                <p class="text-[10px] text-gray-500 mt-0.5">รวมเป็นพื้นที่เดียวโดยสมบูรณ์ ลบเส้นเขตย่อยเดิม</p>
-                            </label>
-                            <label class="flex-1 bg-white p-3 rounded-xl border-2 border-purple-500/50 hover:border-purple-500 transition cursor-pointer">
-                                <input type="radio" name="mergeType" value="fusion" id="merge-type-fusion" class="accent-purple-600 mr-2">
-                                <span class="text-sm font-bold text-gray-700">รวมเพื่อยกสถานะศักดิ์</span>
-                                <p class="text-[10px] text-gray-500 mt-0.5">สร้างเขตแม่ใหม่ รักษาเขตเดิมไว้เป็นเขตย่อย</p>
-                            </label>
-                         </div>
-                         <div class="bg-yellow-50 p-3 rounded-xl border border-yellow-100 text-xs text-yellow-800 mt-3">
-                            <span class="font-bold">หมายเหตุ:</span> ในโหมดบริหาร ระบบจะบังคับใช้ **"รวมเพื่อยกสถานะศักดิ์"** เมื่อศักดิ์ถูกเลื่อนขึ้น
-                        </div>
+                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 text-xs text-amber-800">
+                        <span class="font-bold">ผลลัพธ์:</span> เส้นแบ่งเขตจะหายไป พื้นที่ทั้งหมดจะกลายเป็น <b>1 อาณาจักรใหม่</b> (Polygon เดียว)
                     </div>
-
                     <form id="form-merge" onsubmit="executeMerge(event)">
-                        <div class="space-y-3 pt-3 border-t border-dashed mt-3">
-                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ชื่อเขตแม่ใหม่</label><input type="text" id="merge-name" class="input-cute" required placeholder="เช่น สหราชอาณาจักร..."></div>
+                        <div class="space-y-3">
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ชื่ออาณาจักรใหม่</label><input type="text" id="merge-name" class="input-cute" required placeholder="เช่น สหราชอาณาจักร..."></div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ผู้ปกครอง</label><input type="text" id="merge-ruler" class="input-cute" required></div>
                                 <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ระดับศักดิ์</label><select id="merge-level" class="input-cute"></select></div>
                             </div>
                             <div><label class="text-xs font-bold text-[#8D6E63] ml-2">สีประจำเขต</label><input type="color" id="merge-color" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm"></div>
-                            <p id="merge-level-note-mgmt" class="text-xs text-red-500 hidden">⚠️ ในโหมดบริหาร การรวมจะบังคับศักดิ์ถัดไป และหากเป็นครั้งแรกผู้เล่นจะถูกแต่งตั้งเป็นผู้ปกครอง</p>
-                            <p id="merge-sub-rank-note" class="text-xs text-blue-500 hidden">💡 การรวมเพื่อยกสถานะศักดิ์จะสร้างเขตปกครองย่อยคงขอบเขตเดิมไว้</p>
+                            <p id="merge-level-note" class="text-xs text-red-500 hidden">⚠️ การหลอมรวมหมู่บ้านจะบังคับเป็นตำบล และเปลี่ยนสถานะผู้เล่นเป็นกำนัน</p>
+                            <p id="merge-sub-rank-note" class="text-xs text-blue-500 hidden">💡 การรวมพื้นที่นี้จะสร้างเขตปกครองย่อยคงขอบเขตเดิมไว้ เพื่อรองรับการกระจายอำนาจ</p>
                         </div>
-                        <button type="submit" class="btn-cute w-full mt-6 bg-gradient-to-r from-amber-600 to-orange-600">✨ ดำเนินการรวมดินแดน</button>
+                        <button type="submit" class="btn-cute w-full mt-6 bg-gradient-to-r from-amber-600 to-orange-600">✨ ร่ายเวทย์หลอมรวม</button>
                     </form>
                 </div>
 
@@ -1209,21 +1132,16 @@
                             <select id="annex-leader-select" class="input-cute w-full bg-white cursor-pointer"></select>
                         </div>
                         
-                        <div class="grid grid-cols-3 gap-2 pt-2">
+                        <div class="grid grid-cols-2 gap-3 pt-2">
                             <button onclick="executeAnnex('annex')" class="p-3 rounded-xl border-2 border-red-100 hover:border-red-500 bg-white hover:bg-red-50 transition text-center group">
-                                <span class="material-icons-round text-2xl text-red-400 group-hover:text-red-600 block mb-1">flag</span>
+                                <span class="material-icons-round text-2xl text-red-400 group-hover:text-red-600 block mb-1">gavel</span>
                                 <div class="text-xs font-bold text-gray-600">ผนวกดินแดน</div>
-                                <div class="text-[10px] text-gray-400">(เปลี่ยนเจ้าของ)</div>
+                                <div class="text-[10px] text-gray-400">(เปลี่ยนเจ้าของสมบูรณ์)</div>
                             </button>
                             <button onclick="executeAnnex('vassal')" class="p-3 rounded-xl border-2 border-purple-100 hover:border-purple-500 bg-white hover:bg-purple-50 transition text-center group">
                                 <span class="material-icons-round text-2xl text-purple-400 group-hover:text-purple-600 block mb-1">security</span>
                                 <div class="text-xs font-bold text-gray-600">ประเทศราช</div>
-                                <div class="text-[10px] text-gray-400">(เมืองขึ้น)</div>
-                            </button>
-                             <button onclick="executeAnnex('colony')" class="p-3 rounded-xl border-2 border-blue-100 hover:border-blue-500 bg-white hover:bg-blue-50 transition text-center group">
-                                <span class="material-icons-round text-2xl text-blue-400 group-hover:text-blue-600 block mb-1">public</span>
-                                <div class="text-xs font-bold text-gray-600">อาณานิคม</div>
-                                <div class="text-[10px] text-gray-400">(เมืองขึ้นต่างแดน)</div>
+                                <div class="text-[10px] text-gray-400">(เป็นเมืองขึ้น)</div>
                             </button>
                         </div>
                     </div>
@@ -1374,73 +1292,6 @@
             rank: RANK_COLORS
         };
         
-        // --- Royal Decree Content (NEW) ---
-        const ROYAL_DECREES = {
-            'muban': { icon: '🏞️', title: 'ประกาศแต่งตั้งผู้ใหญ่บ้าน', content: `ด้วยชาวบ้านต่างเห็นพ้องพร้อมใจ เชิดชู {rulerName} ผู้เสียสละแรงกายแรงใจเพื่อหมู่บ้าน ขอมอบตำแหน่ง **"ผู้ใหญ่บ้าน"** แห่งชุมชน{areaName} ขอให้ท่านนำพาผู้คนสู่ความสงบสุข และรักษาวิถีแห่งบรรพกาลให้คงอยู่ตราบนานเท่านาน พลังแห่งธาตุดินจงโอบอุ้มให้หมู่บ้านของท่านเป็นรากฐานที่แข็งแกร่ง.` },
-            'kwaeng': { icon: '🏞️', title: 'ประกาศแต่งตั้งผู้ใหญ่บ้าน (แขวง)', content: `บัดนี้ หมู่บ้านหลายแห่งได้รวมเป็นแขวงเพื่อความเป็นปึกแผ่น ชาวบ้านจึงพร้อมใจกันมอบตำแหน่ง **"ผู้ใหญ่บ้าน"** แห่งแขวง{areaName} ให้แก่ {rulerName} จงทำหน้าที่ด้วยความซื่อสัตย์ ให้ความยุติธรรมนำพาเสมอ ขอให้ความอุดมสมบูรณ์แห่งฟ้าดินอำนวยพร.` },
-            'tambon': { icon: '🏡', title: 'ประกาศตั้งกำนัน', content: `ด้วยการปกครองในหมู่บ้านทั้งหลายเป็นไปด้วยดี บัดนี้ได้รวมพื้นที่และยกสถานะขึ้นเป็นตำบล ประชาชนในตำบลทั้งปวงจึงลงมติพร้อมเพรียง แต่งตั้ง {rulerName} ดำรงตำแหน่ง **"กำนัน"** ตำบล{areaName} ขอให้ท่านรักษาความเรียบร้อยแห่งตำบล และเป็นหลักให้เกษตรกร พ่อค้า วาณิชและครัวเรือนทั้งปวง ขอเทพารักษ์ในไพรพงคุ้มครองท่าน.` },
-            'archKhet': { icon: '🏡', title: 'ประกาศตั้งกำนัน (อาเขต)', content: `ตำบลหลายแห่งถูกยกระดับเพื่อรองรับการค้าและพัฒนา บัดนี้ ท่าน {rulerName} ได้รับการยกย่องให้ดำรงตำแหน่ง **"กำนัน"** แห่งอาเขต{areaName} ขอให้ท่านพิทักษ์ความเจริญรุ่งเรืองที่เกิดขึ้นใหม่ และกระจายอำนาจสู่ความสงบสุข ขออำนาจแห่งธาตุลมนำพาความรู้ใหม่มาสู่ดินแดนของท่าน.` },
-            'amphoe': { icon: '🛡️', title: 'ประกาศตำแหน่งนายอำเภอ', content: `ด้วยความสามารถอันเป็นที่ประจักษ์ {rulerName} ได้ช่วยให้กำนันทั้งหลายและตำบลร่มเย็นเป็นสุข จึงทรงโปรดตั้งให้ดำรงตำแหน่ง **"นายอำเภอ"** {areaName} ตั้งแต่นี้ดินแดนทั้งอำเภออยู่ในความดูแลของท่าน ขอให้ความยุติธรรมและสติปัญญานำพาเสมอ ขอให้ท่านเป็นเสาหลักที่มั่นคงดุจภูผา.` },
-            'muang': { icon: '🌆', title: 'ประกาศตำแหน่งผู้ว่าการเมือง', content: `อำเภอทั้งหลายเติบโตด้วยพาณิชยาการ ผู้คน และศิลปวัฒนธรรม เมื่อยกย่องอำเภอเป็นเมืองแล้ว จึงขอประกาศแต่งตั้ง {rulerName} ให้ดำรงตำแหน่ง **"ผู้ว่าการเมือง"** {areaName} ขอให้ท่านพิทักษ์ผังเมืองให้เจริญรุ่งเรือง และเป็นศูนย์กลางแห่งการค้าและศิลปวัฒนธรรม ขอให้แสงแห่งปัญญาอำนวยชัยให้ท่าน.` },
-            'jangwat': { icon: '🏰', title: 'ประกาศแต่งตั้งผู้ว่าราชการจังหวัด', content: `เมื่ออำเภอทั้งปวงรวมเป็นระเบียบมั่นคง และได้รวมกันเป็นจังหวัด จึงขอประกาศแต่งตั้ง {rulerName} ขึ้นเป็น **"ผู้ว่าราชการจังหวัด"** {areaName} ขอให้ท่านคุ้มครองผู้คนในจังหวัดอันกว้างใหญ่ และเพิ่มความรุ่งเรืองเจริญงอกงามในจังหวัดทุกทิศานุทิศ ขอให้ท่านได้รับพรจากทุกธาตุทั้งสี่ให้การปกครองราบรื่น.` },
-            'nakorn': { icon: '⛩️', title: 'ประกาศนคราภิบาล', content: `จังหวัดมีความใหญ่โตด้วยศิลปศาสตร์และอารยธรรม เมื่อยกย่องจังหวัดเป็นนครแล้วไซร้ จึงขอประกาศแต่งตั้ง {rulerName} เป็น **"ผู้ว่านคราภิบาล"** แห่งนคร{areaName} ตั้งแต่นี้ท่านจักมีอำนาจดูแลนครและหัวเมืองขึ้น ขอให้ปรีชาญาณของท่านนำทางสู่ความยิ่งใหญ่ ขอให้ท่านได้รับความเคารพจากปวงประชาทุกสารทิศ.` },
-            'monthon': { icon: '⚜️', title: 'ประกาศแต่งตั้งมณฑลาธิปัตย์', content: `เมื่อหลายจังหวัดได้รวมตัวเป็นมณฑล จึงขอแต่งตั้ง {rulerName} เป็น **"มณฑลาธิปัตย์"** ผู้ดูแลมณฑล{areaName} ขออำนาจแห่งฟ้าดินคุ้มเกล้าฯ และช่วยให้ท่านนำมณฑลรุ่งเรืองสมบูรณ์พูนสุข ขอให้มณฑลของท่านเป็นที่เลื่องลือด้านความผาสุกและความมั่งคั่ง.` },
-            'monrath': { icon: '🌟', title: 'ประกาศตั้งรัฐาธิกรณ', content: `ด้วยอำนาจแห่งมณฑลที่รวมเป็นหนึ่ง ขอประกาศแต่งตั้ง {rulerName} ขึ้นดำรงตำแหน่ง **"รัฐาธิกรณ"** ผู้ปกครองมณรัฐ{areaName} การปกครองของท่านถือเป็นแบบอย่างแห่งความเป็นเอกภาพ ขอให้สติปัญญาและความกล้าหาญนำพาในทุกย่างก้าว ขอให้ความรุ่งเรืองและเกียรติยศคงอยู่คู่ท่านตราบนานเท่านาน.` },
-            'prathet': { icon: '👑', title: 'ประกาศสถาปนาประเทศ', content: `ด้วยการรวมมณรัฐเป็นประเทศ ถือเป็นมหาภารกิจอันยิ่งใหญ่ {rulerName} จึงได้รับการสถาปนาขึ้นเป็น **"กษัตริย์"** แห่งประเทศ{areaName} นับแต่นี้ อำนาจการรบและสันติภาพอยู่ในมือท่าน ขอให้สายเลือดแห่งนักปกครองไหลเวียนในกายท่าน เพื่อนำพาประเทศก้าวสู่ความยิ่งใหญ่ และขอให้เหล่าเทพยดาและอารักษ์ช่วยปกป้องอาณาเขตของท่าน.` },
-            'anachak': { icon: '🔱', title: 'ประกาศสถาปนาอาณาจักร', content: `เมื่อประเทศทั้งหลายรวมตัวกัน องค์ {rulerName} จึงได้สถาปนาขึ้นเป็น **"พระราชา"** แห่งอาณาจักร{areaName} ขอให้ราชอาณาจักรของท่านเป็นศูนย์รวมแห่งความผาสุกและอำนาจ ขอให้เกียรติภูมิแห่งอาณาจักรเกริกไกรไปทั่วทั้งแผ่นดิน ฟ้าดินจะเป็นพยานในการขึ้นครองราชย์ของท่าน.` },
-            'mahaAnachak': { icon: '🐲', title: 'ประกาศสถาปนามหาอาณาจักร', content: `บัดนี้ อาณาจักรทั้งหลายได้รวมเป็นหนึ่งเดียวภายใต้การนำของ **"พระจักรพรรดิ"** {rulerName} แห่งมหาอาณาจักร{areaName} มหาอาณาจักรของท่านคือจุดสูงสุดแห่งการปกครองและพลัง ขอให้พลังแห่งจักรวาลและอำนาจแห่งมังกรคุ้มครองราชบัลลังก์ของพระองค์ และขอให้การปกครองเป็นไปอย่างยุติธรรมและยิ่งใหญ่ชั่วนิรันดร์.` },
-        };
-
-        // Helper function to show the fantasy royal decree
-        window.showRoyalDecree = (rankId, areaName, rulerName, newAreaId) => {
-            const decree = ROYAL_DECREES[rankId];
-            if (!decree) {
-                 showToast(`ไม่พบข้อความประกาศสำหรับศักดิ์ ${rankId}`);
-                 // Fallback to normal confirm modal if no specific decree is found
-                 showConfirmModal("สำเร็จ", `อาณาจักร ${areaName} ได้รับการสถาปนาแล้ว!`, null, true);
-                 return;
-            }
-
-            // Replace placeholders in content
-            const contentHtml = `<p>${decree.content
-                .replace(/{rulerName}/g, `**${rulerName}**`)
-                .replace(/{areaName}/g, `**${areaName}**`)}</p>`;
-            
-            // Check if we need to open the village ruler modal after decree (only for muban->tambon promotion)
-            let callback = null;
-            if (rankId === 'tambon' && newAreaId) {
-                // Find the original village that was ruled by the player and is now a sub-layer
-                const originalVillage = entities.find(e => e.parentId === newAreaId && e.ruler === playerState.name && e.level === 'muban');
-                if (originalVillage) {
-                    callback = () => {
-                         closeModal('modal-royal-decree');
-                         document.getElementById('modal-village-ruler').classList.remove('hidden');
-                    };
-                }
-            }
-            
-            // Set Modal Content
-            document.getElementById('decree-icon').innerText = decree.icon;
-            document.getElementById('decree-title').innerText = decree.title;
-            document.getElementById('decree-content').innerHTML = contentHtml;
-            
-            const modal = document.getElementById('modal-royal-decree');
-            modal.classList.remove('hidden');
-            
-            // Setup close button to run callback (if exists) or just close
-            const closeBtn = modal.querySelector('.absolute');
-            closeBtn.onclick = callback || (() => closeModal('modal-royal-decree'));
-
-            // The main closing button logic is handled here via `executePendingConfirm`
-            // Since we are using a custom modal, we need a custom function for the main action button
-            modal.querySelector('.decree-footer').insertAdjacentHTML('afterend', `
-                <div class="mt-4 flex justify-center">
-                    <button id="decree-close-btn" class="btn-cute bg-red-600 hover:bg-red-700 text-white text-sm py-2 px-6 rounded-xl">${callback ? 'ต่อไป' : 'รับทราบ'}</button>
-                </div>
-            `);
-            document.getElementById('decree-close-btn').onclick = callback || (() => closeModal('modal-royal-decree'));
-        }
-
         // --- Sovereign Ruler Logic ---
         function getSovereignRulerTitle(gov) {
             switch (gov) {
@@ -1659,7 +1510,7 @@
         function updatePlayerHighestRank() {
              if (currentMode !== 'management' || !playerState.name) return;
 
-             const ownedAreas = entities.filter(e => e.type === 'area' && !e.isWater && e.ruler === playerState.name && !e.isSubLayer);
+             const ownedAreas = entities.filter(e => e.type === 'area' && !e.isWater && e.ruler === playerState.name);
              if (ownedAreas.length === 0) return; // No owned areas yet
 
              let maxRank = 0;
@@ -2040,7 +1891,7 @@
                     const opt = document.createElement('option'); opt.value = h.id; opt.text = h.name; levelSelect.appendChild(opt);
                 });
                 levelSelect.onchange = (e) => {
-                    const lvl = HIERARCHY.find(x => x.id === e.target.value);
+                    const lvl = HIERARCHY.find(h => h.id === e.target.value);
                     if(lvl) document.getElementById('inp-color').value = lvl.defaultColor;
                     updateParentSelect(lvl ? lvl.rank : 0);
                 };
@@ -2048,19 +1899,6 @@
 
             renderImportantIcons(); 
             document.getElementById('search-input')?.addEventListener('keyup', () => { renderMap(); if(is3DMode) renderCesium(); });
-            
-            // NEW: Union Modal Logic Visibility
-            document.querySelectorAll('input[name="mergeType"]').forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    const isFusion = e.target.value === 'fusion';
-                    const mergeSubRankNote = document.getElementById('merge-sub-rank-note');
-                    if (isFusion) {
-                         mergeSubRankNote.classList.remove('hidden');
-                    } else {
-                         mergeSubRankNote.classList.add('hidden');
-                    }
-                });
-            });
         }
 
         window.setMode = (mode) => {
@@ -2164,7 +2002,7 @@
                 playerState.title = govTitle; // Use the government title for the player's status
                 await savePlayerState();
                 
-                // 3. Construct and display the welcome popup (using the existing dark/fantasy style for sovereigns)
+                // 3. Construct and display the welcome popup
                 let welcomeMsg = "";
                 let popupTitle = "";
                 let countryName = ent.name || "ดินแดนศักดิ์สิทธิ์";
@@ -2590,7 +2428,6 @@
                 }, { merge: true });
 
                 // 2. Update player state if this is the highest rank achieved
-                // This is redundant as updatePlayerHighestRank will be triggered by onSnapshot, but safe to set.
                 playerState.highestRank = targetLevelId;
                 playerState.title = HIERARCHY.find(h => h.id === targetLevelId)?.rulerTitle || playerState.title;
                 await savePlayerState();
@@ -2613,75 +2450,70 @@
             modal.classList.remove('hidden');
             
             const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
-            const selectedRanks = selectedEnts.map(e => getRank(e.level));
-            const isHomogeneousRank = selectedRanks.every(r => r === selectedRanks[0]);
-            const minRankOfSelected = Math.min(...selectedRanks);
+            const allVillages = selectedEnts.every(e => getRank(e.level) <= getRank('muban')); // Check for muban/kwaeng only
             const mergeLevelSelect = document.getElementById('merge-level');
-            const mergeLevelNoteMgmt = document.getElementById('merge-level-note-mgmt');
+            const mergeLevelNote = document.getElementById('merge-level-note');
             const mergeSubRankNote = document.getElementById('merge-sub-rank-note');
-            const mergeModeSelection = document.getElementById('merge-mode-selection');
-
-            // --- Setup UI based on Mode and Selection ---
+            const highestRank = playerState.highestRank;
+            const highestRankObj = HIERARCHY.find(h => h.id === highestRank);
             
-            // 1. Visibility of Merge Type Selection (Only in Creative Mode)
-            if (currentMode === 'creative') {
-                 mergeModeSelection.classList.remove('hidden');
-            } else {
-                 mergeModeSelection.classList.add('hidden');
-                 document.getElementById('merge-type-fusion').checked = true; // Default to fusion in management
-            }
-            
-            // 2. Setup Merge Level Dropdown
+            // --- Setup Tab 1: Merge Level Dropdown ---
             mergeLevelSelect.innerHTML = '';
-            let defaultSelectedLevel = HIERARCHY.find(h => h.rank === 7)?.id; // Default to 'prathet'
+            
+            // Determine possible target ranks
+            const minRankOfSelected = Math.min(...selectedEnts.map(e => getRank(e.level)));
+            const nextRankUp = HIERARCHY.find(h => h.rank > minRankOfSelected);
+            const highestAllowedRank = HIERARCHY.find(h => h.rank === getRank(playerState.highestRank) + 1) || HIERARCHY.find(h => h.id === playerState.highestRank);
 
             HIERARCHY.sort((a,b) => b.rank - a.rank).forEach(h => {
                 const opt = document.createElement('option'); opt.value = h.id; opt.text = h.name;
                 
                 if (currentMode === 'management') {
-                    // Management Mode: Enforce same-rank selection and auto-select next rank
+                    // Only allow target rank to be higher than the lowest selected, and no higher than the next rank up from player's current highest rank
                     const targetRankVal = getRank(h.id);
-                    const nextRankVal = minRankOfSelected + 1;
-                    
-                    if (!isHomogeneousRank) {
-                        opt.disabled = true;
-                    } else if (targetRankVal > nextRankVal || targetRankVal <= minRankOfSelected) { 
-                         // Only allow the *exact* next rank
-                         opt.disabled = true;
-                    }
+                    const isNextRank = nextRankUp && h.id === nextRankUp.id;
 
-                    if (h.rank === nextRankVal) defaultSelectedLevel = h.id;
-                    
-                } else {
-                    // Creative Mode: Allow any rank higher than the lowest selected
-                    if (getRank(h.id) <= minRankOfSelected) {
+                    // Disable everything not directly related to promotion or already achieved by the player
+                    if (targetRankVal <= minRankOfSelected) { // Must be a promotion
                          opt.disabled = true;
-                    }
+                    } else if (targetRankVal > getRank(highestAllowedRank.id)) { // Cannot jump more than one rank
+                         opt.disabled = true;
+                    } 
+                    
+                    if (allVillages && h.id === 'tambon') opt.selected = true;
+                    else if (isNextRank && !opt.disabled) opt.selected = true;
+
+
+                } else if(h.rank >= 7) { // Creative mode default
+                     opt.selected = true; 
                 }
                 
                 mergeLevelSelect.appendChild(opt);
             });
-            
-            mergeLevelSelect.value = defaultSelectedLevel;
-            mergeLevelSelect.disabled = currentMode === 'management' && isHomogeneousRank; // Lock selection if management promotion
-            
-            // 3. Update Notes and Ruler Defaults
-            if (currentMode === 'management' && isHomogeneousRank) {
-                 mergeLevelNoteMgmt.classList.remove('hidden');
-                 document.getElementById('merge-ruler').value = playerState.name;
-                 document.getElementById('merge-ruler').disabled = true;
+
+            // Update merge ruler/color defaults
+            document.getElementById('merge-ruler').value = playerState.name || selectedEnts[0].ruler || '';
+            document.getElementById('merge-color').value = highestRankObj.defaultColor;
+
+            // Show notes for Fusion/Sub-Layer Logic
+            if (currentMode === 'management' && (allVillages || getRank(mergeLevelSelect.value) > getRank('tambon'))) {
                  mergeSubRankNote.classList.remove('hidden');
             } else {
-                 mergeLevelNoteMgmt.classList.add('hidden');
-                 document.getElementById('merge-ruler').value = selectedEnts[0].ruler || playerState.name;
-                 document.getElementById('merge-ruler').disabled = false;
-                 // Hide fusion note by default in creative until radio is checked
                  mergeSubRankNote.classList.add('hidden');
             }
 
-            // Update merge color defaults
-            const currentLevelObj = HIERARCHY.find(h => h.id === mergeLevelSelect.value) || HIERARCHY[0];
-            document.getElementById('merge-color').value = currentLevelObj.defaultColor;
+            // Show note if it's a village-to-tambon promotion
+            if (currentMode === 'management' && allVillages) {
+                 mergeLevelSelect.value = 'tambon'; // Force select
+                 mergeLevelSelect.disabled = true; // Lock selection
+                 document.getElementById('merge-ruler').value = playerState.name; // Force ruler name
+                 document.getElementById('merge-ruler').disabled = true;
+                 mergeLevelNote.classList.remove('hidden');
+            } else {
+                 mergeLevelSelect.disabled = false;
+                 document.getElementById('merge-ruler').disabled = false;
+                 mergeLevelNote.classList.add('hidden');
+            }
 
 
             // Setup Tab 2: Annex Leader Selector (unchanged)
@@ -2711,30 +2543,25 @@
             const newColor = document.getElementById('merge-color').value;
             
             const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
-            const selectedRanks = selectedEnts.map(e => getRank(e.level));
-            const isHomogeneousRank = selectedRanks.every(r => r === selectedRanks[0]);
-            const minRankOfSelected = Math.min(...selectedRanks);
-            const nextRankVal = minRankOfSelected + 1;
-            const targetRankVal = getRank(newLevel);
+            const allVillages = selectedEnts.every(e => e.level === 'muban');
+            const isSubLayerMerge = currentMode === 'management' && (allVillages || getRank(newLevel) > getRank('tambon'));
             
-            // Determine if Fusion (Sub-Layer) logic is required
-            let isFusionPromotion = (currentMode === 'management' && isHomogeneousRank && targetRankVal === nextRankVal) || 
-                                    (currentMode === 'creative' && document.getElementById('merge-type-fusion').checked);
-            
-            // Check for first-time ruler promotion
-            let isFirstTimeRuler = false;
-            let previousHighestRank = getRank(playerState.highestRank);
-            
-            if (currentMode === 'management' && isFusionPromotion && newRuler === playerState.name && targetRankVal > previousHighestRank) {
-                 isFirstTimeRuler = true;
-                 const newRankObj = HIERARCHY.find(h => h.id === newLevel);
-                 playerState.title = newRankObj.rulerTitle;
-                 playerState.highestRank = newLevel;
-                 await savePlayerState();
+            let villageToRename = null;
+            let mergeLevelUp = false;
+
+            if (currentMode === 'management' && allVillages && newLevel === 'tambon') {
+                mergeLevelUp = true;
+                villageToRename = selectedEnts.find(e => e.ruler === playerState.name);
+                if (villageToRename) {
+                     playerState.title = HIERARCHY.find(h => h.id === 'tambon')?.rulerTitle || 'กำนัน';
+                     playerState.highestRank = 'tambon';
+                     document.getElementById('village-id-to-rename').value = villageToRename.id;
+                     document.getElementById('village-to-rename').innerText = villageToRename.name;
+                     document.getElementById('new-player-title').innerText = playerState.title;
+                }
             }
 
-            let villageToRenameId = null; // Used for muban->tambon scenario
-            
+
             try {
                 const polys = selectedEnts.map(ent => JSON.parse(ent.geoJson));
 
@@ -2772,60 +2599,57 @@
                     const oldEnt = entities.find(e => e.id === id);
                     const oldRef = doc(colRef, id);
 
-                    if (isFusionPromotion) {
+                    // If fusion is enabled (or required for village->tambon promotion)
+                    if (isSubLayerMerge) {
+                        const isVillageToRename = villageToRename && id === villageToRename.id;
+
                         // Preserve the old entity as a sub-layer
                         const subLayerUpdates = {
                             parentId: newRef.id,
                             isSubLayer: true, // Mark it as a sub-layer
-                            isAnnexed: false, isVassal: false, isColony: false, 
-                            originalColor: oldEnt.originalColor || oldEnt.color, 
-                            // Keep original ruler for the sub-layer, EXCEPT for the one that was the player's village if promoting to tambon
+                            isAnnexed: false, isVassal: false, isColony: false, // Ensure sub-layers are 'independent' visually
+                            originalColor: oldEnt.originalColor || oldEnt.color, // Keep original color for sub-layer distinction
+                            ruler: isVillageToRename ? newRuler : oldEnt.ruler, // Update ruler if needed for promotion flow
+                            // Keep all other properties (name, level, geoJson)
                         };
-                        
-                        // Special check: If this is the village the player is leaving to become Kamnan/Tambon ruler
-                        if (isFirstTimeRuler && oldEnt.level === 'muban' && oldEnt.ruler === playerState.name) {
-                            subLayerUpdates.ruler = 'ว่าง'; // The player will set a new one in the next modal
-                            villageToRenameId = id; // Flag this one for the renaming modal
-                        }
-                        
+
                         batch.update(oldRef, subLayerUpdates);
                     } else {
-                        // Destructive Merge: Delete old layers
+                        // Regular Merge: Delete old layers
                         batch.delete(oldRef);
                     }
                 });
                 
+                // 3. Complete promotion steps
+                if (mergeLevelUp) {
+                     await savePlayerState();
+                }
+
                 await batch.commit();
                 
-                // --- Post-Commit Logic ---
-                closeModal('modal-union');
-                toggleMultiSelectMode();
+                // --- Sovereign Check ---
+                const newRankVal = getRank(newLevel);
+                const isSovereignPromotion = newRankVal >= getRank('prathet'); 
 
-                // 1. Check for Sovereign Promotion (Rank 7+)
-                const isSovereignPromotion = targetRankVal >= getRank('prathet'); 
-
-                if (isSovereignPromotion && currentMode === 'management' && newRuler === playerState.name) {
-                     // Open Sovereign Modal
+                if (isSovereignPromotion && currentMode === 'management' && selectedEnts.some(e => e.ruler === playerState.name)) {
+                     // 1. Prepare data for Sovereign Modal
                      document.getElementById('sovereign-new-id').value = newRef.id;
                      document.getElementById('sovereign-new-level').value = newLevel;
                      document.getElementById('sovereign-rank-display').innerText = getHierarchyName(newLevel);
                      document.getElementById('sovereign-ruler-name-input').value = playerState.name;
                      
+                     // 2. Open Sovereign Modal instead of normal confirmation
                      document.getElementById('modal-sovereign-ruler').classList.remove('hidden');
-                     updateSovereignRulerTitle(); 
-
-                } else if (isFirstTimeRuler) {
-                     // 2. Check for Fantasy Decree (Ranks 1-6)
-                     showRoyalDecree(newLevel, newName, newRuler, newRef.id);
+                     updateSovereignRulerTitle(); // Initialize titles/label
                      
-                     // The decree will handle opening the village ruler modal if villageToRenameId is set
-
                 } else {
-                    // 3. Standard confirmation
+                    // Standard confirmation for lower ranks
+                    closeModal('modal-union');
+                    toggleMultiSelectMode();
                     showConfirmModal("สำเร็จ", `อาณาจักร ${newName} ได้รับการสถาปนาแล้ว!`, null, true);
-                    
-                    // If not first time ruler but still muban->tambon, open the renaming modal
-                    if (isFusionPromotion && newLevel === 'tambon' && villageToRenameId) {
+
+                    // If a village needs renaming, open the modal
+                    if (villageToRename) {
                          document.getElementById('modal-village-ruler').classList.remove('hidden');
                     }
                 }
@@ -2845,18 +2669,6 @@
             const targets = entities.filter(ent => selectedIds.has(ent.id));
             
             if(!leader) return;
-
-            // Check for Annexer Rank requirement (ประเทศ/นคร+)
-            const leaderRankObj = HIERARCHY.find(h => h.id === leader.level);
-            if (!leaderRankObj.warCapable && leaderRankObj.warType !== 'annexOnly') {
-                 showConfirmModal("ประกาศสงครามไม่ได้", `ศักดิ์ ${leaderRankObj.name} ไม่สามารถดำเนินการผนวกได้ ต้องมีศักดิ์ตั้งแต่ นคร หรือ ประเทศขึ้นไป`, null, true);
-                 return;
-            }
-            // Check for Nakorn restriction
-            if (leaderRankObj.warType === 'annexOnly' && (type === 'vassal' || type === 'colony')) {
-                 showConfirmModal("จำกัดอำนาจ", `ศักดิ์ นคร ทำได้เพียง **ผนวกดินแดน** เท่านั้น ไม่สามารถตั้ง ประเทศราช/อาณานิคมได้`, null, true);
-                 return;
-            }
 
             const batch = writeBatch(db);
             const colRef = getEntityCollectionRef();
@@ -2878,16 +2690,10 @@
                 if(type === 'vassal') updates.isVassal = true;
                 if(type === 'colony') updates.isColony = true;
 
-                // For colony, keep the original color
-                if (type === 'colony') {
-                     updates.color = target.originalColor || target.color;
-                } else {
-                     updates.color = leader.color;
-                }
-
                 batch.update(entRef, updates);
                 
                 // Re-parent the target's sub-regions (if any) to the leader
+                // This handles: A conquers B. B's direct children (C, D) now report to A.
                 const targetChildren = entities.filter(e => e.parentId === target.id);
                 targetChildren.forEach(child => {
                      batch.update(doc(colRef, child.id), { parentId: leader.id }, { merge: true });
@@ -2905,13 +2711,15 @@
                 const targetName = targetCount === 1 ? `${getHierarchyName(targets[0].level)} ${targets[0].name}` : `${targetCount} ดินแดน`;
                 const attackerRank = getHierarchyName(leader.level);
                 
-                // Using the dark/fantasy style for annexation/conquest theme
+                const collapseMessage = `${targetName} ล่มสลายลงแล้ว เนื่องจากการรวมแผ่นดินโดย ${attackerRank} ${leader.name} เส้นทางแห่งอำนาจนี้มิอาจย้อนกลับได้ ขอให้ดวงวิญญาณแห่งดินแดนนี้จงสงบ...`;
+                
+                // Apply dark/fantasy style
                 document.getElementById('modal-confirm').querySelector('.modal-paper').classList.add('modal-paper-dark');
                 document.getElementById('modal-confirm').querySelector('.modal-overlay').classList.add('modal-fantasy-dark');
 
                 showConfirmModal(
                     `🌑 การรวมแผ่นดินสำเร็จ 🌑`,
-                    `${targetName} ล่มสลายลงแล้ว เนื่องจากการรวมแผ่นดินโดย ${attackerRank} ${leader.name} เส้นทางแห่งอำนาจนี้มิอาจย้อนกลับได้ ขอให้ดวงวิญญาณแห่งดินแดนนี้จงสงบ...`,
+                    collapseMessage,
                     () => {
                          // Remove dark style after closing
                          document.getElementById('modal-confirm').querySelector('.modal-paper').classList.remove('modal-paper-dark');
@@ -2932,11 +2740,11 @@
             
             const sel = document.getElementById('war-attacker-select'); sel.innerHTML = '';
             
-            // Filter attackers: Only areas ruled by the player and capable of war (ประเทศ+) OR Nakorn (นคร)
+            // Filter attackers: Only areas ruled by the player and capable of war
             const warCapableRanks = HIERARCHY.filter(h => h.warCapable).map(h => h.id);
             const playerAttackers = entities.filter(e => 
                  !e.isWater && e.type === 'area' && e.ruler === playerState.name && 
-                 e.id !== tid && warCapableRanks.includes(e.level) && !e.isSubLayer
+                 e.id !== tid && warCapableRanks.includes(e.level)
             );
             
             if (playerAttackers.length === 0) {
@@ -2954,17 +2762,13 @@
                  const attacker = entities.find(e => e.id === attackerId);
                  const attackerRank = HIERARCHY.find(h => h.id === attacker.level);
                  
-                 const annexBtn = document.getElementById('war-btn-annex');
-                 const vassalBtn = document.getElementById('war-btn-vassal');
-                 const colonyBtn = document.getElementById('war-btn-colony');
-
-                 annexBtn.disabled = false;
-                 vassalBtn.disabled = false;
-                 colonyBtn.disabled = false;
+                 document.getElementById('war-btn-annex').disabled = false;
+                 document.getElementById('war-btn-vassal').disabled = false;
+                 document.getElementById('war-btn-colony').disabled = false;
 
                  if (attackerRank?.warType === 'annexOnly') {
-                     vassalBtn.disabled = true;
-                     colonyBtn.disabled = true;
+                     document.getElementById('war-btn-vassal').disabled = true;
+                     document.getElementById('war-btn-colony').disabled = true;
                      showToast("⚠️ นครทำได้แค่ผนวกดินแดนเท่านั้น");
                  }
             }
@@ -3068,11 +2872,6 @@
 
             await saveToFirestore(data, id);
             closeModal('modal-area'); currentDrawLayer = null;
-            
-            // NEW: If first muban in management mode, show decree
-            if (isFirstMuban && currentMode === 'management') {
-                showRoyalDecree('muban', data.name, data.ruler, data.id);
-            }
         }
 
         function validateAuth() { /* ... unchanged ... */ }
@@ -3117,7 +2916,7 @@
             const targetChildren = entities.filter(e => e.parentId === target.id);
             const reparentBatch = writeBatch(db);
             targetChildren.forEach(child => {
-                 reparentBatch.update(doc(colRef, child.id), { parentId: attacker.id, isAnnexed: updates.isAnnexed, isVassal: updates.isVassal, isColony: updates.isColony }, { merge: true });
+                 reparentBatch.update(doc(colRef, child.id), { parentId: leader.id }, { merge: true });
             });
             await reparentBatch.commit();
 
@@ -3127,13 +2926,15 @@
                 const targetRank = getHierarchyName(target.level);
                 const attackerRank = getHierarchyName(attacker.level);
                 
-                // Using the dark/fantasy style for annexation/conquest theme
+                const collapseMessage = `อาณาจักร${targetRank} ${target.name} ล่มสลายลงแล้ว เนื่องจากการรวมแผ่นดินโดย ${attackerRank} ${attacker.name} เส้นทางแห่งอำนาจนี้มิอาจย้อนกลับได้ ขอให้ดวงวิญญาณแห่งดินแดนนี้จงสงบ...`;
+                
+                // Apply dark/fantasy style
                 document.getElementById('modal-confirm').querySelector('.modal-paper').classList.add('modal-paper-dark');
                 document.getElementById('modal-confirm').querySelector('.modal-overlay').classList.add('modal-fantasy-dark');
-                
+
                 showConfirmModal(
                     `🌑 การรวมแผ่นดินสำเร็จ 🌑`,
-                    `อาณาจักร${targetRank} ${target.name} ล่มสลายลงแล้ว เนื่องจากการรวมแผ่นดินโดย ${attackerRank} ${attacker.name} เส้นทางแห่งอำนาจนี้มิอาจย้อนกลับได้ ขอให้ดวงวิญญาณแห่งดินแดนนี้จงสงบ...`,
+                    collapseMessage,
                     () => {
                          // Remove dark style after closing
                          document.getElementById('modal-confirm').querySelector('.modal-paper').classList.remove('modal-paper-dark');
