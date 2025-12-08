@@ -1680,8 +1680,8 @@
                                 // 2. Check Edit Mode: กรณี 1: โหมดแก้ไข (Click to Edit)
                                 if (window.isEditMode) {
                                     L.DomEvent.stopPropagation(e); // สำคัญ: หยุดการกระจาย Event เพื่อไม่ให้เกิด Popup ซ้อน
-                                    L.DomEvent.preventDefault(e);
-
+                                    // ⚠️ ลบ L.DomEvent.preventDefault(e) ออกเพื่อไม่ให้ขัดแย้งกับ Leaflet Edit
+                                    
                                     // แก้ไขได้เฉพาะ Area (Polygon) และ Road (Polyline)
                                     if (ent.type !== 'area' && ent.type !== 'road') return;
 
@@ -1703,7 +1703,7 @@
                                 // 3. Check Multi-Select Mode: กรณี 2: โหมดเลือกหลายอัน (Multi-Select เดิม)
                                 if (isMultiSelectMode && ent.type === 'area' && !ent.isWater) {
                                     L.DomEvent.stopPropagation(e); // สำคัญ: หยุดการกระจาย Event เพื่อไม่ให้เกิด Popup ซ้อน
-                                    L.DomEvent.preventDefault(e);
+                                    // ⚠️ ลบ L.DomEvent.preventDefault(e) ออก
                                     
                                     if (selectedIds.has(ent.id)) selectedIds.delete(ent.id);
                                     else selectedIds.add(ent.id);
@@ -2399,9 +2399,7 @@
                 
                 btn.classList.add('bg-pink-100', 'ring-2', 'ring-pink-300');
                 showToast("🔧 เปิดโหมดแก้ไข: จิ้มที่พื้นที่ที่ต้องการแก้เส้นได้เลย");
-                // ปิดการคลิก 2D Map เพื่อป้องกันการซ้อนทับ (Leaflet Map Click)
-                // ไม่จำเป็นต้องปิด map.off('click') เนื่องจากเราใช้ stopPropagation ใน l.on('click') แล้ว
-                // map.off('click'); 
+                map.closePopup(); // ⬅️ เพิ่มโค้ดนี้เพื่อให้มั่นใจว่า Pop-up ถูกปิดเมื่อเข้าโหมดแก้ไข
             } else {
                 // --- ปิดใช้งาน (บันทึก) ---
                 if (window.editingLayer) {
@@ -2422,8 +2420,6 @@
 
                 btn.classList.remove('bg-pink-100', 'ring-2', 'ring-pink-300');
                 showToast("ปิดโหมดแก้ไข");
-                // คืนค่าคลิก 2D Map (ถ้ามี)
-                // map.on('click', () => { /* Handle default map click if needed */ });
             }
         };
         
