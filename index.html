@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
     
-    <!-- Turf.js (For Geometry Merging) -->
+    <!-- Turf.js (For Geometry Merging & Simplify) -->
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
     <!-- CesiumJS (3D Globe) -->
@@ -69,6 +69,14 @@
             position: absolute;
             top: 0; left: 0;
             transition: opacity 0.5s ease;
+        }
+
+        /* Custom Cursor for Freehand Mode */
+        .cursor-pen {
+            cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height=32') 0 32, crosshair !important;
+        }
+        .cursor-pen .leaflet-interactive {
+            cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height=32') 0 32, crosshair !important;
         }
 
         #cesiumContainer {
@@ -141,6 +149,31 @@
             flex-direction: column;
             gap: 10px;
             z-index: 1000;
+            align-items: flex-end; /* Align to right for submenu */
+        }
+
+        .tool-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex-direction: row-reverse;
+            gap: 10px;
+        }
+
+        /* Submenu Animation */
+        .tool-submenu {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transform: translateX(20px);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-right: 4px;
+        }
+        .tool-submenu.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
         }
 
         .tool-btn {
@@ -156,13 +189,27 @@
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 2px solid white;
             cursor: pointer;
+            position: relative;
+            z-index: 2;
         }
-        .tool-btn:hover {
+        .tool-btn:hover, .tool-btn.active {
             transform: scale(1.1) rotate(-5deg);
             color: var(--wood-light);
             border-color: var(--gold-accent);
         }
         .tool-btn span { font-size: 26px; }
+
+        .tool-btn-sub {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: #FFF8E1;
+            border: 2px solid #FFE0B2;
+            color: #5D4037;
+        }
+        .tool-btn-sub:hover {
+            background: #FFECB3;
+            transform: scale(1.1);
+        }
 
         /* Compass */
         .compass-container {
@@ -349,7 +396,7 @@
             background: #FFF8E1;
         }
 
-        /* --- FANTASY POPUP STYLING (NEW) --- */
+        /* --- FANTASY POPUP STYLING --- */
         .leaflet-popup-content-wrapper {
             background: rgba(255, 253, 245, 0.95);
             border-radius: 24px;
@@ -569,9 +616,22 @@
 
     <!-- Vertical Toolbar -->
     <div class="toolbar-vertical">
-        <div class="tool-btn" onclick="checkModeAndDraw('polygon')" title="สร้างเขตพื้นที่">
-            <span class="material-icons-round text-emerald-500">terrain</span>
+        <!-- New Draw Menu Group -->
+        <div class="tool-group">
+            <div id="draw-submenu" class="tool-submenu">
+                <div class="tool-btn tool-btn-sub" onclick="startFreehandMode()" title="วาดด้วยปากกา (อิสระ)">
+                    <span class="material-icons-round text-amber-800">edit</span>
+                </div>
+                <div class="tool-btn tool-btn-sub" onclick="startPointMode()" title="วาดเส้นจุด (ทีละจุด)">
+                    <span class="material-icons-round text-blue-600">timeline</span>
+                </div>
+            </div>
+            
+            <div class="tool-btn" onclick="toggleDrawMenu()" title="สร้างเขตพื้นที่ (เลือกแบบ)">
+                <span class="material-icons-round text-emerald-500">terrain</span>
+            </div>
         </div>
+
         <div class="tool-btn" onclick="checkModeAndDraw('polyline')" title="สร้างเส้นทาง">
             <span class="material-icons-round text-amber-700">alt_route</span>
         </div>
@@ -678,7 +738,7 @@
     <!-- Modal: Create/Edit Area -->
     <div id="modal-area" class="fixed inset-0 modal-overlay hidden z-[2000] flex items-center justify-center">
         <div class="modal-paper w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal('modal-area')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round text-2xl">close</span></button>
+            <button onclick="closeModal('modal-area')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition border-2 border-transparent hover:border-red-200 rounded-full w-8 h-8 flex items-center justify-center" title="ปิดหน้าต่าง"><span class="material-icons-round text-2xl">close</span></button>
             <h2 class="text-2xl text-[#5D4037] font-bold mb-6 flex items-center gap-2 border-b border-dashed border-[#E0E0E0] pb-3 cute-font"><span class="material-icons-round text-3xl text-amber-400">edit_location_alt</span><span id="modal-title">สร้างเขตปกครอง</span></h2>
             <form id="form-area" class="space-y-5">
                 <input type="hidden" id="area-id">
@@ -895,6 +955,11 @@
         let pendingConfirmAction = null; 
         let is3DMode = false;
         let selectedCesiumEntity = null;
+
+        // --- NEW GLOBALS for Freehand ---
+        let isFreehand = false;
+        let freehandPath = [];
+        let tempLine = null;
 
         // --- NEW GLOBALS for Unification ---
         let isMultiSelectMode = false;
@@ -1237,10 +1302,16 @@
                 showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดเครื่องมือวาดอีกครั้ง", null, true);
                 return;
             }
-            if(type === 'polygon') window.startDrawPolygon();
+            if(type === 'polygon') window.toggleDrawMenu(); 
             else if(type === 'polyline') window.startDrawPolyline();
             else if(type === 'marker') window.startDrawMarker();
         }
+        
+        // --- NEW: Toggle Draw Menu ---
+        window.toggleDrawMenu = () => {
+             const menu = document.getElementById('draw-submenu');
+             menu.classList.toggle('active');
+        };
 
         // --- Helper: Hierarchy Logic ---
         function getAncestors(ent) {
@@ -1361,8 +1432,6 @@
         function renderCesium() {
             if(!viewer) return;
             
-            // FIX: Deselect entity before removing to prevent Cesium crash "reading positions of null"
-            // แก้ไข: ยกเลิกการเลือกวัตถุก่อนลบ เพื่อป้องกัน Error จอแดง
             viewer.selectedEntity = undefined;
             viewer.trackedEntity = undefined;
             
@@ -1980,6 +2049,76 @@
                  showConfirmModal("Fullscreen Error", "เบราว์เซอร์นี้ไม่อนุญาตให้ใช้โหมดเต็มหน้าจอ", null, true);
              }
         }
+        
+        // --- NEW: Custom Draw Modes ---
+        window.startPointMode = () => {
+             window.toggleDrawMenu();
+             const drawer = new L.Draw.Polygon(map, {
+                 shapeOptions: {
+                     color: '#FFB74D',
+                     weight: 2
+                 }
+             });
+             drawer.enable();
+             
+             // Hook for Right Click Delete
+             const handler = (e) => {
+                 // Check if enabled and has internal poly
+                 if(drawer._enabled && drawer._poly && drawer._poly.getLatLngs().length > 0) {
+                     drawer.deleteLastVertex();
+                 }
+             };
+             
+             map.on('contextmenu', handler);
+             
+             // Remove hook when draw ends
+             map.once(L.Draw.Event.CREATED, () => map.off('contextmenu', handler));
+             // Also remove if tool disabled manually (optional, Leaflet Draw handles disable)
+        };
+
+        window.startFreehandMode = () => {
+            window.toggleDrawMenu();
+            isFreehand = true;
+            map.dragging.disable();
+            document.getElementById('map').classList.add('cursor-pen');
+            map.on('mousedown', onFreehandDown);
+            map.on('mouseup', onFreehandUp);
+        };
+
+        function onFreehandDown(e) {
+            map.on('mousemove', onFreehandMove);
+            freehandPath = [e.latlng];
+            tempLine = L.polyline(freehandPath, {color: '#FFB74D', weight: 3}).addTo(map);
+        }
+
+        function onFreehandMove(e) {
+            freehandPath.push(e.latlng);
+            tempLine.setLatLngs(freehandPath);
+        }
+
+        function onFreehandUp() {
+            map.off('mousemove', onFreehandMove);
+            map.off('mousedown', onFreehandDown);
+            map.off('mouseup', onFreehandUp);
+            
+            // Close the loop
+            freehandPath.push(freehandPath[0]);
+            
+            // Cleanup temp line
+            if(tempLine) map.removeLayer(tempLine);
+            map.dragging.enable();
+            document.getElementById('map').classList.remove('cursor-pen');
+            isFreehand = false;
+
+            if(freehandPath.length > 5) {
+                // Simplify path to reduce points (using Turf is overkill for simple, but handy if imported)
+                // Let's just make polygon directly
+                const poly = L.polygon(freehandPath);
+                const event = { layer: poly, layerType: 'polygon' };
+                onDrawCreated(event);
+            }
+        }
+
 
         function onDrawCreated(e) {
             currentDrawLayer = e.layer;
