@@ -937,7 +937,7 @@
                 </div>
                 <h2 class="text-2xl text-[#5D4037] font-bold mb-1 cute-font">ยินดีต้อนรับกลับมา!</h2>
                 <p class="text-gray-500 text-xs mb-6">เข้าสู่ดินแดนแห่งจินตนาการของคุณ</p>
-                <form id="form-login" class="space-y-4">
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
                     <div class="input-group"><span class="material-icons-round icon">person</span><input type="text" id="login-username" class="input-cute" required placeholder="ชื่อผู้ใช้"></div>
                     <div class="input-group"><span class="material-icons-round icon">vpn_key</span><input type="password" id="login-password" class="input-cute" required placeholder="รหัสผ่าน"></div>
                     <button type="submit" class="btn-cute w-full mt-2 shadow-lg hover:shadow-xl">เปิดประตูมิติ</button>
@@ -952,7 +952,7 @@
             <button onclick="closeModal('modal-register')" class="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition z-10"><span class="material-icons-round">close</span></button>
             <div class="relative z-10">
                 <h2 class="text-2xl text-[#5D4037] font-bold mb-6 text-center cute-font">สร้างตัวตนใหม่</h2>
-                <form id="form-register" class="space-y-4">
+                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อ</label><input type="text" id="reg-firstname" class="input-cute" required></div>
                         <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">นามสกุล</label><input type="text" id="reg-lastname" class="input-cute" required></div>
@@ -2904,9 +2904,76 @@
             document.getElementById('selection-count').innerText = selectedIds.size;
         }
 
+        // --- AUTHENTICATION FUNCTIONS (FIXED) ---
+
+        /**
+         * Handles user login via username (used as email) and password.
+         */
+        window.handleLogin = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            // Simple email validation since Firebase auth methods require email format
+            if (!email.includes('@')) {
+                 showConfirmModal("เข้าสู่ระบบไม่สำเร็จ", "รูปแบบชื่อผู้ใช้ไม่ถูกต้อง กรุณาใช้รูปแบบอีเมล", null, true);
+                 return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                closeModal('modal-login');
+                showToast("เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับ");
+            } catch (error) {
+                console.error("Login error:", error);
+                let msg = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+                if (error.code === 'auth/user-not-found') {
+                    msg = "ไม่พบผู้ใช้ด้วยอีเมลนี้";
+                } else if (error.code === 'auth/wrong-password') {
+                    msg = "รหัสผ่านไม่ถูกต้อง";
+                }
+                showConfirmModal("เข้าสู่ระบบล้มเหลว", msg, null, true);
+            }
+        };
+
+        /**
+         * Handles user registration and profile update.
+         */
+        window.handleRegister = async (e) => {
+            e.preventDefault();
+            const firstName = document.getElementById('reg-firstname').value;
+            const lastName = document.getElementById('reg-lastname').value;
+            const email = document.getElementById('reg-email').value;
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            
+            // Use username as display name
+            const displayName = username;
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                
+                // Update display name
+                await updateProfile(userCredential.user, { displayName: displayName });
+
+                closeModal('modal-register');
+                showToast(`ลงทะเบียนสำเร็จ! ยินดีต้อนรับ ${displayName}`);
+            } catch (error) {
+                console.error("Registration error:", error);
+                let msg = "เกิดข้อผิดพลาดในการลงทะเบียน";
+                if (error.code === 'auth/email-already-in-use') {
+                    msg = "อีเมลนี้ถูกใช้งานแล้ว";
+                } else if (error.code === 'auth/weak-password') {
+                    msg = "รหัสผ่านอ่อนเกินไป (ต้องมีอย่างน้อย 6 ตัวอักษร)";
+                } else if (error.code === 'auth/invalid-email') {
+                    msg = "รูปแบบอีเมลไม่ถูกต้อง";
+                }
+                showConfirmModal("ลงทะเบียนล้มเหลว", msg, null, true);
+            }
+        };
+
         // --- Unchanged Functions ---
         window.showToast = (msg) => { /* ... unchanged ... */ }
-        // The original filterEntities was missing. It has been added above.
         function createPopupContent(ent, displayColor, colorContext) { /* ... unchanged ... */ }
         function updateLegend(mode) { /* ... unchanged ... */ }
         window.startDrawPolygon = () => openAreaModal(); // Use the logic to open the modal
@@ -3009,8 +3076,30 @@
             }
         }
 
-        function validateAuth() { /* ... unchanged ... */ }
-        async function saveToFirestore(data, id = null) { /* ... unchanged ... */ }
+        function validateAuth() {
+            if (!auth || !auth.currentUser) {
+                showConfirmModal("เข้าสู่ระบบไม่สำเร็จ", "กรุณาเข้าสู่ระบบก่อนดำเนินการ", null, true);
+                return false;
+            }
+            return true;
+        }
+        async function saveToFirestore(data, id = null) {
+            if (!validateAuth()) return;
+            const ref = getEntityCollectionRef();
+            if (!ref) {
+                 showConfirmModal("ข้อผิดพลาด", "กรุณาเลือกกระดาษแผนที่ก่อนบันทึกข้อมูล", null, true);
+                 return;
+            }
+            try {
+                if (id) {
+                    await setDoc(doc(ref, id), data, { merge: true });
+                } else {
+                    await addDoc(ref, data);
+                }
+            } catch (err) {
+                 showConfirmModal("บันทึกข้อมูลล้มเหลว", `เกิดข้อผิดพลาดในการบันทึก: ${err.message}`, null, true);
+            }
+        }
         
         // --- War Action (Updated to use selected Attacker) ---
         window.confirmWarAction = async (type) => {
@@ -3085,8 +3174,9 @@
         window.declareIndependence = (id) => { /* ... unchanged ... */ }
         window.confirmDelete = (id) => { /* ... unchanged ... */ }
         window.openEditModal = (id) => { /* ... unchanged ... */ }
-        document.getElementById('form-login').onsubmit = async (e) => { /* ... unchanged ... */ }
-        document.getElementById('form-register').onsubmit = async (e) => { /* ... unchanged ... */ }
+        // window.handleLogin = async (e) => { /* Replaced by FIX above */ }
+        // document.getElementById('form-login').onsubmit = async (e) => { /* Replaced by FIX above */ }
+        // document.getElementById('form-register').onsubmit = async (e) => { /* Replaced by FIX above */ }
         window.logoutUser = () => signOut(auth);
         window.cancelDraw = () => { /* ... unchanged ... */ }
         window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
