@@ -903,10 +903,13 @@
             </div>
             <div class="mt-6">
                 <label class="text-xs font-bold text-gray-500 block mb-2 text-center">ผลลัพธ์</label>
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-4 gap-2">
                     <button onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">flag</span> ผนวก</button>
                     <button onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
                     <button onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
+                    <!-- NEW BUTTON FOR GEOMETRIC MERGE -->
+                    <button onclick="executeGeometricMerge()" class="py-2 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 shadow transition flex flex-col items-center gap-1" title="รวมรูปทรงทางภูมิศาสตร์"><span class="material-icons-round text-base">merge_type</span> หลอมรวมรูปทรง</button>
+                    <!-- END NEW BUTTON -->
                 </div>
             </div>
         </div>
@@ -2211,6 +2214,87 @@
             toggleMultiSelectMode();
             showConfirmModal("สำเร็จ", `การผนวกดินแดนภายใต้ ${leader.name} เสร็จสมบูรณ์`, null, true);
         };
+        
+        /**
+         * Geometric Merge: Attacker absorbs Target, deleting both and creating a single new merged polygon.
+         */
+        window.executeGeometricMerge = () => {
+             showConfirmModal("ยืนยันการหลอมรวม", "การดำเนินการนี้จะรวมรูปทรงของดินแดนฝ่ายรุกและเป้าหมายเข้าด้วยกัน และจะลบข้อมูลเดิมทั้งสองออก ยืนยันหรือไม่?", 
+                 async () => await performGeometricMerge()
+             );
+        };
+        
+        async function performGeometricMerge() {
+            if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
+
+            const tid = document.getElementById('war-target-id').value;
+            const aid = document.getElementById('war-attacker-select').value;
+            const attacker = entities.find(e => e.id === aid);
+            const target = entities.find(e => e.id === tid);
+            
+            if(!attacker || !target) { 
+                showConfirmModal("Error", "ไม่พบข้อมูลดินแดน (ตรวจสอบว่าถูกลบไปแล้วหรือไม่)", null, true); 
+                closeModal('modal-war');
+                return;
+            }
+
+            // Check if both are Polygons (Area)
+            if (attacker.type !== 'area' || target.type !== 'area') {
+                 showConfirmModal("Error", "การหลอมรวมรูปทรงทำได้เฉพาะกับเขตพื้นที่ (Area) เท่านั้น", null, true);
+                 closeModal('modal-war');
+                 return;
+            }
+
+            try {
+                const attackerGeo = JSON.parse(attacker.geoJson);
+                const targetGeo = JSON.parse(target.geoJson);
+                
+                let mergedGeo = turf.union(attackerGeo, targetGeo);
+
+                // If turf.union fails or returns null/undefined (e.g., non-intersecting MultiPolygons)
+                if (!mergedGeo) {
+                    showConfirmModal("Error", "ไม่สามารถหลอมรวมรูปทรงได้ อาจเป็นเพราะรูปทรงซับซ้อนเกินไปหรือไม่เชื่อมต่อกัน", null, true);
+                    return;
+                }
+
+                // Create new entity based on Attacker's details
+                const newDoc = {
+                    name: attacker.name,
+                    ruler: attacker.ruler,
+                    color: attacker.color,
+                    level: attacker.level,
+                    geoJson: JSON.stringify(mergedGeo),
+                    type: 'area',
+                    isWater: false,
+                    createdAt: new Date().toISOString(),
+                    originalName: attacker.originalName || attacker.name,
+                    originalRuler: attacker.originalRuler || attacker.ruler,
+                    originalColor: attacker.originalColor || attacker.color,
+                    mergedFrom: [attacker.name, target.name]
+                };
+
+                const batch = writeBatch(db);
+                const colRef = getEntityCollectionRef();
+
+                // 1. Create new merged entity
+                const newRef = doc(colRef); 
+                batch.set(newRef, newDoc);
+
+                // 2. Delete old entities
+                batch.delete(doc(colRef, aid)); // Delete Attacker (old geometry)
+                batch.delete(doc(colRef, tid)); // Delete Target
+                
+                await batch.commit();
+                
+                closeModal('modal-war');
+                showConfirmModal("สำเร็จ", `อาณาจักร ${attacker.name} ได้หลอมรวมดินแดนกับ ${target.name} แล้ว`, null, true);
+
+            } catch (err) {
+                console.error("Geometric Merge Error:", err);
+                showConfirmModal("เกิดข้อผิดพลาด", "ไม่สามารถรวมพื้นที่ได้ (โครงสร้างอาจซับซ้อนเกินไป): " + err.message, null, true);
+            }
+        }
+
 
         window.showToast = (msg) => {
             const div = document.createElement('div');
