@@ -24,7 +24,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.105.0/Widgets/widgets.css" rel="stylesheet">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&family=Sarabun:wght[300;400;600]&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -76,7 +76,7 @@
             cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height=32') 0 32, crosshair !important;
         }
         .cursor-pen .leaflet-interactive {
-            cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height:32') 0 32, crosshair !important;
+            cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height=32') 0 32, crosshair !important;
         }
 
         #cesiumContainer {
@@ -200,8 +200,7 @@
         .tool-btn span { font-size: 26px; }
 
         .tool-btn-sub {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border-radius: 12px;
             background: #FFF8E1;
             border: 2px solid #FFE0B2;
@@ -247,13 +246,13 @@
         }
         .compass-container:hover + .compass-tooltip { opacity: 1; }
 
-        /* Globe Toggle Button (ปรับขนาดตามที่ผู้ใช้ร้องขอ) */
+        /* Globe Toggle Button */
         .globe-toggle-btn {
             position: absolute;
             bottom: 30px;
             right: 30px;
-            width: 80px; /* Increased size */
-            height: 80px; /* Increased size */
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             background: white;
             border: 4px solid var(--wood-dark);
@@ -270,13 +269,10 @@
             transform: scale(1.1) rotate(10deg);
             box-shadow: 0 8px 30px rgba(0,0,0,0.4);
         }
-        .globe-toggle-btn img {
-            width: 100%; /* Ensure icon scales with button */
-            height: 100%;
-        }
+        .globe-toggle-btn img { width: 100%; height: 100%; object-fit: cover; }
         .globe-tooltip {
             position: absolute;
-            bottom: 110px; /* Adjusted position for larger button */
+            bottom: 100px;
             right: 30px;
             background: rgba(255, 255, 255, 0.9);
             padding: 4px 8px;
@@ -437,34 +433,21 @@
             gap: 8px;
         }
         .icon-option {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: white;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #eee; border-radius: 12px;
+            cursor: pointer; transition: all 0.2s; background: white;
         }
         .icon-option img { width: 24px; height: 24px; object-fit: contain; }
         .icon-option:hover { background-color: #FFF3E0; border-color: #FFCC80; }
         .icon-option.selected {
-            border-color: #6D4C41;
-            background-color: #FFE0B2;
-            transform: scale(1.1);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-color: #6D4C41; background-color: #FFE0B2;
+            transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .icon-category-title {
-            font-size: 11px;
-            font-weight: bold;
-            color: #8D6E63;
-            margin-top: 8px;
-            margin-bottom: 4px;
-            border-bottom: 1px dashed #D7CCC8;
-            padding-bottom: 2px;
+            font-size: 11px; font-weight: bold; color: #8D6E63;
+            margin-top: 8px; margin-bottom: 4px; border-bottom: 1px dashed #D7CCC8; padding-bottom: 2px;
         }
 
         /* Scrollbar */
@@ -475,38 +458,21 @@
 
         /* Color Swatch in Popup */
         .color-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            background: #FFF;
-            border-radius: 12px;
-            font-size: 11px;
-            color: #616161;
-            border: 1px solid #F0F0F0;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; background: #FFF; border-radius: 12px;
+            font-size: 11px; color: #616161; border: 1px solid #F0F0F0;
+            font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .swatch-circle {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.1);
-            display: inline-block;
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1); display: inline-block;
         }
 
         /* Hierarchy Path in Popup */
         .hierarchy-path {
-            font-size: 10px;
-            color: #795548;
-            background-color: #FFF8E1;
-            padding: 4px 8px;
-            border-radius: 8px;
-            margin-top: 4px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            align-items: center;
+            font-size: 10px; color: #795548; background-color: #FFF8E1;
+            padding: 4px 8px; border-radius: 8px; margin-top: 4px;
+            display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
             border: 1px dashed #FFE0B2;
         }
         .h-node::after { content: "›"; margin-left: 4px; color: #BCAAA4; }
@@ -533,64 +499,10 @@
             border: 2px solid #FFD700 !important;
         }
         
-        /* New Management HUD */
-        #management-hud {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 900;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 10px 20px;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border: 2px solid #EEE;
-        }
-        .stat-item {
-            text-align: center;
-            border-right: 1px solid #EEE;
-            padding: 0 15px;
-        }
-        .stat-item:last-child { border-right: none; }
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            font-family: 'Mali', cursive;
-            line-height: 1;
-        }
-        .stat-label {
-            font-size: 0.75rem;
-            color: #8D6E63;
-        }
-        
-        /* New Fantasy Dark Popup Style */
-        .modal-fantasy-dark {
-            background-color: rgba(18, 18, 18, 0.95);
-            backdrop-filter: blur(8px);
-        }
-        .modal-paper-dark {
-            background: linear-gradient(145deg, #2c3e50, #34495e);
-            color: #ecf0f1;
-            border: 4px solid #f1c40f;
-            outline: 2px dashed #95a5a6;
-            animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .popup-title-dark {
-             color: #ffd700;
-             text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-        }
     </style>
 </head>
 <body class="mode-2d">
 
-    <!-- Management HUD (Removed Stats as requested) -->
-    <div id="management-hud" class="hidden">
-        <div class="flex gap-4 items-center">
-            <!-- Stats removed: ทองคำหลวง, ประชากร, มานาสะสม -->
-        </div>
-    </div>
-    
     <!-- Left Sidebar -->
     <div id="sidebar-left" class="sidebar-left p-5">
         <div class="toggle-sidebar-btn" id="toggle-sidebar">◀</div>
@@ -642,18 +554,6 @@
 
         <!-- Tools / Filters -->
         <div class="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
-            <!-- Mode Switcher (NEW: เพื่อให้ Management HUD แสดง) -->
-            <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md">
-                 <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2 text-sm">
-                    <span class="material-icons-round text-purple-500">all_inclusive</span> โหมดการใช้งาน
-                </h3>
-                 <div class="flex gap-2">
-                    <button onclick="setMode('creative')" id="btn-mode-creative" class="flex-1 text-xs py-2 rounded-xl bg-[#5D4037] text-white shadow-sm font-bold active">🎨 สร้างสรรค์</button>
-                    <button onclick="setMode('management')" id="btn-mode-management" class="flex-1 text-xs py-2 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition">👑 บริหาร</button>
-                    <button class="flex-1 text-xs py-2 rounded-xl bg-gray-100 text-gray-400 cursor-not-allowed">⚔️ เกม</button>
-                </div>
-            </div>
-
             <!-- Layer Control -->
             <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm transition hover:shadow-md">
                 <h3 class="font-bold text-[#5D4037] mb-3 flex items-center gap-2 text-sm">
@@ -736,8 +636,7 @@
                     <span class="material-icons-round text-pink-400">palette</span> โหมดสีแผนที่
                 </h3>
                 <select id="color-mode-select" class="input-cute text-sm cursor-pointer py-2">
-                    <option value="entity">สีตามเขตพื้นที่ (Original/Local)</option>
-                    <option value="political">สีตามผู้ครอบครอง (Political State)</option> <!-- NEW MODE -->
+                    <option value="entity">สีตามเขตพื้นที่ (ปกติ)</option>
                     <option value="religion">แยกตามศาสนา</option>
                     <option value="government">แยกตามระบอบปกครอง</option>
                     <option value="rank">แยกตามศักดิ์ (ระดับชั้น)</option>
@@ -763,11 +662,10 @@
         <!-- New Draw Menu Group -->
         <div class="tool-group">
             <div id="draw-submenu" class="tool-submenu">
-                <!-- ใช้ checkModeAndDraw เพื่อบังคับให้มี Map Sheet และไม่ติดโหมดอื่น -->
-                <div class="tool-btn tool-btn-sub" onclick="checkModeAndDraw('polygon_freehand')" title="วาดด้วยปากกา (อิสระ)">
+                <div class="tool-btn tool-btn-sub" onclick="startFreehandMode()" title="วาดด้วยปากกา (อิสระ)">
                     <span class="material-icons-round text-amber-800">edit</span>
                 </div>
-                <div class="tool-btn tool-btn-sub" onclick="checkModeAndDraw('polygon_point')" title="วาดเส้นจุด (ทีละจุด)">
+                <div class="tool-btn tool-btn-sub" onclick="startPointMode()" title="วาดเส้นจุด (ทีละจุด)">
                     <span class="material-icons-round text-blue-600">timeline</span>
                 </div>
                 <!-- ปุ่มแก้ไขรูปทรง -->
@@ -790,7 +688,7 @@
         
         <!-- Feature ใหม่: Multi-Select / Union -->
         <div class="h-px bg-white/50 mx-2 my-1"></div>
-        <div class="tool-btn" id="btn-multi-select" onclick="window.toggleMultiSelectMode()" title="จัดการหลายพื้นที่ (รวม/ยึด)">
+        <div class="tool-btn" id="btn-multi-select" onclick="toggleMultiSelectMode()" title="จัดการหลายพื้นที่ (รวม/ยึด)">
             <span class="material-icons-round text-purple-600">playlist_add_check</span>
         </div>
         
@@ -831,7 +729,7 @@
         <button onclick="openUnionModal()" class="btn-cute bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm py-2 px-4 shadow-lg hover:shadow-purple-200">
             <span class="material-icons-round text-base">account_balance</span> จัดการดินแดน
         </button>
-        <button onclick="window.toggleMultiSelectMode()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-500 flex items-center justify-center transition">
+        <button onclick="toggleMultiSelectMode()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-500 flex items-center justify-center transition">
             <span class="material-icons-round text-sm">close</span>
         </button>
     </div>
@@ -845,88 +743,6 @@
         <div id="legend-content" class="space-y-1.5 text-[11px]"></div>
     </div>
 
-    <!-- Modal: The Grand Proclamation (NEW) -->
-    <div id="modal-proclamation" class="fixed inset-0 modal-fantasy-dark hidden z-[4000] flex items-center justify-center">
-        <div class="modal-paper-dark w-full max-w-3xl p-8 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <!-- Proclamation Header -->
-            <div class="text-center mb-6 border-b-2 border-yellow-600 pb-3">
-                <h1 class="text-4xl popup-title-dark font-bold cute-font mb-1">ราชโองการประกาศสถาปนา</h1>
-                <p class="text-yellow-300 text-sm italic">ด้วยพระราชอำนาจและอานุภาพแห่งปฐพี</p>
-            </div>
-            
-            <div id="proclamation-content" class="text-lg leading-relaxed text-gray-200 space-y-4">
-                <!-- Content will be injected here -->
-            </div>
-            
-            <div class="text-center mt-8 pt-4 border-t border-gray-700">
-                <button onclick="closeModal('modal-proclamation')" class="btn-cute bg-gradient-to-r from-yellow-600 to-amber-700 text-white px-8 py-3 shadow-xl">รับทราบและน้อมนำ</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Player Setup (NEW) -->
-    <div id="modal-player-setup" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
-        <div class="modal-paper w-96 p-8 relative text-center">
-             <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white"><span class="material-icons-round text-3xl">account_circle</span></div>
-            <h2 class="text-2xl text-[#5D4037] font-bold mb-2 cute-font">กำหนดตัวตนของท่าน</h2>
-            <p class="text-sm text-gray-500 mb-6">ท่านคือผู้สถาปนาอาณาจักรนี้! กรุณาตั้งชื่อตนเองเพื่อใช้ในการปกครอง</p>
-            <form id="form-player-setup" onsubmit="setPlayerName(event)" class="space-y-4">
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block text-left">ชื่อผู้เล่น/ชื่อผู้ปกครอง</label>
-                    <input type="text" id="player-name-input" class="input-cute font-bold text-[#5D4037] text-center" required placeholder="ชื่อของท่าน">
-                </div>
-                <button type="submit" class="btn-cute w-full mt-2 bg-gradient-to-r from-amber-600 to-red-600">เริ่มการปกครอง</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Modal: Village Ruler Naming (NEW) -->
-    <div id="modal-village-ruler" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
-        <div class="modal-paper w-96 p-8 relative text-center">
-             <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white"><span class="material-icons-round text-3xl">village</span></div>
-            <h2 class="text-2xl text-[#5D4037] font-bold mb-2 cute-font">แต่งตั้งผู้ใหญ่บ้าน</h2>
-            <p class="text-sm text-gray-500 mb-6">ท่านได้เลื่อนเป็น <span id="new-player-title" class="font-bold text-emerald-600"></span> แล้ว! กรุณาตั้งชื่อผู้ใหญ่บ้านของ <span id="village-to-rename" class="font-bold text-[#5D4037]"></span> แทนท่าน</p>
-            <form id="form-village-ruler" onsubmit="saveNewVillageRuler(event)" class="space-y-4">
-                <input type="hidden" id="village-id-to-rename">
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block text-left">ชื่อผู้ใหญ่บ้านคนใหม่</label>
-                    <input type="text" id="village-ruler-name-input" class="input-cute font-bold text-[#5D4037] text-center" required placeholder="ชื่อผู้ใหญ่บ้าน">
-                </div>
-                <button type="submit" class="btn-cute w-full mt-2 bg-gradient-to-r from-emerald-600 to-teal-600">บันทึก</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal: Sovereign Ruler Setup (NEW) -->
-    <div id="modal-sovereign-ruler" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
-        <div class="modal-paper w-[500px] p-8 relative text-center">
-             <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white"><span class="material-icons-round text-3xl">gavel</span></div>
-            <h2 class="text-2xl text-[#5D4037] font-bold mb-2 cute-font">สถาปนาประมุขแห่งรัฐ</h2>
-            <p class="text-sm text-gray-500 mb-6">ท่านได้ยกระดับดินแดนเป็น <span id="sovereign-rank-display" class="font-bold text-red-600"></span> แล้ว กรุณากำหนดระบอบการปกครองและตั้งชื่อประมุข</p>
-            <form id="form-sovereign-ruler" onsubmit="saveSovereignRuler(event)" class="space-y-4 text-left">
-                <input type="hidden" id="sovereign-new-id">
-                <input type="hidden" id="sovereign-new-level">
-                
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระบอบการปกครอง</label>
-                    <select id="sovereign-gov-type" class="input-cute" onchange="updateSovereignRulerTitle()">
-                        <option value="สมบูรณาญาสิทธิราชย์">สมบูรณาญาสิทธิราชย์ (Monarchy)</option>
-                        <option value="ปริมิตาญาสิทธิราชย์">ปริมิตาญาสิทธิราชย์ (Constitutional Monarchy)</option>
-                        <option value="ประชาธิปไตย">ประชาธิปไตย (Republic)</option>
-                        <option value="คอมมิวนิสต์">คอมมิวนิสต์ (Communist State)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block" id="ruler-title-label">พระนาม / ชื่อประมุข</label>
-                    <input type="text" id="sovereign-ruler-name-input" class="input-cute font-bold text-[#5D4037]" required placeholder="พระนาม หรือ ชื่อประธานาธิบดี">
-                    <p class="text-[10px] text-gray-400 mt-1 pl-1">ตำแหน่ง: <span id="sovereign-ruler-title-display">พระมหากษัตริย์</span></p>
-                </div>
-                <button type="submit" class="btn-cute w-full mt-4 bg-gradient-to-r from-red-600 to-amber-600">สถาปนา</button>
-            </form>
-        </div>
-    </div>
-
     <!-- Modal: Login -->
     <div id="modal-login" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper modal-paper-auth w-[380px] p-8">
@@ -937,7 +753,7 @@
                 </div>
                 <h2 class="text-2xl text-[#5D4037] font-bold mb-1 cute-font">ยินดีต้อนรับกลับมา!</h2>
                 <p class="text-gray-500 text-xs mb-6">เข้าสู่ดินแดนแห่งจินตนาการของคุณ</p>
-                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                <form id="form-login" class="space-y-4">
                     <div class="input-group"><span class="material-icons-round icon">person</span><input type="text" id="login-username" class="input-cute" required placeholder="ชื่อผู้ใช้"></div>
                     <div class="input-group"><span class="material-icons-round icon">vpn_key</span><input type="password" id="login-password" class="input-cute" required placeholder="รหัสผ่าน"></div>
                     <button type="submit" class="btn-cute w-full mt-2 shadow-lg hover:shadow-xl">เปิดประตูมิติ</button>
@@ -952,7 +768,7 @@
             <button onclick="closeModal('modal-register')" class="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition z-10"><span class="material-icons-round">close</span></button>
             <div class="relative z-10">
                 <h2 class="text-2xl text-[#5D4037] font-bold mb-6 text-center cute-font">สร้างตัวตนใหม่</h2>
-                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4">
+                <form id="form-register" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อ</label><input type="text" id="reg-firstname" class="input-cute" required></div>
                         <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">นามสกุล</label><input type="text" id="reg-lastname" class="input-cute" required></div>
@@ -991,7 +807,6 @@
                              <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">เขตปกครองแม่</label><select id="inp-parent" class="input-cute text-sm cursor-pointer"><option value="">-- เป็นอิสระ / สูงสุด --</option></select></div>
                         </div>
                          <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ผู้ปกครอง</label><input type="text" id="inp-ruler" class="input-cute" required></div>
-                         <p id="ruler-name-note" class="text-xs text-red-500 hidden">⚠️ ท่านคือผู้ใหญ่บ้านของหมู่บ้านแรกนี้ ชื่อผู้ปกครองจะถูกตั้งเป็น: <span class="font-bold" id="ruler-name-display"></span></p>
                     </div>
                 </div>
                 <div class="grid grid-cols-3 gap-4 pt-2">
@@ -1086,18 +901,18 @@
                 <div class="text-center text-gray-300 font-bold text-xl my-1">VS</div>
                 <div><label class="text-xs font-bold text-[#5D4037] block mb-1 ml-2">ฝ่ายรุก (เลือกดินแดนของคุณ)</label><select id="war-attacker-select" class="input-cute w-full bg-white cursor-pointer"></select></div>
             </div>
-            <div id="war-actions" class="mt-6">
+            <div class="mt-6">
                 <label class="text-xs font-bold text-gray-500 block mb-2 text-center">ผลลัพธ์</label>
                 <div class="grid grid-cols-3 gap-2">
-                    <button onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1" id="war-btn-annex"><span class="material-icons-round text-base">flag</span> ผนวก</button>
-                    <button onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1" id="war-btn-vassal"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
-                    <button onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1" id="war-btn-colony"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
+                    <button onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">flag</span> ผนวก</button>
+                    <button onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
+                    <button onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal: The Grand Unification (Merge/Annex) -->
+    <!-- Modal: The Grand Unification (New Feature) -->
     <div id="modal-union" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper w-[500px] p-0 overflow-hidden">
             <!-- Header Tabs -->
@@ -1124,8 +939,6 @@
                                 <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ระดับศักดิ์</label><select id="merge-level" class="input-cute"></select></div>
                             </div>
                             <div><label class="text-xs font-bold text-[#8D6E63] ml-2">สีประจำเขต</label><input type="color" id="merge-color" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm"></div>
-                            <p id="merge-level-note" class="text-xs text-red-500 hidden">⚠️ การหลอมรวมหมู่บ้านจะบังคับเป็นตำบล และเปลี่ยนสถานะผู้เล่นเป็นกำนัน</p>
-                            <p id="merge-sub-rank-note" class="text-xs text-blue-500 hidden">💡 การรวมพื้นที่นี้จะสร้างเขตปกครองย่อยคงขอบเขตเดิมไว้ เพื่อรองรับการกระจายอำนาจ</p>
                         </div>
                         <button type="submit" class="btn-cute w-full mt-6 bg-gradient-to-r from-amber-600 to-orange-600">✨ ร่ายเวทย์หลอมรวม</button>
                     </form>
@@ -1174,39 +987,7 @@
         </div>
     </div>
 
-    <!-- Modal: Sub-Region Management (NEW FEATURE 2) -->
-    <div id="modal-sub-regions" class="fixed inset-0 modal-overlay hidden z-[2100] flex items-center justify-center">
-        <div class="modal-paper w-[600px] p-6 relative">
-            <button onclick="closeModal('modal-sub-regions')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition"><span class="material-icons-round">close</span></button>
-            <h3 class="text-xl font-bold text-[#5D4037] mb-4 flex items-center gap-2 border-b border-dashed pb-2 cute-font">
-                <span class="material-icons-round text-amber-600">account_balance_wallet</span> จัดการเขตย่อยของ <span id="sub-region-parent-name" class="text-amber-600"></span>
-            </h3>
-            <input type="hidden" id="sub-region-parent-id">
-            
-            <div id="sub-region-list" class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar p-2 border rounded-xl bg-gray-50">
-                <div class="text-center text-gray-400 p-4">ไม่มีเขตย่อยในสังกัด</div>
-            </div>
-
-            <!-- Promotion Buttons (NEW FEATURE: Complex Promotion) -->
-            <div id="promotion-section" class="mt-4 pt-4 border-t border-dashed">
-                <h4 class="font-bold text-[#5D4037] text-sm mb-2 flex items-center gap-2"><span class="material-icons-round text-yellow-600">military_tech</span> การเลื่อนสถานะพิเศษ</h4>
-                <div id="promotion-buttons" class="flex flex-wrap gap-3">
-                    <!-- Buttons will be rendered here by JavaScript -->
-                    <p class="text-xs text-gray-500">ตรวจสอบเงื่อนไขและเลื่อนศักดิ์เป็น **แขวง, อาเขต, เมือง, นคร** ได้ที่นี่</p>
-                </div>
-            </div>
-
-            <div class="mt-4 pt-4 border-t border-dashed">
-                <h4 class="font-bold text-[#5D4037] text-sm mb-2 flex items-center gap-2"><span class="material-icons-round text-purple-500">fork_right</span> ย้ายสังกัด/ผนวกเขตย่อย</h4>
-                <div class="flex gap-2">
-                    <select id="transfer-child-select" class="input-cute flex-1 text-sm"><option value="">-- เลือกเขตย่อย --</option></select>
-                    <select id="transfer-target-select" class="input-cute flex-1 text-sm"><option value="">-- เลือกเขตแม่ปลายทาง --</option></select>
-                    <button onclick="executeTransfer()" class="btn-cute bg-purple-600 px-4 text-sm"><span class="material-icons-round text-sm">swap_horiz</span> ย้ายสังกัด</button>
-                </div>
-                <p class="text-[10px] text-gray-500 mt-1 pl-1">เลือกเขตย่อยในสังกัดนี้ และย้ายไปเป็นเขตย่อยของเขตปกครองอื่นที่มีศักดิ์สูงกว่า</p>
-            </div>
-        </div>
-    </div>
+    <!-- Modal: Rename Map Sheet ถูกนำออก -->
 
     <!-- Firebase SDK & Logic -->
     <script type="module">
@@ -1246,8 +1027,6 @@
         let is3DMode = false;
         let selectedCesiumEntity = null;
         
-        // ** FIX: Declare currentMode and initialize it **
-        let currentMode = 'creative'; 
 
         // --- NEW GLOBALS for Freehand ---
         let isFreehand = false;
@@ -1263,34 +1042,17 @@
         let mapSheets = [];           // Array of all map sheets for the current user
         let unsubscribeMapListener = null; // To manage the dynamic map data listener
 
-        // --- NEW GLOBAL for Player Management ---
-        let playerState = {
-            name: '',
-            title: 'ผู้ใหญ่บ้าน', // Default title
-            highestRank: 'muban' // Highest rank of area player is ruler of, initialized to muban
-        }; 
-        
-        // --- UPDATED HIERARCHY FOR COMPLEX PROMOTION (Fully defined as per request) ---
+
         const HIERARCHY = [
-             // 9-7: Kingdom Level
-            { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51', rulerTitle: 'พระจักรพรรดิ', warCapable: true, govType: 'sovereign' },
-            { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#F1C40F', rulerTitle: 'พระราชา', warCapable: true, govType: 'sovereign' },
-            { id: 'prathet', name: 'ประเทศ/ราชรัฐ (State)', rank: 7, defaultColor: '#E74C3C', rulerTitle: 'กษัตริย์', warCapable: true, govType: 'sovereign' },
-             // 6-5: Provincial Level
-            { id: 'monrath', name: 'มณรัฐ (Region)', rank: 6, defaultColor: '#F39C12', rulerTitle: 'รัฐาธิกรณ', warCapable: false }, // Updated title
-            { id: 'monthon', name: 'มณฑล (Province)', rank: 5, defaultColor: '#E91E63', rulerTitle: 'มณฑลาธิปัตย์', warCapable: false }, // Updated title
-             // 4: City/Jangwat Level - Added 'City Proper'
-            { id: 'nakorn', name: 'นคร (City)', rank: 4.5, defaultColor: '#2C3E50', rulerTitle: 'ผู้ว่านคราภิบาล', warCapable: true, warType: 'annexOnly' }, // Updated title
-            { id: 'jangwat', name: 'จังหวัด (Province)', rank: 4, defaultColor: '#2ECC71', rulerTitle: 'ผู้ว่าราชการจังหวัด', warCapable: false }, // Updated title
-             // 3: District Level - Added 'City Proper'
-            { id: 'muang', name: 'เมือง (City Proper)', rank: 3.5, defaultColor: '#7D3C98', rulerTitle: 'ผู้ว่าการเมือง', warCapable: false }, // Updated title
-            { id: 'amphoe', name: 'อำเภอ (District)', rank: 3, defaultColor: '#8E44AD', rulerTitle: 'นายอำเภอ', warCapable: false }, // Updated title
-             // 2: Sub-district Level - Added 'Arch District'
-            { id: 'archKhet', name: 'อาเขต (Arch District)', rank: 2.5, defaultColor: '#16A085', rulerTitle: 'กำนัน', warCapable: false }, // Updated title
-            { id: 'tambon', name: 'ตำบล (Sub-district)', rank: 2, defaultColor: '#95A5A6', rulerTitle: 'กำนัน', warCapable: false }, // Updated title
-             // 1: Village Level - Added 'Sub-district Zone'
-            { id: 'kwaeng', name: 'แขวง (Sub-district Zone)', rank: 1.5, defaultColor: '#F08080', rulerTitle: 'ผู้ใหญ่บ้าน', warCapable: false }, // Updated title
-            { id: 'muban', name: 'หมู่บ้าน (Village)', rank: 1, defaultColor: '#3498DB', rulerTitle: 'ผู้ใหญ่บ้าน', warCapable: false } // Updated title
+            { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51' },
+            { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#F1C40F' },
+            { id: 'prathet', name: 'ประเทศ/ราชรัฐ (State)', rank: 7, defaultColor: '#E74C3C' },
+            { id: 'monrath', name: 'มณรัฐ (Region)', rank: 6, defaultColor: '#F39C12' },
+            { id: 'monthon', name: 'มณฑล (Province)', rank: 5, defaultColor: '#E91E63' },
+            { id: 'jangwat', name: 'จังหวัด/นคร (City)', rank: 4, defaultColor: '#2ECC71' },
+            { id: 'amphoe', name: 'อำเภอ (District)', rank: 3, defaultColor: '#8E44AD' },
+            { id: 'tambon', name: 'ตำบล (Sub-district)', rank: 2, defaultColor: '#95A5A6' },
+            { id: 'muban', name: 'หมู่บ้าน (Village)', rank: 1, defaultColor: '#3498DB' }
         ];
 
         const RANK_COLORS = {};
@@ -1300,87 +1062,6 @@
             religion: { 'พุทธ': '#F1C40F', 'คริสต์': '#3498DB', 'อิสลาม': '#2ECC71', 'พราหมณ์ฮินดู': '#E91E63', 'ศาสนาดั้งเดิม': '#95A5A6' },
             gov: { 'ประชาธิปไตย': '#2ECC71', 'คอมมิวนิสต์': '#E74C3C', 'สมบูรณาญาสิทธิราชย์': '#8E44AD', 'ปริมิตาญาสิทธิราชย์': '#F39C12' },
             rank: RANK_COLORS
-        };
-        
-        // --- Sovereign Ruler Logic ---
-        function getSovereignRulerTitle(gov) {
-            switch (gov) {
-                case 'สมบูรณาญาสิทธิราชย์':
-                case 'ปริมิตาญาสิทธิราชย์':
-                    return { title: 'พระมหากษัตริย์', formal: true, govTitle: 'กษัตริย์' };
-                case 'ประชาธิปไตย':
-                    return { title: 'ประธานาธิบดี', formal: false, govTitle: 'ประธานาธิบดี' };
-                case 'คอมมิวนิสต์':
-                    return { title: 'ท่านผู้นำ', formal: false, govTitle: 'ท่านผู้นำ' };
-                default:
-                    return { title: 'ผู้นำสูงสุด', formal: false, govTitle: 'ผู้นำ' };
-            }
-        }
-        
-        // --- Proclamation Templates (NEW) ---
-        const PROCLAMATION_TEMPLATES = {
-            muban: { title: "ผู้ใหญ่บ้าน", text: (player, area) => `
-                <p>🏞️ <strong>ประกาศแต่งตั้งผู้ใหญ่บ้าน</strong>: ด้วยชาวบ้านต่างเห็นพ้องพร้อมใจ เชิดชู ${player} ผู้เสียสละแรงกายแรงใจเพื่อหมู่บ้าน</p>
-                <p>ขอมอบตำแหน่ง “ผู้ใหญ่บ้าน” แห่งชุมชน${area} ขอให้ท่านนำพาผู้คนสู่ความสงบสุข และรักษาวิถีแห่งบรรพกาลให้คงอยู่ตราบนานเท่านาน</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขออำนาจแห่งเทพารักษ์และดวงวิญญาณแห่งแผ่นดินจงคุ้มครองท่านเสมอไป.</p>
-            `},
-            kwaeng: { title: "ผู้ใหญ่บ้าน", text: (player, area) => `
-                <p>🏞️ <strong>ประกาศยกฐานะเป็นแขวง</strong>: ด้วยความสามารถของ ${player} ที่ได้รวมหมู่บ้านหลายแห่งไว้ด้วยกัน บัดนี้ได้ยกฐานะเป็น “แขวง” ${area} โดยยังคงให้ท่านดำรงตำแหน่ง “ผู้ใหญ่บ้าน”</p>
-                <p>ขอให้ท่านเป็นหลักในการกระจายอำนาจดูแลชุมชนย่อยทั้งหมด และนำพาแขวงนี้สู่ความเจริญรุ่งเรือง</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขอให้ความมั่นคงแห่งภูผาจงเป็นรากฐานแห่งการปกครองของท่าน.</p>
-            `},
-            tambon: { title: "กำนัน", text: (player, area) => `
-                <p>🏡 <strong>ประกาศตั้งกำนัน</strong>: ด้วยการปกครองในหมู่บ้านทั้งหลายเป็นไปด้วยดี บัดนี้ได้รวมพื้นที่และยกสถานะขึ้นเป็นตำบล ประชาชนในตำบลทั้งปวงจึงลงมติพร้อมเพรียง</p>
-                <p>แต่งตั้ง ${player} ดำรงตำแหน่ง “กำนัน”ตำบล${area} ขอให้ท่านรักษาความเรียบร้อยแห่งตำบล และเป็นหลักให้เกษตรกร พ่อค้า วาณิชและครัวเรือนทั้งปวง</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขอให้ความเจริญรุ่งเรืองแห่งวารีและพสุธาจงสถิตคู่ตำบลของท่าน.</p>
-            `},
-            archKhet: { title: "กำนัน", text: (player, area) => `
-                <p>🛡️ <strong>ประกาศยกฐานะเป็นอาเขต</strong>: ด้วยวิสัยทัศน์ของ ${player} ที่ได้ผนวกรวมเขตตำบลย่อยจนเป็นปึกแผ่น จึงประกาศยกสถานะขึ้นเป็น “อาเขต” ${area} โดยยังคงให้ท่านดำรงตำแหน่ง “กำนัน”</p>
-                <p>ขอให้ท่านขยายขอบเขตอำนาจไปทั่วทุกทิศ เพื่อให้ดินแดนนี้เข้มแข็งยิ่งกว่าที่เคยเป็นมา</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขอให้พลังแห่งไฟและโลหะจงเพิ่มพูนอำนาจแห่งท่าน.</p>
-            `},
-            amphoe: { title: "นายอำเภอ", text: (player, area) => `
-                <p>🛡️ <strong>ประกาศตำแหน่งนายอำเภอ</strong>: ด้วยความสามารถอันเป็นที่ประจักษ์ ${player} ได้ช่วยให้กำนันทั้งหลายและตำบลร่มเย็นเป็นสุข จึงทรงโปรดตั้งให้ดำรงตำแหน่ง “นายอำเภอ” ${area}</p>
-                <p>ตั้งแต่นี้ดินแดนทั้งอำเภออยู่ในความดูแลของท่าน ขอให้ความยุติธรรมและสติปัญญานำพาเสมอ</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขอให้สายฟ้าและวายุอันทรงพลังจงนำทางท่านสู่ความสำเร็จ.</p>
-            `},
-            muang: { title: "ผู้ว่าการเมือง", text: (player, area) => `
-                <p>🏮 <strong>ประกาศตั้งผู้ว่าการเมือง</strong>: อำเภอทั้งหลายเติบโตด้วยพาณิชยาการ ผู้คน และศิลปวัฒนธรรม เมื่อยกย่องอำเภอเป็นเมืองแล้วจึงขอประกาศแต่งตั้ง ${player} ให้ดำรงตำแหน่ง “ผู้ว่าการเมือง” ${area}</p>
-                <p>ขอให้ท่านพิทักษ์ผังเมืองให้เจริญรุ่งเรือง และเป็นศูนย์กลางแห่งการค้าและศิลปวัฒนธรรม</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขอให้ทรัพย์สินและโชคลาภจงหลั่งไหลสู่เมืองของท่านตลอดกาล.</p>
-            `},
-            jangwat: { title: "ผู้ว่าราชการจังหวัด", text: (player, area) => `
-                <p>🏰 <strong>ประกาศแต่งตั้งผู้ว่าราชการจังหวัด</strong>: เมื่ออำเภอทั้งปวงรวมเป็นระเบียบมั่นคง และได้รวมกันเป็นจังหวัด จึงขอประกาศแต่งตั้ง ${player} ขึ้นเป็น “ผู้ว่าราชการจังหวัด” ${area}</p>
-                <p>ขอให้ท่านคุ้มครองผู้คนในจังหวัดอันกว้างใหญ่ และเพิ่มความรุ่งเรืองเจริญงอกงามในจังหวัดทุกทิศานุทิศ</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขออำนาจแห่งฟ้าดินคุ้มเกล้าฯ และช่วยให้ท่านนำจังหวัดรุ่งเรืองสมบูรณ์พูนสุข.</p>
-            `},
-            nakorn: { title: "ผู้ว่านคราภิบาล", text: (player, area) => `
-                <p>⛩️ <strong>ประกาศนคราภิบาล</strong>: จังหวัดมีความใหญ่โตด้วยศิลปศาสตร์และอารยธรรม เมื่อยกย่องจังหวัดเป็นนครแล้วไซร้ จึงขอประกาศแต่งตั้ง ${player} เป็น “ผู้ว่านคราภิบาล” แห่งนคร${area}</p>
-                <p>ตั้งแต่นี้ท่านจักมีอำนาจดูแลนครและหัวเมืองขึ้น ขอให้ปรีชาญาณของท่านนำทางสู่ความยิ่งใหญ่</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขอให้ปรีชาญาณและอำนาจแห่งเทพเจ้าจงสถิตอยู่ในตัวท่าน.</p>
-            `},
-            monthon: { title: "มณฑลาธิปัตย์", text: (player, area) => `
-                <p>⚜️ <strong>ประกาศแต่งตั้งมณฑลาธิปัตย์</strong>: เมื่อหลายจังหวัดได้รวมตัวเป็นมณฑล จึงของแต่งตั้ง ${player} เป็น “มณฑลาธิปัตย์” ผู้ดูแลมณฑล${area}</p>
-                <p>ขออำนาจแห่งฟ้าดินคุ้มเกล้าฯ และช่วยให้ท่านนำมณฑลรุ่งเรืองสมบูรณ์พูนสุข</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขอให้พลังธาตุทั้งสี่ ดิน น้ำ ลม ไฟ จงเกื้อหนุนท่านในการปกครอง.</p>
-            `},
-            monrath: { title: "รัฐาธิกรณ", text: (player, area) => `
-                <p>🌟 <strong>ประกาศตั้งรัฐาธิกรณ</strong>: ด้วยอำนาจแห่งมณฑลที่รวมเป็นหนึ่ง ขอประกาศแต่งตั้ง ${player} ขึ้นดำรงตำแหน่ง “รัฐาธิกรณ” ผู้ปกครองมณรัฐ${area}</p>
-                <p>ขอให้มณรัฐนี้เป็นหลักชัยแห่งความมั่นคง และเป็นที่พึ่งพิงของชนทุกหมู่เหล่า</p>
-                <p class="text-right text-yellow-500 font-bold cute-font mt-4">ขอให้บารมีและพลังอำนาจแห่งมณรัฐนี้จงแผ่ไพศาลไปทั่วทิศ.</p>
-            `}
-        };
-        
-        window.showProclamationModal = (levelId, entityName, rulerName) => {
-            const template = PROCLAMATION_TEMPLATES[levelId];
-            if (!template) {
-                console.error("No proclamation template found for level:", levelId);
-                showToast(`🎉 เลื่อนสถานะเป็น ${getHierarchyName(levelId)} สำเร็จ!`);
-                return;
-            }
-            
-            document.getElementById('proclamation-content').innerHTML = template.text(rulerName, entityName);
-            document.getElementById('modal-proclamation').classList.remove('hidden');
         };
 
         const IMPORTANT_ICONS = {
@@ -1401,12 +1082,6 @@
         function getEntityCollectionRef() {
             if (!window.userId || !currentMapSheetId) return null;
             return collection(db, 'artifacts', appId, 'users', window.userId, 'map_sheets', currentMapSheetId, 'fantasy_empires');
-        }
-
-        // Helper function to get the player state document reference
-        function getPlayerStateDocRef() {
-             if (!window.userId) return null;
-             return doc(db, 'artifacts', appId, 'users', window.userId, 'player_state', 'data');
         }
 
 
@@ -1432,9 +1107,6 @@
                         document.getElementById('user-display-name').innerText = `Lord ${user.displayName || user.email}`;
                         document.getElementById('user-id-display').innerText = `ID: ${window.userId.substring(0,6)}`;
                         
-                        // Load player state first
-                        await loadPlayerState();
-
                         // Start listening for map sheets when user logs in
                         subscribeToMapSheets(); 
 
@@ -1446,32 +1118,10 @@
                         if (unsubscribeMapListener) unsubscribeMapListener();
                         drawnItems.clearLayers();
                         entities = [];
-                        playerState = { name: '', title: 'ผู้ใหญ่บ้าน', highestRank: 'muban' }; // Reset state
                     }
                 });
             } catch (err) { console.error("Firebase connection failed:", err); }
         };
-
-        // --- Player State Management (NEW) ---
-        async function loadPlayerState() {
-             if (!window.userId) return;
-             try {
-                 const docRef = getPlayerStateDocRef();
-                 const docSnap = await getDoc(docRef);
-                 if (docSnap.exists()) {
-                     playerState = { ...playerState, ...docSnap.data() };
-                     console.log("Player State Loaded:", playerState);
-                 }
-             } catch (err) { console.error("Error loading player state:", err); }
-        }
-        
-        async function savePlayerState(merge = true) {
-            if (!window.userId) return;
-            try {
-                const docRef = getPlayerStateDocRef();
-                await setDoc(docRef, playerState, { merge: merge });
-            } catch (err) { console.error("Error saving player state:", err); }
-        }
 
         function toggleAuthUI(user) {
             const loggedInView = document.getElementById('logged-in-view');
@@ -1568,49 +1218,14 @@
             // Set up new listener
             unsubscribeMapListener = onSnapshot(areasRef, (snap) => {
                 entities = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                
-                // NEW: Update player's highest rank based on created areas (for management mode)
-                updatePlayerHighestRank(); 
-
                 renderMap(); // 2D
                 if(is3DMode) renderCesium(); // 3D
-                // Removed calculateAggregateStats as requested
             }, (error) => {
                 console.error("Error subscribing to map data:", error);
                 entities = [];
                 renderMap();
             });
         }
-
-        // NEW: Function to check and update player's highest owned rank
-        function updatePlayerHighestRank() {
-             if (currentMode !== 'management' || !playerState.name) return;
-
-             const ownedAreas = entities.filter(e => e.type === 'area' && !e.isWater && e.ruler === playerState.name);
-             if (ownedAreas.length === 0) return; // No owned areas yet
-
-             let maxRank = 0;
-             let highestRankId = 'muban';
-             let highestRankTitle = 'ผู้ใหญ่บ้าน';
-
-             ownedAreas.forEach(area => {
-                 const rank = getRank(area.level);
-                 if (rank > maxRank) {
-                     maxRank = rank;
-                     highestRankId = area.level;
-                     highestRankTitle = HIERARCHY.find(h => h.id === highestRankId)?.rulerTitle || 'ผู้นำ';
-                 }
-             });
-             
-             // Check for promotion only if the current title is lower
-             if (maxRank > getRank(playerState.highestRank)) {
-                 playerState.highestRank = highestRankId;
-                 playerState.title = highestRankTitle;
-                 savePlayerState(); // Save the new state
-                 // Note: Proclamation is now triggered in executeMerge/executeSpecialPromotion
-             }
-        }
-
 
         window.createNewMapSheet = async (e, defaultName = null) => {
             if (e) e.preventDefault();
@@ -1672,8 +1287,6 @@
              }
         }
 
-        // --- Management HUD Logic (Simplified as stats are removed) ---
-        // Removed calculateAggregateStats as it is no longer needed.
 
         // --- Map Setup (2D) ---
         function initMap() {
@@ -1894,7 +1507,7 @@
             document.getElementById('color-mode-select')?.addEventListener('change', (e) => {
                 const mode = e.target.value;
                 const legendBox = document.getElementById('legend-box');
-                if (mode === 'religion' || mode === 'government' || mode === 'rank' || mode === 'political') {
+                if (mode === 'religion' || mode === 'government' || mode === 'rank') {
                     legendBox.classList.remove('hidden'); updateLegend(mode);
                 } else {
                     legendBox.classList.add('hidden');
@@ -1909,9 +1522,7 @@
                 filterContainer.innerHTML = '';
                 HIERARCHY.forEach(h => {
                     const div = document.createElement('div');
-                    // Checkbox for special ranks should be distinct
-                    const isSpecial = h.id === 'nakorn' || h.id === 'muang' || h.id === 'archKhet' || h.id === 'kwaeng';
-                    div.innerHTML = `<label class="flex items-center text-xs cursor-pointer hover:bg-white/50 p-1 rounded"><input type="checkbox" checked class="filter-level accent-[#5D4037] mr-2" value="${h.id}"> ${isSpecial ? '⭐' : ''} ${h.name}</label>`;
+                    div.innerHTML = `<label class="flex items-center text-xs cursor-pointer hover:bg-white/50 p-1 rounded"><input type="checkbox" checked class="filter-level accent-[#5D4037] mr-2" value="${h.id}"> ${h.name}</label>`;
                     filterContainer.appendChild(div);
                 });
                 document.querySelectorAll('.filter-level').forEach(el => el.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); }));
@@ -1930,7 +1541,6 @@
 
             const levelSelect = document.getElementById('inp-level');
             if(levelSelect) {
-                levelSelect.innerHTML = ''; // Clear default options
                 HIERARCHY.forEach(h => {
                     const opt = document.createElement('option'); opt.value = h.id; opt.text = h.name; levelSelect.appendChild(opt);
                 });
@@ -1945,139 +1555,6 @@
             document.getElementById('search-input')?.addEventListener('keyup', () => { renderMap(); if(is3DMode) renderCesium(); });
         }
 
-        window.setMode = (mode) => {
-            document.getElementById('btn-mode-creative').classList.remove('active', 'bg-[#5D4037]', 'text-white');
-            document.getElementById('btn-mode-creative').classList.add('bg-gray-100', 'text-gray-500');
-            document.getElementById('btn-mode-management').classList.remove('active', 'bg-[#5D4037]', 'text-white');
-            document.getElementById('btn-mode-management').classList.add('bg-gray-100', 'text-gray-500');
-            document.getElementById('management-hud').classList.add('hidden'); // Ensure HUD is hidden
-
-            if (mode === 'creative') {
-                document.getElementById('btn-mode-creative').classList.add('active', 'bg-[#5D4037]', 'text-white');
-                document.getElementById('btn-mode-creative').classList.remove('bg-gray-100', 'text-gray-500');
-            } else if (mode === 'management') {
-                // NEW MANAGEMENT MODE LOGIC
-                document.getElementById('btn-mode-management').classList.add('active', 'bg-[#5D4037]', 'text-white');
-                document.getElementById('btn-mode-management').classList.remove('bg-gray-100', 'text-gray-500');
-                
-                if (!playerState.name) {
-                    // Open setup modal if name is not set
-                    document.getElementById('modal-player-setup').classList.remove('hidden');
-                }
-            }
-            currentMode = mode;
-        }
-        
-        // NEW: Function to handle player name setup
-        window.setPlayerName = (e) => {
-            e.preventDefault();
-            const name = document.getElementById('player-name-input').value.trim();
-            if (!name) return;
-
-            playerState.name = name;
-            playerState.title = 'ผู้ใหญ่บ้าน'; // Reset title if needed, or ensure it's set
-            playerState.highestRank = 'muban';
-            savePlayerState();
-
-            closeModal('modal-player-setup');
-            
-            // Show welcome popup with player's name
-            const welcomeMsg = `ยินดีต้อนรับสู่ปฐมบทแห่งการปกครอง ท่าน${playerState.title} ${playerState.name} "เส้นทางสู่มหาอาณาจักร มิอาจสร้างได้ในวันเดียว และมิอาจลัดขั้นตอน ท่านยังไม่มีอำนาจเหนือแผ่นดินกว้างใหญ่ จงปักหมุดสร้าง 'หมู่บ้าน' ของท่านรวมหมู่บ้านเหล่านั้นเหล่านั้น แล้วยกสถานะขึ้นเป็นตำบล ก่อนที่ท่านจะใฝ่ฝันถึงสิ่งใดที่สูงเกินใจปอง"`;
-            showConfirmModal("ปฐมบทแห่งการปกครอง", welcomeMsg, null, true);
-        }
-        
-        // NEW: Function to save the new ruler name for a village after promotion
-        window.saveNewVillageRuler = async (e) => {
-            e.preventDefault();
-            if(!validateAuth()) return;
-            const villageId = document.getElementById('village-id-to-rename').value;
-            const newRulerName = document.getElementById('village-ruler-name-input').value.trim();
-            
-            if (!villageId || !newRulerName) return;
-            
-            try {
-                // Update the single village's ruler name
-                const docRef = doc(getEntityCollectionRef(), villageId);
-                await setDoc(docRef, { ruler: newRulerName, originalRuler: newRulerName }, { merge: true });
-                showToast(`แต่งตั้งผู้ใหญ่บ้าน ${newRulerName} แห่งหมู่บ้าน ${document.getElementById('village-to-rename').innerText} สำเร็จ`);
-            } catch (error) {
-                 console.error("Error setting new village ruler:", error);
-                 showToast("เกิดข้อผิดพลาดในการบันทึกชื่อผู้ใหญ่บ้าน");
-            }
-            closeModal('modal-village-ruler');
-        }
-        
-        window.updateSovereignRulerTitle = () => {
-            const gov = document.getElementById('sovereign-gov-type').value;
-            const { title, formal } = getSovereignRulerTitle(gov);
-            
-            document.getElementById('sovereign-ruler-title-display').innerText = title;
-            document.getElementById('ruler-title-label').innerText = formal ? "พระนาม / ชื่อประมุข (ราชาศัพท์)" : "ชื่อประมุข";
-        }
-
-        window.saveSovereignRuler = async (e) => {
-            e.preventDefault();
-            if(!validateAuth()) return;
-            
-            const newId = document.getElementById('sovereign-new-id').value;
-            const newLevel = document.getElementById('sovereign-new-level').value;
-            const rulerName = document.getElementById('sovereign-ruler-name-input').value.trim();
-            const govType = document.getElementById('sovereign-gov-type').value;
-            
-            const ent = entities.find(e => e.id === newId);
-            if (!ent) { showToast("Error: Entity not found."); return; }
-
-            const { title, formal, govTitle } = getSovereignRulerTitle(govType);
-
-            try {
-                // 1. Update the newly merged entity with final ruler data
-                await setDoc(doc(getEntityCollectionRef(), newId), {
-                    ruler: rulerName, 
-                    government: govType,
-                    originalRuler: rulerName
-                }, { merge: true });
-
-                // 2. Update player state (If the player is establishing their highest rank sovereign state)
-                playerState.highestRank = newLevel;
-                playerState.title = govTitle; // Use the government title for the player's status
-                await savePlayerState();
-                
-                // 3. Construct and display the welcome popup
-                let welcomeMsg = "";
-                let popupTitle = "";
-                let countryName = ent.name || "ดินแดนศักดิ์สิทธิ์";
-                let rankName = getHierarchyName(newLevel);
-                
-                // Set the modal style to dark/fantasy for the welcome message
-                document.getElementById('modal-confirm').querySelector('.modal-paper').classList.add('modal-paper-dark');
-                document.getElementById('modal-confirm').querySelector('.modal-overlay').classList.add('modal-fantasy-dark');
-
-                if (formal) {
-                    popupTitle = "👑 ขอถวายพระพรชัยมงคล";
-                    welcomeMsg = `ขอถวายพระพร ${rulerName} เนื่องในวโรกาสเถลิงถวัลยราชสมบัติเป็นพระมหากษัตริย์เเห่งราชอาณาจักร${rankName} ${countryName} ขอพระองค์ทรงพระเจริญยิ่งยืนนาน`;
-                } else {
-                    popupTitle = `📢 ขอแสดงความยินดี`;
-                    
-                    let occasion = govType === 'คอมมิวนิสต์' ? 'ในการได้รับมอบอำนาจบริหารสูงสุด' : 'เนื่องในโอกาศได้รับเลือก';
-                    let stateType = govType === 'ประชาธิปไตย' ? 'สาธารณรัฐ' : (govType === 'คอมมิวนิสต์' ? 'รัฐคอมมิวนิสต์' : rankName);
-
-                    welcomeMsg = `ขอแสดงความยินดีกับ ${rulerName} ${occasion} ให้เป็น${title}แห่ง${stateType} ${countryName} ขอให้การปกครองเป็นไปอย่างราบรื่น`;
-                }
-
-                showConfirmModal(popupTitle, welcomeMsg, () => {
-                     closeModal('modal-sovereign-ruler');
-                     window.toggleMultiSelectMode(); // ใช้ window. เพื่อเรียกใช้ฟังก์ชัน Global
-                     // Remove dark style after closing
-                     document.getElementById('modal-confirm').querySelector('.modal-paper').classList.remove('modal-paper-dark');
-                     document.getElementById('modal-confirm').querySelector('.modal-overlay').classList.remove('modal-fantasy-dark');
-                }, true);
-                
-            } catch (error) {
-                showConfirmModal("สถาปนาไม่สำเร็จ", error.message, null, true);
-            }
-        }
-
-
         window.toggleAllLevels = (check) => {
             document.querySelectorAll('.filter-level').forEach(cb => cb.checked = check);
             renderMap(); if(is3DMode) renderCesium();
@@ -2089,43 +1566,28 @@
         };
 
         window.checkModeAndDraw = (type) => {
-            // UPDATED: Check for Map Sheet
             if (!currentMapSheetId) {
-                showConfirmModal("⚠️ สร้างแผนที่ก่อน", "กรุณาสร้างหรือเลือกกระดาษแผนที่ในแถบด้านซ้ายก่อนเริ่มวาด (Map Sheet)", null, true);
+                showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด");
                 return;
             }
-            // UPDATED: Check for Multi-Select Mode
             if(isMultiSelectMode) {
-                 showConfirmModal("⚠️ ปิดโหมดเลือกพื้นที่", "กรุณาปิด 'จัดการหลายพื้นที่' (ปุ่มสีม่วงด้านขวา) ก่อนเริ่มวาด", null, true);
+                 showToast("กรุณาปิดโหมดเลือกหลายพื้นที่ก่อนวาด");
                  return;
             }
-            // UPDATED: Check for 3D Mode
             if(is3DMode) {
                 toggleGlobeMode();
-                showConfirmModal("⚠️ สลับไป 2 มิติ", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดเครื่องมือวาดอีกครั้ง", null, true);
+                showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดเครื่องมือวาดอีกครั้ง", null, true);
                 return;
             }
             // ถ้าอยู่ในโหมดแก้ไขอยู่ ให้ปิดก่อน
             if (isEditMode) {
                 toggleEditGeometry();
             }
-            // Determine draw action based on type
-            if(type === 'polygon' || type === 'polygon_freehand' || type === 'polygon_point') {
-                // If polygon is requested via main button, open menu. If requested via sub-button, start drawing.
-                if(type === 'polygon') {
-                     window.toggleDrawMenu();
-                } else if(type === 'polygon_freehand') {
-                    window.startFreehandMode();
-                } else if(type === 'polygon_point') {
-                    window.startPointMode();
-                }
-            } else if(type === 'polyline') {
-                window.startDrawPolyline();
-            } else if(type === 'marker') {
-                window.startDrawMarker();
-            }
+            if(type === 'polygon') window.toggleDrawMenu(); 
+            else if(type === 'polyline') window.startDrawPolyline();
+            else if(type === 'marker') window.startDrawMarker();
         }
-
+        
         // --- NEW: Toggle Draw Menu ---
         window.toggleDrawMenu = () => {
              const menu = document.getElementById('draw-submenu');
@@ -2149,38 +1611,20 @@
             let descendants = [];
             let queue = [...parentIds];
             let visited = new Set(parentIds);
-            let depth = 0;
-            while(queue.length > 0 && depth < 50) { // Add safety check
+            while(queue.length > 0) {
                 const pid = queue.shift();
                 const children = entities.filter(e => e.parentId === pid);
                 children.forEach(c => {
                     if(!visited.has(c.id)) { visited.add(c.id); descendants.push(c); queue.push(c.id); }
                 });
-                depth++;
             }
             return descendants;
         }
 
-        function getHighestOwner(entity) {
-             let owner = entity;
-             if(entity.occupiedBy) {
-                // Find the actual sovereign state (one that is not annexed/vassal/colony to others)
-                let sovereign = entities.find(e => e.id === entity.occupiedBy);
-                if (sovereign) {
-                    owner = sovereign;
-                }
-             }
-             return owner;
-        }
-        
-        // --- UPDATED FEATURE 2: New Color Mode Logic ---
         function getEntityVisuals(ent) {
             const colorMode = document.getElementById('color-mode-select').value;
             let fillColor = ent.color;
             let colorContext = { type: 'entity', value: 'สีประจำเขต' };
-
-            // Determine if this entity is a sub-layer that should be ignored for political colors
-            const isSubLayer = ent.isSubLayer; 
 
             if (colorMode === 'religion') {
                 fillColor = COLORS.religion[ent.religion] || '#ccc';
@@ -2192,14 +1636,6 @@
                 const h = HIERARCHY.find(x => x.id === ent.level);
                 fillColor = h ? h.defaultColor : '#ccc';
                 colorContext = { type: 'rank', value: h ? h.name : 'Unknown' };
-            } else if (colorMode === 'political' && !isSubLayer) { // Apply political color only to main layers
-                const owner = getHighestOwner(ent);
-                fillColor = owner.color || '#ccc';
-                colorContext = { type: 'political', value: `ผู้ครอบครอง: ${owner.name}` };
-            } else if (colorMode === 'political' && isSubLayer) {
-                // Keep original color for sub-layers in political mode for visualization
-                fillColor = ent.originalColor || ent.color;
-                colorContext = { type: 'sub-layer', value: `เขตย่อยในสังกัด: ${getHierarchyName(ent.level)}` };
             }
 
             if (ent.isWater) {
@@ -2207,134 +1643,292 @@
                 colorContext = { type: 'water', value: 'น่านน้ำ' };
             }
             
+            if (colorMode === 'entity') {
+                if (ent.isColony) {
+                    fillColor = ent.originalColor || ent.color; 
+                } else if (ent.isAnnexed || ent.isVassal) {
+                    fillColor = ent.color; 
+                }
+            }
+            
+            // Check if current entity is the one being edited
+            if (isEditMode && ent.id === editingLayerId) {
+                // Leaflet Draw handles the styling when enabled.
+            }
+
             return { fillColor, colorContext };
         }
-        
-        // --- FIX: Added missing filterEntities function ---
-        function filterEntities() {
-            const selectedLevels = new Set(Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value));
-            const selectedStatuses = new Set(Array.from(document.querySelectorAll('.filter-status:checked')).map(cb => cb.value));
-            const searchQuery = document.getElementById('search-input')?.value.toLowerCase() || '';
 
-            const visibleEntities = entities.filter(ent => {
-                // Type Filter
-                if (ent.type === 'area') {
-                    if (!selectedLevels.has(ent.level)) return false;
+        function renderImportantIcons() {
+            const container = document.getElementById('quick-icons-container');
+            container.innerHTML = '';
+            
+            for (const [category, icons] of Object.entries(IMPORTANT_ICONS)) {
+                const title = document.createElement('div');
+                title.className = 'icon-category-title col-span-full';
+                title.innerText = category;
+                container.appendChild(title);
 
-                    // Status Filter
-                    let status = 'independent';
-                    if (ent.isAnnexed) status = 'annexed';
-                    else if (ent.isVassal) status = 'vassal';
-                    else if (ent.isColony) status = 'colony';
-                    if (!selectedStatuses.has(status)) return false;
-                }
-
-                // Search Filter
-                if (searchQuery) {
-                    const matchName = ent.name?.toLowerCase().includes(searchQuery);
-                    const matchRuler = ent.ruler?.toLowerCase().includes(searchQuery);
-                    const matchLevel = getHierarchyName(ent.level)?.toLowerCase().includes(searchQuery);
-                    if (!matchName && !matchRuler && !matchLevel) return false;
-                }
-                
-                return true;
-            });
-
-            return { visibleEntities };
+                icons.forEach(iconName => {
+                    const url = `https://api.iconify.design/${iconName.replace(':','/')}.svg`;
+                    const div = document.createElement('div');
+                    div.className = 'icon-option flex-shrink-0';
+                    div.innerHTML = `<img src="${url}" title="${iconName}">`;
+                    div.onclick = () => selectIcon(url, div);
+                    container.appendChild(div);
+                });
+            }
         }
-        // --- END FIX ---
 
+        window.searchIcons = async () => {
+            const query = document.getElementById('icon-search-query').value;
+            if(!query) return;
+            const container = document.getElementById('icon-results');
+            container.innerHTML = '<div class="text-xs text-gray-500 p-2">กำลังค้นหา...</div>';
+            
+            try {
+                const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=30`);
+                const data = await res.json();
+                container.innerHTML = '';
+                
+                if(data.icons && data.icons.length > 0) {
+                    data.icons.forEach(iconName => {
+                        const url = `https://api.iconify.design/${iconName.replace(':','/')}.svg`;
+                        const div = document.createElement('div');
+                        div.className = 'icon-option flex-shrink-0 w-10 h-10';
+                        div.innerHTML = `<img src="${url}" title="${iconName}" class="w-6 h-6">`;
+                        div.onclick = () => selectIcon(url, div);
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-xs text-gray-500 p-2">ไม่พบไอคอน</div>';
+                }
+            } catch(e) {
+                container.innerHTML = '<div class="text-xs text-red-500 p-2">เกิดข้อผิดพลาด</div>';
+            }
+        }
 
-        function renderImportantIcons() { /* ... unchanged ... */ }
-        window.searchIcons = async () => { /* ... unchanged ... */ }
-        function selectIcon(url, element) { /* ... unchanged ... */ }
-        function renderCesium() { /* ... unchanged ... */ }
+        function selectIcon(url, element) {
+            selectedMarkerIconUrl = url;
+            document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+        }
 
-        // --- Leaflet Rendering Logic (UPDATED FOR SUB-LAYERS) ---
+        // --- Cesium Rendering Logic ---
+        function renderCesium() {
+            if(!viewer) return;
+            
+            viewer.selectedEntity = undefined;
+            viewer.trackedEntity = undefined;
+            
+            viewer.entities.removeAll();
+            
+            const { visibleEntities } = filterEntities();
+            const showRoads = document.getElementById('toggle-roads').checked;
+            const showLabels = document.getElementById('toggle-created-labels').checked;
+            
+            visibleEntities.forEach(ent => {
+                try {
+                    const geoJson = JSON.parse(ent.geoJson);
+                    const visuals = getEntityVisuals(ent);
+                    
+                    if (ent.type === 'road') {
+                        if(!showRoads) return;
+                        const flatCoords = [];
+                        
+                        // Safety Check: Ensure coordinates exist
+                        if (!geoJson.geometry || !geoJson.geometry.coordinates) return;
+                        
+                        geoJson.geometry.coordinates.forEach(pt => { if(pt.length >= 2) flatCoords.push(pt[0], pt[1]); });
+                        
+                        // Safety Check: Need at least 2 points for a line
+                        if (flatCoords.length < 4) return; 
+
+                        const roadEnt = viewer.entities.add({
+                            polyline: {
+                                positions: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                                width: parseInt(ent.weight) || 4,
+                                material: Cesium.Color.fromCssColorString(ent.color)
+                            },
+                            name: ent.name
+                        });
+                        roadEnt.entityDataId = ent.id;
+                        return;
+                    }
+
+                    if (ent.type === 'marker') {
+                        const lon = geoJson.geometry.coordinates[0];
+                        const lat = geoJson.geometry.coordinates[1];
+                        
+                        const markerEnt = viewer.entities.add({
+                            position: Cesium.Cartesian3.fromDegrees(lon, lat),
+                            billboard: {
+                                image: ent.iconUrl,
+                                scale: 1.0,
+                                color: Cesium.Color.fromCssColorString(ent.color),
+                                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                            },
+                            name: ent.name
+                        });
+                        markerEnt.entityDataId = ent.id;
+                        
+                        if(showLabels) {
+                            markerEnt.label = {
+                                text: ent.name,
+                                font: 'bold 16px "Mali", sans-serif',
+                                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                fillColor: Cesium.Color.WHITE,
+                                outlineColor: Cesium.Color.fromCssColorString('#5D4037'),
+                                outlineWidth: 4,
+                                verticalOrigin: Cesium.VerticalOrigin.TOP,
+                                pixelOffset: new Cesium.Cartesian2(0, 5),
+                                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 1000000),
+                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                            };
+                        }
+                        return;
+                    }
+
+                    if(geoJson.geometry.type === 'Polygon' || geoJson.geometry.type === 'MultiPolygon') {
+                         if(geoJson.geometry.type === 'Polygon') {
+                             const flat = [];
+                             // Safety Check
+                             if (!geoJson.geometry.coordinates || !geoJson.geometry.coordinates[0]) return;
+                             
+                             geoJson.geometry.coordinates[0].forEach(pt => { if(pt.length >= 2) flat.push(pt[0], pt[1]); });
+                             
+                             // Safety Check: Need at least 3 points for a polygon (6 coords)
+                             if (flat.length < 6) return;
+
+                             let outlineColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
+                             if (ent.isAnnexed) outlineColor = visuals.fillColor; 
+    
+                             const hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
+
+                             const polyEnt = viewer.entities.add({
+                                polygon: {
+                                    hierarchy: hierarchy,
+                                    material: Cesium.Color.fromCssColorString(visuals.fillColor).withAlpha(ent.isWater ? 0.5 : globalOpacity),
+                                    outline: !ent.isColony,
+                                    outlineColor: Cesium.Color.fromCssColorString(outlineColor),
+                                    outlineWidth: 2
+                                },
+                                name: ent.name
+                             });
+                             polyEnt.entityDataId = ent.id;
+
+                             // Colony Dashed Line Fix
+                             if (ent.isColony) {
+                                 viewer.entities.add({
+                                     polyline: {
+                                         positions: hierarchy, 
+                                         width: 2,
+                                         material: new Cesium.PolylineDashMaterialProperty({
+                                             color: Cesium.Color.fromCssColorString(globalStrokeColor),
+                                             dashLength: 16.0
+                                         }),
+                                         clampToGround: true
+                                     }
+                                 });
+                             }
+                             
+                             // Center Label Logic
+                             try {
+                                const center = turf.centerOfMass(geoJson);
+                                polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1]);
+
+                                if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
+                                    let labelText = ent.name;
+                                    if (ent.isAnnexed) labelText = ent.annexedByName; // Main name becomes conqueror
+                                    if (ent.isColony) labelText += ` (อาณานิคมของ ${ent.annexedByName})`;
+                                    
+                                    viewer.entities.add({
+                                        position: polyEnt.centerPosition,
+                                        label: {
+                                            text: labelText,
+                                            font: 'bold 14px "Mali", sans-serif',
+                                            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                            fillColor: Cesium.Color.fromCssColorString(ent.labelColor || '#4E342E'),
+                                            outlineColor: Cesium.Color.WHITE,
+                                            outlineWidth: 3,
+                                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2000000)
+                                        }
+                                    });
+                                }
+                             } catch(e) {}
+                         }
+                    }
+                } catch(e) { console.error("Cesium render error", e); }
+            });
+        }
+
+        // --- Leaflet Rendering Logic (UPDATED FOR EDIT MODE FIX) ---
         function renderMap() {
             if(!map || !drawnItems) return;
             drawnItems.clearLayers();
             
             const { visibleEntities } = filterEntities();
             const showRoads = document.getElementById('toggle-roads').checked;
-            
-            // Separate entities into main layers and sub-layers (Sub-layers render first)
-            const mainLayers = visibleEntities.filter(e => !e.isSubLayer && e.type === 'area');
-            const subLayers = visibleEntities.filter(e => e.isSubLayer && e.type === 'area');
-            const markersAndRoads = visibleEntities.filter(e => e.type !== 'area');
 
-            // Order: Sub-layers first, then Main layers (to render outlines on top)
-            // Note: Must include the new merged layers (which are !isSubLayer) to ensure they render above their sub-layers
-            const orderedEntities = [...subLayers, ...mainLayers, ...markersAndRoads];
-
-
-            orderedEntities.forEach(ent => {
+            visibleEntities.forEach(ent => {
                 try {
                     const geoJson = JSON.parse(ent.geoJson);
                     const visuals = getEntityVisuals(ent); 
 
-                    if (ent.type === 'road' || ent.type === 'marker') {
-                        if (ent.type === 'road' && !showRoads) return;
-                         // Existing road/marker rendering logic
-                        if (ent.type === 'road') {
-                             const roadLayer = L.geoJSON(geoJson, {
-                                style: { color: ent.color, weight: parseInt(ent.weight) || 4, dashArray: ent.roadType === 'army' ? '10, 15' : null, opacity: 0.8, lineCap: 'round' }
-                            }).bindPopup(`
-                                <div class="text-center">
-                                    <div class="font-bold text-[#5D4037] text-lg cute-font">${ent.name}</div>
-                                    <div class="text-xs text-gray-500 mb-2">${ent.roadType==='army'?'เส้นทางเดินทัพ':'ถนนการค้า'}</div>
-                                    <button onclick="window.confirmDelete('${ent.id}')" class="text-red-400 text-xs underline cursor-pointer">ลบเส้นทาง</button>
-                                </div>
-                            `).addTo(drawnItems);
-                            roadLayer.eachLayer(l => l.options.entityId = ent.id);
-                        } else if (ent.type === 'marker') {
-                            const icon = L.divIcon({
-                                className: 'custom-marker',
-                                html: `<div style="position:relative; width:30px; height:30px;"><div style="position:absolute; top:0; left:0; width:100%; height:100%; background:${ent.color}; opacity:0.3; border-radius:50%; filter:blur(4px);"></div><img src="${ent.iconUrl}" style="width:30px; height:30px; position:relative; z-index:2; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></div>`,
-                                iconSize: [30, 30], iconAnchor: [15, 15]
-                            });
-                            L.geoJSON(geoJson, { pointToLayer: (f, l) => L.marker(l, {icon: icon}) }).bindPopup(`
-                                <div class="text-center font-bold text-[#5D4037]">
-                                    <img src="${ent.iconUrl}" class="w-12 h-12 mx-auto mb-2">
-                                    <div class="mb-1 text-lg cute-font">${ent.name}</div>
-                                    <button onclick="window.confirmDelete('${ent.id}')" class="text-red-400 text-xs underline cursor-pointer">ลบหมุด</button>
-                                </div>
-                            `).addTo(drawnItems);
-                        }
+                    if (ent.type === 'road') {
+                        if(!showRoads) return;
+                        const roadLayer = L.geoJSON(geoJson, {
+                            style: { color: ent.color, weight: parseInt(ent.weight) || 4, dashArray: ent.roadType === 'army' ? '10, 15' : null, opacity: 0.8, lineCap: 'round' }
+                        }).bindPopup(`
+                            <div class="text-center">
+                                <div class="font-bold text-[#5D4037] text-lg cute-font">${ent.name}</div>
+                                <div class="text-xs text-gray-500 mb-2">${ent.roadType==='army'?'เส้นทางเดินทัพ':'ถนนการค้า'}</div>
+                                <button onclick="window.confirmDelete('${ent.id}')" class="text-red-400 text-xs underline cursor-pointer">ลบเส้นทาง</button>
+                            </div>
+                        `).addTo(drawnItems);
+                        roadLayer.eachLayer(l => l.options.entityId = ent.id);
+                        return;
+                    }
+                    
+                    if (ent.type === 'marker') {
+                        const icon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="position:relative; width:30px; height:30px;"><div style="position:absolute; top:0; left:0; width:100%; height:100%; background:${ent.color}; opacity:0.3; border-radius:50%; filter:blur(4px);"></div><img src="${ent.iconUrl}" style="width:30px; height:30px; position:relative; z-index:2; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></div>`,
+                            iconSize: [30, 30], iconAnchor: [15, 15]
+                        });
+                        L.geoJSON(geoJson, { pointToLayer: (f, l) => L.marker(l, {icon: icon}) }).bindPopup(`
+                            <div class="text-center font-bold text-[#5D4037]">
+                                <img src="${ent.iconUrl}" class="w-12 h-12 mx-auto mb-2">
+                                <div class="mb-1 text-lg cute-font">${ent.name}</div>
+                                <button onclick="window.confirmDelete('${ent.id}')" class="text-red-400 text-xs underline cursor-pointer">ลบหมุด</button>
+                            </div>
+                        `).addTo(drawnItems);
                         return;
                     }
 
                     // --- AREA LOGIC ---
                     let strokeColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
-                    let strokeWeight = ent.isSubLayer ? 0.5 : (ent.isWater ? 1 : 1.5); // Thinner stroke for sub-layers
                     if (ent.isAnnexed) strokeColor = visuals.fillColor; 
                     
                     // Logic for Selection Highlight (Used for Multi-Select Mode)
                     const isSelected = selectedIds.has(ent.id);
                     
-                    // Thicker stroke for main layer outlines
-                    if (!ent.isSubLayer) {
-                         strokeWeight = isSelected ? 4 : (ent.isWater ? 1 : 1.5);
-                    }
-
-
                     // Style for the layer
                     const layerStyle = {
                         color: isSelected ? '#FFD700' : strokeColor, // Gold if selected (Multi-Select)
-                        weight: isSelected ? 4 : strokeWeight,
+                        weight: isSelected ? 4 : (ent.isWater ? 1 : 1.5),
                         fillColor: visuals.fillColor,
-                        fillOpacity: ent.isWater ? 0.5 : (ent.isSubLayer ? 1.0 : globalOpacity), // Sub-layers should be fully opaque or opaque on top of the merged layer
-                        dashArray: isSelected ? '8, 8' : (ent.isColony ? '5, 10' : null),
-                        // Add ZIndex to ensure main layers render *above* sublayers
-                        // Note: Leaflet only uses zIndex for markers/paths of the same type.
-                        // The rendering order above is crucial.
-                        zIndex: ent.isSubLayer ? 1 : 10
+                        fillOpacity: ent.isWater ? 0.5 : globalOpacity,
+                        dashArray: isSelected ? '8, 8' : (ent.isColony ? '5, 10' : null)
                     };
                     
                     // Override stroke color/style if currently being edited
                     if (isEditMode && ent.id === editingLayerId) {
-                         window.editingLayer = null; // Ensure the logic below re-enables it if layer is found
-                         layerStyle.color = strokeColor; 
+                         // Leaflet Draw handles the highlight (gold dash) when editing is enabled
+                         // If it's the layer being edited, we don't apply the selection style from here
+                         layerStyle.color = strokeColor; // Use original color when not selected in multi-select mode
                          layerStyle.weight = ent.isWater ? 1 : 1.5;
                          layerStyle.dashArray = ent.isColony ? '5, 10' : null;
                     }
@@ -2355,37 +1949,43 @@
                                 // 1. Pop-up Blocking: ปิด Popup ที่อาจเปิดอยู่ก่อนเสมอ
                                 map.closePopup();
 
-                                // 2. Check Edit Mode: 
+                                // 2. Check Edit Mode: กรณี 1: โหมดแก้ไข (Click to Edit)
                                 if (window.isEditMode) {
                                     L.DomEvent.stopPropagation(e); 
-                                    if (ent.type !== 'area' && ent.type !== 'road') { showToast("ไม่สามารถแก้ไขหมุดหรือจุดได้ในโหมดนี้"); return; }
                                     
+                                    // แก้ไขได้เฉพาะ Area (Polygon) และ Road (Polyline)
+                                    if (ent.type !== 'area' && ent.type !== 'road') {
+                                        showToast("ไม่สามารถแก้ไขหมุดหรือจุดได้ในโหมดนี้");
+                                        return;
+                                    }
+
+                                    // ถ้ามี Layer อื่นกำลังถูกแก้อยู่ ให้ปิดการแก้ไขตัวนั้นและบันทึกก่อน
                                     if (window.editingLayer && window.editingLayer !== l) {
                                         window.editingLayer.editing.disable();
                                         const oldRef = doc(getEntityCollectionRef(), window.editingLayer.options.entityId);
+                                        // ใช้วิธี save แบบเงียบๆ ไม่ต้องรอ
                                         setDoc(oldRef, { geoJson: JSON.stringify(window.editingLayer.toGeoJSON()) }, { merge: true }).then(() => console.log("Old entity saved")).catch(e => console.error("Error saving old entity:", e));
                                         window.editingLayerId = null;
                                         window.editingLayer = null;
                                     }
 
+                                    // เปิดใช้งานการแก้ไข Layer ที่คลิก
                                     l.editing.enable();
                                     window.editingLayer = l;
-                                    window.editingLayerId = ent.id; 
+                                    window.editingLayerId = ent.id; // บันทึก ID ของ Layer ที่กำลังแก้ไข
+                                    
+                                    // Force re-render เพื่อให้ Leaflet Draw ใช้ style ที่กำหนด (gold dashed line)
+                                    // และเพื่อให้ Layer อื่นๆ กลับไปใช้ style ปกติ
                                     renderMap(); 
+                                    
                                     showToast(`กำลังแก้ไข: ${ent.name} (ดึงจุดเพื่อปรับรูปทรง)`);
                                     return; 
                                 }
 
-                                // 3. Check Multi-Select Mode: 
+                                // 3. Check Multi-Select Mode: กรณี 2: โหมดเลือกหลายอัน (Multi-Select เดิม)
                                 if (isMultiSelectMode && ent.type === 'area' && !ent.isWater) {
                                     L.DomEvent.stopPropagation(e); 
                                     
-                                    // Sub-layers cannot be merged or annexed directly, only the main layer
-                                    if (ent.isSubLayer) {
-                                        showToast(`ไม่สามารถเลือกเขตย่อย (${ent.name}) ได้`);
-                                        return;
-                                    }
-
                                     if (selectedIds.has(ent.id)) selectedIds.delete(ent.id);
                                     else selectedIds.add(ent.id);
                                     updateSelectionUI();
@@ -2393,7 +1993,7 @@
                                     return;
                                 }
 
-                                // 4. Default Mode: 
+                                // 4. Default Mode: กรณี 3: โหมดปกติ (แสดง Popup Info)
                                 l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext)).openPopup();
                             });
 
@@ -2402,19 +2002,14 @@
                                 const center = l.getBounds().getCenter();
                                 let labelHtml = ent.name;
                                 
-                                let owner = getHighestOwner(ent);
-
                                 if (ent.isAnnexed) {
-                                    labelHtml = owner.name;
+                                    labelHtml = ent.annexedByName;
                                 }
 
                                 if (ent.isColony) {
-                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(อาณานิคมของ ${owner.name})</div>`;
+                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(อาณานิคมของ ${ent.annexedByName})</div>`;
                                 } else if (ent.isVassal) {
-                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${owner.name})</div>`;
-                                } else if (ent.isSubLayer) {
-                                     // Hide labels for sub-layers unless they are high rank (e.g. city)
-                                     if (getRank(ent.level) < 3) return; 
+                                    labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${ent.annexedByName})</div>`;
                                 } 
 
                                 drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
@@ -2427,196 +2022,64 @@
             });
         }
 
-        // --- Complex Promotion Logic ---
-        function checkSpecialPromotions(parentId) {
-            const parentEnt = entities.find(e => e.id === parentId);
-            if (!parentEnt || parentEnt.ruler !== playerState.name || currentMode !== 'management') return;
-            
-            const children = entities.filter(e => e.parentId === parentId && !e.isWater && !e.isSubLayer);
-            const buttonsContainer = document.getElementById('promotion-buttons');
-            buttonsContainer.innerHTML = '';
-            
-            const currentRank = getRank(parentEnt.level);
-            
-            // 1. Promote Muban to Kwaeng (Requires 3 Muban)
-            if (parentEnt.level === 'muban' && currentRank < getRank('kwaeng') && children.length >= 3) {
-                 const newRank = HIERARCHY.find(h => h.id === 'kwaeng');
-                 buttonsContainer.innerHTML += createPromotionButton(
-                    parentId, 'kwaeng', `ยกระดับเป็น ${newRank.name} (${children.length} หมู่บ้าน)`
-                 );
-                 return; // Only one promotion per click on the lowest level
+        // --- NEW: Unification / Multi-Select Logic ---
+
+        window.toggleMultiSelectMode = () => {
+            if (!currentMapSheetId) {
+                showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนใช้งานโหมดเลือกหลายพื้นที่");
+                return;
+            }
+            if (isEditMode) {
+                // ปิดโหมดแก้ไขก่อน
+                toggleEditGeometry();
             }
 
-            // 2. Promote Tambon to ArchKhet (Requires all Muban/Kwaeng under it to be Kwaeng)
-            if (parentEnt.level === 'tambon' && currentRank < getRank('archKhet')) {
-                const subRanks = children.map(c => c.level);
-                // Check if all children are Kwaeng (1.5) or higher (if they merged higher)
-                const allKwaengOrHigher = subRanks.every(level => getRank(level) >= getRank('kwaeng'));
-                if (allKwaengOrHigher) {
-                    const newRank = HIERARCHY.find(h => h.id === 'archKhet');
-                    buttonsContainer.innerHTML += createPromotionButton(
-                        parentId, 'archKhet', `ยกระดับเป็น ${newRank.name} (แขวงครบ)`
-                    );
-                }
-            }
-
-            // 3. Promote Amphoe to Muang (Requires all Tambon/ArchKhet under it to be ArchKhet)
-            if (parentEnt.level === 'amphoe' && currentRank < getRank('muang')) {
-                const subRanks = children.map(c => c.level);
-                const allArchKhetOrHigher = subRanks.every(level => getRank(level) >= getRank('archKhet'));
-                if (allArchKhetOrHigher) {
-                     const newRank = HIERARCHY.find(h => h.id === 'muang');
-                     buttonsContainer.innerHTML += createPromotionButton(
-                         parentId, 'muang', `ยกระดับเป็น ${newRank.name} (อาเขตครบ)`
-                     );
-                }
+            isMultiSelectMode = !isMultiSelectMode;
+            selectedIds.clear();
+            
+            const btn = document.getElementById('btn-multi-select');
+            const bar = document.getElementById('selection-bar');
+            
+            if (isMultiSelectMode) {
+                btn.classList.add('bg-purple-100', 'text-purple-700', 'ring-2', 'ring-purple-400');
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+                
+                if(currentDrawLayer) cancelDraw();
+                showToast("💡 เปิดโหมดเลือกหลายพื้นที่: คลิกที่พื้นที่บนแผนที่เพื่อเลือก");
+            } else {
+                btn.classList.remove('bg-purple-100', 'text-purple-700', 'ring-2', 'ring-purple-400');
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
             }
             
-            // 4. Promote Jangwat to Nakorn (Requires all Amphoe/Muang under it to be Muang)
-            if (parentEnt.level === 'jangwat' && currentRank < getRank('nakorn')) {
-                const subRanks = children.map(c => c.level);
-                const allMuangOrHigher = subRanks.every(level => getRank(level) >= getRank('muang'));
-                if (allMuangOrHigher) {
-                     const newRank = HIERARCHY.find(h => h.id === 'nakorn');
-                     buttonsContainer.innerHTML += createPromotionButton(
-                         parentId, 'nakorn', `ยกระดับเป็น ${newRank.name} (เมืองครบ)`
-                     );
-                }
-            }
+            updateSelectionUI();
+            renderMap();
+        };
 
-            if(buttonsContainer.innerHTML === '') {
-                 buttonsContainer.innerHTML = '<p class="text-xs text-gray-500">ยังไม่เข้าเงื่อนไขการเลื่อนสถานะพิเศษ (ต้องเป็นผู้ปกครองพื้นที่นั้นๆ)</p>';
-            }
-        }
-        
-        function createPromotionButton(id, targetLevelId, label) {
-             const h = HIERARCHY.find(x => x.id === targetLevelId);
-             if (!h) return '';
-             return `<button onclick="confirmSpecialPromotion('${id}', '${targetLevelId}')" class="btn-cute bg-yellow-600 hover:bg-yellow-700 text-white text-xs py-2 px-4 shadow-lg border border-white/20">${label}</button>`;
-        }
-        
-        window.confirmSpecialPromotion = (id, targetLevelId) => {
-             const ent = entities.find(e => e.id === id);
-             const targetRankName = getHierarchyName(targetLevelId);
-             
-             showConfirmModal(
-                 `ยกระดับ ${ent.name} เป็น ${targetRankName}`,
-                 `ยืนยันการยกระดับศักดิ์ ${getHierarchyName(ent.level)}: ${ent.name} เป็น ${targetRankName} ใช่หรือไม่?`,
-                 () => executeSpecialPromotion(id, targetLevelId)
-             );
-             closeModal('modal-sub-regions');
+        function updateSelectionUI() {
+            document.getElementById('selection-count').innerText = selectedIds.size;
         }
 
-        async function executeSpecialPromotion(id, targetLevelId) {
-             if(!validateAuth()) return;
-             const ent = entities.find(e => e.id === id);
-             const newTitle = HIERARCHY.find(h => h.id === targetLevelId)?.rulerTitle || ent.ruler;
-             
-             try {
-                // 1. Update the entity to the new rank
-                await setDoc(doc(getEntityCollectionRef(), id), {
-                    level: targetLevelId,
-                    ruler: newTitle, // Set ruler to the new default title
-                    originalRuler: newTitle, // Also update original ruler
-                    color: HIERARCHY.find(h => h.id === targetLevelId)?.defaultColor || ent.color
-                }, { merge: true });
-
-                // 2. Update player state if this is the highest rank achieved
-                playerState.highestRank = targetLevelId;
-                playerState.title = HIERARCHY.find(h => h.id === targetLevelId)?.rulerTitle || playerState.title;
-                await savePlayerState();
-
-                // 3. Show Proclamation
-                showProclamationModal(targetLevelId, ent.name, playerState.name);
-
-             } catch (error) {
-                 showConfirmModal("ยกระดับไม่สำเร็จ", error.message, null, true);
-             }
-        }
-
-
-        // --- Multi-Select & Promotion (UPDATED for Fusion Logic) ---
         window.openUnionModal = () => {
-            // UPDATED: Check for minimum selection
             if (selectedIds.size < 2) {
-                showConfirmModal("⚠️ เลือกพื้นที่ไม่พอ", "กรุณาเลือกอย่างน้อย 2 พื้นที่เพื่อรวมหรือผนวกดินแดน", null, true);
+                showConfirmModal("แจ้งเตือน", "กรุณาเลือกอย่างน้อย 2 พื้นที่เพื่อดำเนินการ", null, true);
                 return;
             }
 
             const modal = document.getElementById('modal-union');
             modal.classList.remove('hidden');
             
-            const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
-            // Check for muban/kwaeng only
-            const allVillages = selectedEnts.every(e => getRank(e.level) >= getRank('muban') && getRank(e.level) <= getRank('kwaeng'));
-            
+            // Setup Tab 1: Merge Level Dropdown
             const mergeLevelSelect = document.getElementById('merge-level');
-            const mergeLevelNote = document.getElementById('merge-level-note');
-            const mergeSubRankNote = document.getElementById('merge-sub-rank-note');
-            const highestRank = playerState.highestRank;
-            const highestRankObj = HIERARCHY.find(h => h.id === highestRank);
-            
-            // --- Setup Tab 1: Merge Level Dropdown ---
             mergeLevelSelect.innerHTML = '';
-            
-            // Determine possible target ranks
-            const minRankOfSelected = Math.min(...selectedEnts.map(e => getRank(e.level)));
-            const nextRankUp = HIERARCHY.find(h => h.rank > minRankOfSelected);
-            const highestAllowedRank = HIERARCHY.find(h => h.rank === getRank(playerState.highestRank) + 1) || HIERARCHY.find(h => h.id === playerState.highestRank);
-
-            HIERARCHY.sort((a,b) => b.rank - a.rank).forEach(h => {
+            HIERARCHY.forEach(h => {
                 const opt = document.createElement('option'); opt.value = h.id; opt.text = h.name;
-                
-                if (currentMode === 'management') {
-                    // Only allow target rank to be higher than the lowest selected, and no higher than the next rank up from player's current highest rank
-                    const targetRankVal = getRank(h.id);
-                    const isNextRank = nextRankUp && h.id === nextRankUp.id;
-
-                    // Disable everything not directly related to promotion or already achieved by the player
-                    if (targetRankVal <= minRankOfSelected) { // Must be a promotion
-                         opt.disabled = true;
-                    } else if (targetRankVal > getRank(highestAllowedRank.id)) { // Cannot jump more than one rank (Unless it's the specific Muban->Tambon merge)
-                         if (!(allVillages && h.id === 'tambon')) opt.disabled = true;
-                    } 
-                    
-                    if (allVillages && h.id === 'tambon') opt.selected = true;
-                    else if (isNextRank && !opt.disabled) opt.selected = true;
-
-
-                } else if(h.rank >= 7) { // Creative mode default
-                     opt.selected = true; 
-                }
-                
+                if(h.rank >= 7) opt.selected = true; // Suggest higher rank
                 mergeLevelSelect.appendChild(opt);
             });
 
-            // Update merge ruler/color defaults
-            document.getElementById('merge-ruler').value = playerState.name || selectedEnts[0].ruler || '';
-            document.getElementById('merge-color').value = highestRankObj.defaultColor;
-
-            // Show notes for Fusion/Sub-Layer Logic
-            const selectedMergeLevel = mergeLevelSelect.value;
-            if (currentMode === 'management' && (allVillages || getRank(selectedMergeLevel) > getRank('muban'))) {
-                 mergeSubRankNote.classList.remove('hidden');
-            } else {
-                 mergeSubRankNote.classList.add('hidden');
-            }
-
-            // Show note if it's a village-to-tambon promotion
-            if (currentMode === 'management' && allVillages) {
-                 mergeLevelSelect.value = 'tambon'; // Force select
-                 mergeLevelSelect.disabled = true; // Lock selection
-                 document.getElementById('merge-ruler').value = playerState.name; // Force ruler name
-                 document.getElementById('merge-ruler').disabled = true;
-                 mergeLevelNote.classList.remove('hidden');
-            } else {
-                 mergeLevelSelect.disabled = false;
-                 document.getElementById('merge-ruler').disabled = false;
-                 mergeLevelNote.classList.add('hidden');
-            }
-
-
-            // Setup Tab 2: Annex Leader Selector (unchanged)
+            // Setup Tab 2: Annex Leader Selector
             const leaderSelect = document.getElementById('annex-leader-select');
             leaderSelect.innerHTML = '';
             selectedIds.forEach(id => {
@@ -2632,38 +2095,31 @@
             switchUnionTab('merge');
         };
 
-        // --- Merger Execution (Updated for Sub-Layer Creation and Sovereign/Proclamation Check) ---
+        window.switchUnionTab = (tab) => {
+            const btnMerge = document.getElementById('tab-merge');
+            const btnAnnex = document.getElementById('tab-annex');
+            const contentMerge = document.getElementById('content-merge');
+            const contentAnnex = document.getElementById('content-annex');
+
+            if (tab === 'merge') {
+                btnMerge.className = "flex-1 py-4 text-sm font-bold text-[#5D4037] border-b-2 border-[#5D4037] bg-white transition flex items-center justify-center gap-2";
+                btnAnnex.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2";
+                contentMerge.classList.remove('hidden');
+                contentAnnex.classList.add('hidden');
+            } else {
+                btnAnnex.className = "flex-1 py-4 text-sm font-bold text-red-600 border-b-2 border-red-600 bg-white transition flex items-center justify-center gap-2";
+                btnMerge.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2";
+                contentAnnex.classList.remove('hidden');
+                contentMerge.classList.add('hidden');
+            }
+        };
+
         window.executeMerge = async (e) => {
             e.preventDefault();
             if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
 
-            const newLevel = document.getElementById('merge-level').value;
-            const newRuler = document.getElementById('merge-ruler').value;
-            const newName = document.getElementById('merge-name').value;
-            const newColor = document.getElementById('merge-color').value;
-            
-            const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
-            const allVillages = selectedEnts.every(e => getRank(e.level) >= getRank('muban') && getRank(e.level) <= getRank('kwaeng'));
-            // Fusion logic applies to all promotions from the lowest rank up (e.g., all villages merging into something higher than muban)
-            const isSubLayerMerge = currentMode === 'management' && getRank(newLevel) > getRank(selectedEnts[0].level);
-            
-            let villageToRename = null;
-            let mergeLevelUp = false;
-
-            if (currentMode === 'management' && allVillages && newLevel === 'tambon') {
-                mergeLevelUp = true;
-                villageToRename = selectedEnts.find(e => e.ruler === playerState.name);
-                if (villageToRename) {
-                     playerState.title = HIERARCHY.find(h => h.id === 'tambon')?.rulerTitle || 'กำนัน';
-                     playerState.highestRank = 'tambon';
-                     document.getElementById('village-id-to-rename').value = villageToRename.id;
-                     document.getElementById('village-to-rename').innerText = villageToRename.name;
-                     document.getElementById('new-player-title').innerText = playerState.title;
-                }
-            }
-
-
             try {
+                const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
                 const polys = selectedEnts.map(ent => JSON.parse(ent.geoJson));
 
                 // Turf Union Logic
@@ -2671,6 +2127,11 @@
                 for (let i = 1; i < polys.length; i++) {
                     mergedGeo = turf.union(mergedGeo, polys[i]);
                 }
+
+                const newName = document.getElementById('merge-name').value;
+                const newColor = document.getElementById('merge-color').value;
+                const newRuler = document.getElementById('merge-ruler').value;
+                const newLevel = document.getElementById('merge-level').value;
 
                 const newDoc = {
                     name: newName,
@@ -2684,81 +2145,27 @@
                     originalName: newName,
                     originalRuler: newRuler,
                     originalColor: newColor,
-                    mergedFrom: selectedEnts.map(e => e.name),
-                    isSubLayer: false // New merged layer is the main layer
+                    mergedFrom: selectedEnts.map(e => e.name)
                 };
 
                 const batch = writeBatch(db);
                 const colRef = getEntityCollectionRef();
 
-                // 1. Create new merged layer
+                // Create new
                 const newRef = doc(colRef); 
                 batch.set(newRef, newDoc);
 
-                // 2. Handle old layers (Fusion Logic)
+                // Delete old
                 selectedIds.forEach(id => {
-                    const oldEnt = entities.find(e => e.id === id);
                     const oldRef = doc(colRef, id);
-
-                    // If fusion is enabled (or required for promotion)
-                    if (isSubLayerMerge) {
-                        const isVillageToRename = villageToRename && id === villageToRename.id;
-
-                        // Preserve the old entity as a sub-layer
-                        const subLayerUpdates = {
-                            parentId: newRef.id,
-                            isSubLayer: true, // Mark it as a sub-layer
-                            isAnnexed: false, isVassal: false, isColony: false, // Ensure sub-layers are 'independent' visually
-                            originalColor: oldEnt.originalColor || oldEnt.color, // Keep original color for sub-layer distinction
-                            ruler: isVillageToRename ? newRuler : oldEnt.ruler, // Update ruler if needed for promotion flow
-                            // Keep all other properties (name, level, geoJson)
-                        };
-
-                        batch.update(oldRef, subLayerUpdates);
-                    } else {
-                        // Regular Merge: Delete old layers
-                        batch.delete(oldRef);
-                    }
+                    batch.delete(oldRef);
                 });
-                
-                // 3. Complete promotion steps
-                if (mergeLevelUp) {
-                     await savePlayerState();
-                }
 
                 await batch.commit();
                 
-                // --- Sovereign Check ---
-                const newRankVal = getRank(newLevel);
-                const isSovereignPromotion = newRankVal >= getRank('prathet'); 
-                const playerIsNewRuler = newRuler === playerState.name;
-
                 closeModal('modal-union');
-                window.toggleMultiSelectMode(); // ใช้ window. เพื่อเรียกใช้ฟังก์ชัน Global
-
-                if (isSovereignPromotion && currentMode === 'management' && playerIsNewRuler) {
-                     // 1. Prepare data for Sovereign Modal
-                     document.getElementById('sovereign-new-id').value = newRef.id;
-                     document.getElementById('sovereign-new-level').value = newLevel;
-                     document.getElementById('sovereign-rank-display').innerText = getHierarchyName(newLevel);
-                     document.getElementById('sovereign-ruler-name-input').value = playerState.name;
-                     
-                     // 2. Open Sovereign Modal instead of normal confirmation
-                     document.getElementById('modal-sovereign-ruler').classList.remove('hidden');
-                     updateSovereignRulerTitle(); // Initialize titles/label
-                     
-                } else if (currentMode === 'management' && playerIsNewRuler && mergeLevelUp) {
-                    // Non-Sovereign Promotion Proclamation (muban to monrath)
-                    showProclamationModal(newLevel, newName, playerState.name);
-
-                    // If a village needs renaming, open the modal (this is for the Village Chief the player replaced)
-                    if (villageToRename) {
-                         document.getElementById('modal-village-ruler').classList.remove('hidden');
-                    }
-                } else {
-                    // Standard confirmation for regular merge or non-player ruler promotion
-                    showConfirmModal("สำเร็จ", `เขตปกครอง ${newName} ได้รับการสถาปนาแล้ว!`, null, true);
-                }
+                toggleMultiSelectMode();
+                showConfirmModal("สำเร็จ", `อาณาจักร ${newName} ได้รับการสถาปนาแล้ว!`, null, true);
 
             } catch (err) {
                 console.error(err);
@@ -2766,238 +2173,318 @@
             }
         };
 
-        // --- Annexation Logic (Updated for Fantasy Popup) ---
         window.executeAnnex = async (type) => {
             if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
             
             const leaderId = document.getElementById('annex-leader-select').value;
             const leader = entities.find(e => e.id === leaderId);
-            const targets = entities.filter(ent => selectedIds.has(ent.id));
             
             if(!leader) return;
 
             const batch = writeBatch(db);
             const colRef = getEntityCollectionRef();
 
-            targets.forEach(target => {
-                if(target.id === leaderId) return;
+            selectedIds.forEach(id => {
+                if(id === leaderId) return;
 
-                const entRef = doc(colRef, target.id);
+                const entRef = doc(colRef, id);
                 const updates = {
                     isAnnexed: false, isVassal: false, isColony: false,
                     occupiedBy: leader.id,
                     annexedByName: leader.name,
                     ruler: leader.ruler, 
-                    color: leader.color,
-                    isSubLayer: false // Ensure annexed areas are main layers
+                    color: leader.color
                 };
 
-                if(type === 'annex') updates.isAnnexed = true;
-                if(type === 'vassal') updates.isVassal = true;
-                if(type === 'colony') updates.isColony = true;
+                if(type === 'annex') {
+                    updates.isAnnexed = true;
+                } else if (type === 'vassal') {
+                    updates.isVassal = true;
+                }
 
                 batch.update(entRef, updates);
-                
-                // Re-parent the target's sub-regions (if any) to the leader
-                // This handles: A conquers B. B's direct children (C, D) now report to A.
-                const targetChildren = entities.filter(e => e.parentId === target.id);
-                targetChildren.forEach(child => {
-                     batch.update(doc(colRef, child.id), { parentId: leader.id }, { merge: true });
-                });
             });
 
             await batch.commit();
             
             closeModal('modal-union');
-            window.toggleMultiSelectMode(); // ใช้ window. เพื่อเรียกใช้ฟังก์ชัน Global
-
-            // NEW: Fantasy Conquer Popup for Annex
-            if (type === 'annex') {
-                const targetRank = getHierarchyName(target.level);
-                const attackerRank = getHierarchyName(attacker.level);
-                
-                const collapseMessage = `อาณาจักร${targetRank} ${target.name} ล่มสลายลงแล้ว เนื่องจากการรวมแผ่นดินโดย ${attackerRank} ${attacker.name} เส้นทางแห่งอำนาจนี้มิอาจย้อนกลับได้ ขอให้ดวงวิญญาณแห่งดินแดนนี้จงสงบ...`;
-                
-                // Apply dark/fantasy style
-                document.getElementById('modal-confirm').querySelector('.modal-paper').classList.add('modal-paper-dark');
-                document.getElementById('modal-confirm').querySelector('.modal-overlay').classList.add('modal-fantasy-dark');
-
-                showConfirmModal(
-                    `🌑 การรวมแผ่นดินสำเร็จ 🌑`,
-                    collapseMessage,
-                    () => {
-                         // Remove dark style after closing
-                         document.getElementById('modal-confirm').querySelector('.modal-paper').classList.remove('modal-paper-dark');
-                         document.getElementById('modal-confirm').querySelector('.modal-overlay').classList.remove('modal-fantasy-dark');
-                    }, 
-                    true
-                );
-            } else {
-                showToast(`⚔️ ยุทธการ ${type} เสร็จสมบูรณ์!`);
-            }
+            toggleMultiSelectMode();
+            showConfirmModal("สำเร็จ", `การผนวกดินแดนภายใต้ ${leader.name} เสร็จสมบูรณ์`, null, true);
         };
 
-        // --- War Modal Logic (Updated for rank and Nakorn restrictions) ---
-        window.openWarModal = (tid) => {
-            const t = entities.find(e => e.id === tid);
-            document.getElementById('war-target-id').value = tid;
-            document.getElementById('war-target-name').innerText = t.name; 
+        window.showToast = (msg) => {
+            const div = document.createElement('div');
+            div.className = "fixed top-20 left-1/2 -translate-x-1/2 bg-[#5D4037] text-white px-4 py-2 rounded-full shadow-lg text-sm z-[3000] animate-fade-in";
+            div.innerText = msg;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        // --- Core Filtering Logic ---
+        function filterEntities() {
+            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+            const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
+            const selectedStatuses = Array.from(document.querySelectorAll('.filter-status:checked')).map(cb => cb.value);
+
+            const sorted = [...entities].sort((a, b) => getRank(b.level) - getRank(a.level));
             
-            const sel = document.getElementById('war-attacker-select'); sel.innerHTML = '';
-            
-            // Filter attackers: Only areas ruled by the player and capable of war (Prathet, Anachak, MahaAnachak, Nakorn)
-            const warCapableRanks = HIERARCHY.filter(h => h.warCapable).map(h => h.id);
-            const playerAttackers = entities.filter(e => 
-                 !e.isWater && e.type === 'area' && e.ruler === playerState.name && 
-                 e.id !== tid && warCapableRanks.includes(e.level)
-            );
-            
-            // UPDATED: Check for player's war capability rank
-            if (playerAttackers.length === 0) {
-                 showConfirmModal("⚔️ ไม่สามารถประกาศสงคราม", `ท่านต้องเป็นผู้ปกครองดินแดนในระดับ **ประเทศ (Rank 7) ขึ้นไป** หรือ **นคร (Rank 4.5)** จึงจะสามารถประกาศสงครามได้ ศักดิ์ของท่าน ( ${getHierarchyName(playerState.highestRank)} ) ยังไม่เพียงพอ`, null, true);
-                 return;
+            if (!searchTxt) {
+                // No search text logic
+                return { visibleEntities: sorted.filter(ent => {
+                    if(ent.type !== 'area') return true;
+                    if(!selectedLevels.includes(ent.level)) return false;
+
+                    // Status Logic
+                    let status = 'independent';
+                    if (ent.isColony) status = 'colony';
+                    else if (ent.isVassal) status = 'vassal';
+                    else if (ent.isAnnexed) status = 'annexed';
+
+                    return selectedStatuses.includes(status);
+                })};
             }
 
-            playerAttackers.forEach(e => {
-                const opt = document.createElement('option'); opt.value = e.id; opt.text = `${e.name} (${getHierarchyName(e.level)})`; sel.appendChild(opt);
+            const directMatches = sorted.filter(ent => {
+                const nameMatch = ent.name.toLowerCase().includes(searchTxt);
+                const annexMatch = ent.isAnnexed && ent.annexedByName && ent.annexedByName.toLowerCase().includes(searchTxt);
+                const rulerMatch = ent.ruler && ent.ruler.toLowerCase().includes(searchTxt);
+                const levelMatch = getHierarchyName(ent.level).toLowerCase().includes(searchTxt);
+                return nameMatch || annexMatch || rulerMatch || levelMatch;
             });
-            
-            // Set button restrictions based on the selected attacker's rank (Nakorn restriction)
-            sel.onchange = () => {
-                 const attackerId = sel.value;
-                 const attacker = entities.find(e => e.id === attackerId);
-                 const attackerRank = HIERARCHY.find(h => h.id === attacker.level);
-                 
-                 document.getElementById('war-btn-annex').disabled = false;
-                 document.getElementById('war-btn-vassal').disabled = false;
-                 document.getElementById('war-btn-colony').disabled = false;
 
-                 if (attackerRank?.warType === 'annexOnly') {
-                     document.getElementById('war-btn-vassal').disabled = true;
-                     document.getElementById('war-btn-colony').disabled = true;
-                     // UPDATED: Show warning modal about Nakorn's restriction on button click
-                     showConfirmModal("⚠️ ข้อจำกัดของนคร", "ผู้ปกครองนคร (Nakorn) มีข้อจำกัดทางยุทธการ: สามารถดำเนินการได้เพียง **ผนวกดินแดน** เท่านั้น", null, true);
-                 }
-            }
-            // Trigger initial check
-            if (sel.options.length > 0) sel.onchange();
+            const directMatchIds = directMatches.map(e => e.id);
+            const descendants = getDescendants(directMatchIds);
+            const descendantIds = new Set(descendants.map(d => d.id));
+            const allowedIds = new Set([...directMatchIds, ...descendantIds]);
 
-            document.getElementById('modal-war').classList.remove('hidden');
+            const result = sorted.filter(ent => {
+                if (ent.type !== 'area') return true; 
+                if (!allowedIds.has(ent.id)) return false;
+                if (!selectedLevels.includes(ent.level)) return false;
+
+                // Status Logic
+                let status = 'independent';
+                if (ent.isColony) status = 'colony';
+                else if (ent.isVassal) status = 'vassal';
+                else if (ent.isAnnexed) status = 'annexed';
+
+                return selectedStatuses.includes(status);
+            });
+
+            return { visibleEntities: result };
         }
 
+        function createPopupContent(ent, displayColor, colorContext) {
+            const flag = ent.flag || 'https://cdn-icons-png.flaticon.com/512/1458/1458514.png';
+            
+            let mainTitle = ent.name;
+            let subStatus = "";
+            let statusBadge = '<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full border border-emerald-200">รัฐอิสระ</span>';
+            
+            if (ent.isAnnexed) {
+                statusBadge = '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-200">ถูกผนวก</span>';
+                mainTitle = ent.annexedByName; 
+                subStatus = `<div class="text-[10px] text-gray-500 mt-1">ผนวกดินแดนจาก ${ent.originalName || ent.name}</div>`;
+            } else if (ent.isVassal) {
+                statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
+                subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(ประเทศราชของ ${ent.annexedByName})</div>`;
+            } else if (ent.isColony) {
+                statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">อาณานิคม</span>';
+                subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(อาณานิคมของ ${ent.annexedByName})</div>`;
+            } else if (ent.isWater) {
+                statusBadge = '<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full border border-blue-100">น่านน้ำ</span>';
+            }
 
-        // --- Helper: Multi-Select Mode (Made Global) ---
-        window.toggleMultiSelectMode = () => {
-            isMultiSelectMode = !isMultiSelectMode;
-            if (isMultiSelectMode) {
-                document.getElementById('selection-bar').classList.remove('hidden');
-                document.getElementById('btn-multi-select').classList.add('active');
+            let colorDesc = "สีประจำเขต";
+            if(colorContext.type === 'religion') colorDesc = `☸️ ศาสนา: ${colorContext.value}`;
+            else if(colorContext.type === 'gov') colorDesc = `⚖️ ปกครอง: ${colorContext.value}`;
+            else if(colorContext.type === 'rank') colorDesc = `👑 ศักดิ์: ${getHierarchyName(ent.level)}`;
+            else if(colorContext.type === 'water') colorDesc = `🌊 พื้นที่: น่านน้ำ`;
+
+            const ancestors = getAncestors(ent);
+            let hierarchyHtml = '';
+            if(ancestors.length > 0) {
+                hierarchyHtml = `<div class="hierarchy-path">`;
+                ancestors.forEach(a => { hierarchyHtml += `<span class="h-node">${a.name}</span>`; });
+                hierarchyHtml += `<span class="h-node">${ent.name}</span></div>`;
             } else {
-                selectedIds.clear();
-                document.getElementById('selection-bar').classList.add('hidden');
-                document.getElementById('btn-multi-select').classList.remove('active');
+                hierarchyHtml = `<div class="hierarchy-path"><span class="h-node">${ent.name} (สูงสุด)</span></div>`;
             }
-            renderMap();
-        };
 
-        function updateSelectionUI() {
-            document.getElementById('selection-count').innerText = selectedIds.size;
+            return `
+                <div class="relative font-sans overflow-visible group">
+                    <span class="sparkle-icon s1">✨</span>
+                    <span class="sparkle-icon s2">✨</span>
+                    <span class="sparkle-icon s3">✦</span>
+                    
+                    <div class="h-20 bg-gradient-to-r from-[#FFF8E1] to-white rounded-t-2xl relative overflow-hidden">
+                        <div class="absolute inset-0 bg-white/30 backdrop-blur-[1px]"></div>
+                    </div>
+                    
+                    <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
+                        <div class="w-20 h-20 rounded-full p-1 bg-white shadow-lg relative z-10">
+                            <img src="${flag}" class="w-full h-full rounded-full object-cover border border-gray-100">
+                        </div>
+                    </div>
+
+                    <div class="pt-10 px-6 pb-6 text-center relative z-10">
+                        <h3 class="text-xl font-bold text-[#5D4037] leading-tight cute-font mt-1 drop-shadow-sm">${mainTitle}</h3>
+                        ${subStatus}
+                        <div class="mt-2 mb-4 flex flex-col justify-center gap-2 items-center">
+                            ${statusBadge}
+                            <div class="color-tag"><span class="swatch-circle" style="background-color:${displayColor}"></span> ${colorDesc}</div>
+                        </div>
+                        
+                        <div class="text-left text-xs bg-white/80 p-3 rounded-xl border border-[#EEE] space-y-2 shadow-sm">
+                            <div class="pb-2 border-b border-dashed border-[#DDD]">
+                                <span class="text-[#A1887F] block mb-1 text-[9px] uppercase tracking-wide font-bold">🏳️ สายการปกครอง</span>
+                                ${hierarchyHtml}
+                            </div>
+                            <div class="flex justify-between border-b border-dashed border-[#DDD] pb-2 pt-1">
+                                <span class="text-gray-400">ระดับ</span>
+                                <span class="font-bold text-[#8D6E63]">${getHierarchyName(ent.level)}</span>
+                            </div>
+                            <div class="pt-1">
+                                <span class="text-gray-400 block text-[10px]">ผู้ปกครอง</span>
+                                <span class="font-bold text-[#5D4037] truncate block text-sm">${ent.ruler}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-5 flex gap-2 justify-center pt-2">
+                            ${(!ent.isWater) ? `
+                                <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition shadow-sm hover:scale-110"><span class="material-icons-round text-sm">edit</span></button>
+                                <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm hover:scale-110"><span class="material-icons-round text-sm">delete</span></button>
+                            ` : ''}
+
+                            ${(!ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">⚔️ ยุทธการ</button>` : ''}
+                            
+                            ${(ent.isAnnexed || ent.isVassal || ent.isColony) ? `
+                                <button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">🚩 กู้เอกราช</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        // --- AUTHENTICATION FUNCTIONS (FIXED) ---
+        function updateLegend(mode) {
+            const container = document.getElementById('legend-content');
+            container.innerHTML = '';
+            let data = {};
+            let title = '';
 
-        /**
-         * Handles user login via username (used as email) and password.
-         */
-        window.handleLogin = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-
-            // Simple email validation since Firebase auth methods require email format
-            if (!email.includes('@')) {
-                 showConfirmModal("เข้าสู่ระบบไม่สำเร็จ", "รูปแบบชื่อผู้ใช้ไม่ถูกต้อง กรุณาใช้รูปแบบอีเมล", null, true);
-                 return;
+            if (mode === 'religion') { data = COLORS.religion; title = 'แยกตามศาสนา'; }
+            else if (mode === 'government') { data = COLORS.gov; title = 'แยกตามระบอบปกครอง'; }
+            else if (mode === 'rank') { 
+                data = {};
+                HIERARCHY.forEach(h => data[h.name] = h.defaultColor);
+                title = 'แยกตามศักดิ์ปกครอง';
             }
 
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                closeModal('modal-login');
-                showToast("เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับ");
-            } catch (error) {
-                console.error("Login error:", error);
-                let msg = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
-                if (error.code === 'auth/user-not-found') {
-                    msg = "ไม่พบผู้ใช้ด้วยอีเมลนี้";
-                } else if (error.code === 'auth/wrong-password') {
-                    msg = "รหัสผ่านไม่ถูกต้อง";
-                }
-                showConfirmModal("เข้าสู่ระบบล้มเหลว", msg, null, true);
+            document.getElementById('legend-title').innerText = title;
+            for (const [key, color] of Object.entries(data)) {
+                container.innerHTML += `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full border border-gray-200" style="background-color: ${color}"></span><span class="truncate">${key}</span></div>`;
             }
-        };
+        }
 
-        /**
-         * Handles user registration and profile update.
-         */
-        window.handleRegister = async (e) => {
-            e.preventDefault();
-            const firstName = document.getElementById('reg-firstname').value;
-            const lastName = document.getElementById('reg-lastname').value;
-            const email = document.getElementById('reg-email').value;
-            const username = document.getElementById('reg-username').value;
-            const password = document.getElementById('reg-password').value;
-            
-            // Use username as display name
-            const displayName = username;
-
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                
-                // Update display name
-                await updateProfile(userCredential.user, { displayName: displayName });
-
-                closeModal('modal-register');
-                showToast(`ลงทะเบียนสำเร็จ! ยินดีต้อนรับ ${displayName}`);
-            } catch (error) {
-                console.error("Registration error:", error);
-                let msg = "เกิดข้อผิดพลาดในการลงทะเบียน";
-                if (error.code === 'auth/email-already-in-use') {
-                    msg = "อีเมลนี้ถูกใช้งานแล้ว";
-                } else if (error.code === 'auth/weak-password') {
-                    msg = "รหัสผ่านอ่อนเกินไป (ต้องมีอย่างน้อย 6 ตัวอักษร)";
-                } else if (error.code === 'auth/invalid-email') {
-                    msg = "รูปแบบอีเมลไม่ถูกต้อง";
-                }
-                showConfirmModal("ลงทะเบียนล้มเหลว", msg, null, true);
-            }
-        };
-
-        // --- Unchanged Functions ---
-        window.showToast = (msg) => { /* ... unchanged ... */ }
-        function createPopupContent(ent, displayColor, colorContext) { /* ... unchanged ... */ }
-        function updateLegend(mode) { /* ... unchanged ... */ }
-        window.startDrawPolygon = () => openAreaModal(); // Use the logic to open the modal
+        window.startDrawPolygon = () => new L.Draw.Polygon(map).enable();
         window.startDrawPolyline = () => new L.Draw.Polyline(map).enable();
         window.startDrawMarker = () => new L.Draw.Marker(map).enable();
-        window.toggleFullScreen = async () => { /* ... unchanged ... */ }
-        window.startPointMode = () => new L.Draw.Polygon(map).enable(); // Direct call to start drawing polygon
-        window.startFreehandMode = () => { /* ... unchanged ... */ }
-        function onFreehandDown(e) { /* ... unchanged ... */ }
-        function onFreehandMove(e) { /* ... unchanged ... */ }
-        function onFreehandUp() { /* ... unchanged ... */ }
+        window.toggleFullScreen = async () => {
+             try {
+                if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+                else await document.exitFullscreen();
+             } catch(e) {
+                 showConfirmModal("Fullscreen Error", "เบราว์เซอร์นี้ไม่อนุญาตให้ใช้โหมดเต็มหน้าจอ", null, true);
+             }
+        }
+        
+        // --- NEW: Custom Draw Modes ---
+        window.startPointMode = () => {
+             if (!currentMapSheetId) { showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด"); return; }
+             window.toggleDrawMenu();
+             const drawer = new L.Draw.Polygon(map, {
+                 shapeOptions: {
+                     color: '#FFB74D',
+                     weight: 2
+                 }
+             });
+             drawer.enable();
+             
+             // Hook for Right Click Delete
+             const handler = (e) => {
+                 // Check if enabled and has internal poly
+                 if(drawer._enabled && drawer._poly && drawer._poly.getLatLngs().length > 0) {
+                     drawer.deleteLastVertex();
+                 }
+             };
+             
+             map.on('contextmenu', handler);
+             
+             // Remove hook when draw ends
+             map.once(L.Draw.Event.CREATED, () => map.off('contextmenu', handler));
+             // Also remove if tool disabled manually (optional, Leaflet Draw handles disable)
+        };
+
+        window.startFreehandMode = () => {
+            if (!currentMapSheetId) { showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด"); return; }
+            window.toggleDrawMenu();
+            isFreehand = true;
+            map.dragging.disable();
+            document.getElementById('map').classList.add('cursor-pen');
+            map.on('mousedown', onFreehandDown);
+            map.on('mouseup', onFreehandUp);
+        };
+
+        function onFreehandDown(e) {
+            map.on('mousemove', onFreehandMove);
+            freehandPath = [e.latlng];
+            tempLine = L.polyline(freehandPath, {color: '#FFB74D', weight: 3}).addTo(map);
+        }
+
+        function onFreehandMove(e) {
+            freehandPath.push(e.latlng);
+            tempLine.setLatLngs(freehandPath);
+        }
+
+        function onFreehandUp() {
+            map.off('mousemove', onFreehandMove);
+            map.off('mousedown', onFreehandDown);
+            map.off('mouseup', onFreehandUp);
+            
+            // Close the loop
+            freehandPath.push(freehandPath[0]);
+            
+            // Cleanup temp line
+            if(tempLine) map.removeLayer(tempLine);
+            map.dragging.enable();
+            document.getElementById('map').classList.remove('cursor-pen');
+            isFreehand = false;
+
+            if(freehandPath.length > 5) {
+                // Simplify path to reduce points (using Turf is overkill for simple, but handy if imported)
+                // Let's just make polygon directly
+                const poly = L.polygon(freehandPath);
+                const event = { layer: poly, layerType: 'polygon' };
+                onDrawCreated(event);
+            }
+        }
+
 
         function onDrawCreated(e) {
-            // UPDATED: Check for Map Sheet
             if (!currentMapSheetId) { 
                 drawnItems.removeLayer(e.layer);
-                showConfirmModal("⚠️ สร้างแผนที่ก่อน", "กรุณาสร้างหรือเลือกกระดาษแผนที่ในแถบด้านซ้ายก่อนเริ่มวาด (Map Sheet)", null, true);
+                showToast("⚠️ กรุณาเลือกกระดาษแผนที่ก่อนวาด"); 
                 return;
             }
 
             currentDrawLayer = e.layer;
             drawnItems.addLayer(currentDrawLayer); 
             if (e.layerType === 'polygon') {
-                openAreaModal(); 
+                document.getElementById('modal-area').classList.remove('hidden');
+                document.getElementById('form-area').reset();
+                document.getElementById('area-id').value = '';
+                document.getElementById('inp-level').dispatchEvent(new Event('change'));
             } else if (e.layerType === 'polyline') {
                 document.getElementById('modal-road').classList.remove('hidden');
             } else if (e.layerType === 'marker') {
@@ -3011,42 +2498,50 @@
             });
         }
 
-        window.saveRoad = async () => { /* ... unchanged ... */ }
-        window.saveMarker = async () => { /* ... unchanged ... */ }
+        window.saveRoad = async () => {
+            if(!validateAuth()) return;
+            const weight = document.getElementById('road-weight').value;
+            const data = {
+                name: document.getElementById('road-name').value || 'ทางไร้ชื่อ',
+                roadType: document.getElementById('road-type').value,
+                color: document.getElementById('road-color').value,
+                weight: weight,
+                geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
+                type: 'road', level: 'road'
+            };
+            await saveToFirestore(data);
+            closeModal('modal-road'); currentDrawLayer = null;
+        }
+
+        window.saveMarker = async () => {
+            if(!validateAuth()) return;
+            const data = {
+                name: document.getElementById('marker-name').value || 'จุดสำคัญ',
+                iconUrl: selectedMarkerIconUrl,
+                color: document.getElementById('marker-color').value,
+                geoJson: JSON.stringify(currentDrawLayer.toGeoJSON()),
+                type: 'marker', level: 'marker'
+            };
+            await saveToFirestore(data);
+            closeModal('modal-marker'); currentDrawLayer = null;
+        }
+
         window.saveArea = async (e) => {
             e.preventDefault();
             if(!validateAuth()) return;
             const id = document.getElementById('area-id').value;
-            const isFirstMuban = currentMode === 'management' && id === '' && entities.filter(e => e.type === 'area' && !e.isWater).length === 0;
-            
-            const levelId = document.getElementById('inp-level').value;
-            const rulerInput = isFirstMuban ? playerState.name : document.getElementById('inp-ruler').value;
-            
-            // Auto-set the appropriate ruler title if in management mode and not sovereign level
-            let finalRulerName = rulerInput;
-            if (currentMode === 'management' && getRank(levelId) < getRank('prathet') && !isFirstMuban) {
-                 const rulerTitle = HIERARCHY.find(h => h.id === levelId)?.rulerTitle || '';
-                 if (rulerInput.includes(playerState.name) && !rulerInput.includes(rulerTitle)) {
-                      finalRulerName = `${rulerTitle} ${playerState.name}`; // Ensure title is always correct
-                 } else if (rulerInput === playerState.name) {
-                     finalRulerName = `${rulerTitle} ${playerState.name}`;
-                 }
-            }
-
-
             const data = {
                 name: document.getElementById('inp-name').value,
                 customId: document.getElementById('inp-custom-id').value,
-                level: levelId,
+                level: document.getElementById('inp-level').value,
                 parentId: document.getElementById('inp-parent').value,
-                ruler: isFirstMuban ? playerState.name : finalRulerName, // Use player name if first muban
+                ruler: document.getElementById('inp-ruler').value,
                 religion: document.getElementById('inp-religion').value,
                 government: document.getElementById('inp-gov').value,
                 color: document.getElementById('inp-color').value,
                 labelColor: document.getElementById('inp-label-color').value,
                 isWater: document.querySelector('input[name="areaType"]:checked').value === 'water',
-                type: 'area',
-                isSubLayer: false // New areas start as main layers
+                type: 'area'
             };
             
             const img = document.getElementById('preview-flag');
@@ -3065,54 +2560,47 @@
 
             await saveToFirestore(data, id);
             closeModal('modal-area'); currentDrawLayer = null;
-            
-            // If it's the very first village in management mode, show the proclamation/welcome
-            if (isFirstMuban && currentMode === 'management') {
-                 // Update player state to be Village Chief
-                 playerState.highestRank = 'muban';
-                 playerState.title = HIERARCHY.find(h => h.id === 'muban')?.rulerTitle || 'ผู้ใหญ่บ้าน';
-                 await savePlayerState();
-                 showProclamationModal('muban', data.name, playerState.name);
-            }
         }
 
         function validateAuth() {
-            if (!auth || !auth.currentUser) {
-                showConfirmModal("เข้าสู่ระบบไม่สำเร็จ", "กรุณาเข้าสู่ระบบก่อนดำเนินการ", null, true);
+            if (!window.userId) {
+                showConfirmModal("ยังไม่เข้าสู่ระบบ", "กรุณาเข้าสู่ระบบเพื่อบันทึกข้อมูล", null, true);
+                return false;
+            }
+            if (!currentMapSheetId) {
+                showConfirmModal("ยังไม่เลือกแผนที่", "กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนบันทึกข้อมูล", null, true);
                 return false;
             }
             return true;
         }
+
         async function saveToFirestore(data, id = null) {
-            if (!validateAuth()) return;
-            const ref = getEntityCollectionRef();
-            if (!ref) {
-                 showConfirmModal("ข้อผิดพลาด", "กรุณาเลือกกระดาษแผนที่ก่อนบันทึกข้อมูล", null, true);
-                 return;
-            }
+            if (!currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนบันทึก", null, true); return; }
             try {
-                if (id) {
-                    await setDoc(doc(ref, id), data, { merge: true });
-                } else {
-                    await addDoc(ref, data);
-                }
-            } catch (err) {
-                 showConfirmModal("บันทึกข้อมูลล้มเหลว", `เกิดข้อผิดพลาดในการบันทึก: ${err.message}`, null, true);
-            }
+                const colRef = getEntityCollectionRef();
+                if(id) await setDoc(doc(colRef, id), data, {merge: true});
+                else await addDoc(colRef, data);
+            } catch(e) { showConfirmModal("Error", e.message, null, true); }
         }
-        
-        // --- War Action (Updated to use selected Attacker) ---
+
+        window.openWarModal = (tid) => {
+            const t = entities.find(e => e.id === tid);
+            document.getElementById('war-target-id').value = tid;
+            document.getElementById('war-target-name').innerText = t.name; 
+            const sel = document.getElementById('war-attacker-select'); sel.innerHTML = '';
+            
+            entities.filter(e => !e.isWater && e.type === 'area' && e.id !== tid).forEach(e => {
+                const opt = document.createElement('option'); opt.value = e.id; opt.text = e.name; sel.appendChild(opt);
+            });
+            document.getElementById('modal-war').classList.remove('hidden');
+        }
+
         window.confirmWarAction = async (type) => {
             const tid = document.getElementById('war-target-id').value;
             const aid = document.getElementById('war-attacker-select').value;
             const attacker = entities.find(e => e.id === aid);
             const target = entities.find(e => e.id === tid);
             
-            if (!attacker || !target) {
-                 showToast("ข้อมูลผู้โจมตี/เป้าหมายไม่ถูกต้อง");
-                 return;
-            }
-
             const updates = { isAnnexed: false, isVassal: false, isColony: false };
             
             if(type === 'annex') updates.isAnnexed = true;
@@ -3123,9 +2611,6 @@
             updates.occupiedBy = attacker.id; 
             updates.ruler = attacker.ruler;
 
-            // Ensure the target is no longer a sub-layer if it was
-            updates.isSubLayer = false; 
-
             if(type === 'colony') {
                 updates.color = target.originalColor || target.color;
             } else {
@@ -3134,119 +2619,144 @@
             
             await setDoc(doc(getEntityCollectionRef(), tid), updates, {merge: true});
             closeModal('modal-war');
-            
-            // Re-parent the target's sub-regions (if any) to the leader
-            const colRef = getEntityCollectionRef();
-            const targetChildren = entities.filter(e => e.parentId === target.id);
-            const reparentBatch = writeBatch(db);
-            targetChildren.forEach(child => {
-                 reparentBatch.update(doc(colRef, child.id), { parentId: attacker.id }, { merge: true });
+        }
+
+        window.declareIndependence = (id) => {
+            showConfirmModal("กู้เอกราช", "ต้องการประกาศอิสรภาพหรือไม่? พื้นที่จะกลับสู่สถานะเดิม", async () => {
+                const ent = entities.find(e => e.id === id);
+                await setDoc(doc(getEntityCollectionRef(), id), {
+                    isAnnexed: false, isVassal: false, isColony: false,
+                    color: ent.originalColor || ent.color, 
+                    ruler: ent.originalRuler || ent.ruler,
+                    occupiedBy: null, annexedByName: null
+                }, {merge: true});
             });
-            await reparentBatch.commit();
+        }
 
+        window.confirmDelete = (id) => {
+             if (!currentMapSheetId) return;
+             showConfirmModal("ลบข้อมูล", "ยืนยันการลบ?", async () => await deleteDoc(doc(getEntityCollectionRef(), id)));
+        }
 
-            // NEW: Fantasy Conquer Popup for War
-            if (type === 'annex') {
-                const targetRank = getHierarchyName(target.level);
-                const attackerRank = getHierarchyName(attacker.level);
-                
-                const collapseMessage = `อาณาจักร${targetRank} ${target.name} ล่มสลายลงแล้ว เนื่องจากการรวมแผ่นดินโดย ${attackerRank} ${attacker.name} เส้นทางแห่งอำนาจนี้มิอาจย้อนกลับได้ ขอให้ดวงวิญญาณแห่งดินแดนนี้จงสงบ...`;
-                
-                // Apply dark/fantasy style
-                document.getElementById('modal-confirm').querySelector('.modal-paper').classList.add('modal-paper-dark');
-                document.getElementById('modal-confirm').querySelector('.modal-overlay').classList.add('modal-fantasy-dark');
-
-                showConfirmModal(
-                    `🌑 การรวมแผ่นดินสำเร็จ 🌑`,
-                    collapseMessage,
-                    () => {
-                         // Remove dark style after closing
-                         document.getElementById('modal-confirm').querySelector('.modal-paper').classList.remove('modal-paper-dark');
-                         document.getElementById('modal-confirm').querySelector('.modal-overlay').classList.remove('modal-fantasy-dark');
-                    }, 
-                    true
-                );
-            } else {
-                showToast(`⚔️ ยุทธการ ${type} เสร็จสมบูรณ์!`);
+        window.openEditModal = (id) => {
+            const ent = entities.find(e => e.id === id);
+            document.getElementById('modal-area').classList.remove('hidden');
+            document.getElementById('area-id').value = ent.id;
+            document.getElementById('inp-name').value = ent.originalName || ent.name; 
+            document.getElementById('inp-custom-id').value = ent.customId || '';
+            document.getElementById('inp-level').value = ent.level;
+            updateParentSelect(getRank(ent.level));
+            document.getElementById('inp-parent').value = ent.parentId || "";
+            document.getElementById('inp-ruler').value = ent.originalRuler || ent.ruler;
+            document.getElementById('inp-religion').value = ent.religion;
+            document.getElementById('inp-gov').value = ent.government;
+            document.getElementById('inp-color').value = ent.originalColor || ent.color;
+            if(ent.flag) {
+                document.getElementById('preview-flag').src = ent.flag;
+                document.getElementById('preview-flag').classList.remove('hidden');
+                document.getElementById('preview-flag-placeholder').classList.add('hidden');
             }
         }
-        
-        window.declareIndependence = (id) => { /* ... unchanged ... */ }
-        window.confirmDelete = (id) => { /* ... unchanged ... */ }
-        window.openEditModal = (id) => { /* ... unchanged ... */ }
-        // window.handleLogin = async (e) => { /* Replaced by FIX above */ }
-        // document.getElementById('form-login').onsubmit = async (e) => { /* Replaced by FIX above */ }
-        // document.getElementById('form-register').onsubmit = async (e) => { /* Replaced by FIX above */ }
-        window.logoutUser = () => signOut(auth);
-        window.cancelDraw = () => { /* ... unchanged ... */ }
-        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
-        window.showConfirmModal = (t, m, fn, alert=false) => { /* ... unchanged ... */ }
-        window.executePendingConfirm = async () => { /* ... unchanged ... */ }
-        window.toggleEditGeometry = async () => { 
-             if (!currentMapSheetId) { 
-                 showConfirmModal("⚠️ สร้างแผนที่ก่อน", "กรุณาสร้างหรือเลือกกระดาษแผนที่ในแถบด้านซ้ายก่อนเริ่มแก้ไข", null, true);
-                 return;
-             }
-             // ... (rest of the logic unchanged)
+
+        document.getElementById('form-login').onsubmit = async (e) => {
+            e.preventDefault();
+            try { await signInWithEmailAndPassword(auth, document.getElementById('login-username').value, document.getElementById('login-password').value); closeModal('modal-login'); }
+            catch(err) { showConfirmModal("Login Failed", err.message, null, true); }
         }
-        function updateParentSelect(rank) { /* ... unchanged ... */ }
+        document.getElementById('form-register').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const u = await createUserWithEmailAndPassword(auth, document.getElementById('reg-email').value, document.getElementById('reg-password').value);
+                await updateProfile(u.user, { displayName: document.getElementById('reg-username').value });
+                closeModal('modal-register');
+            } catch(err) { showConfirmModal("Register Failed", err.message, null, true); }
+        }
+        window.logoutUser = () => signOut(auth);
+
+        window.cancelDraw = () => { 
+            if(currentDrawLayer && !document.getElementById('area-id').value) drawnItems.removeLayer(currentDrawLayer); 
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden')); 
+            currentDrawLayer=null; 
+        }
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.showConfirmModal = (t, m, fn, alert=false) => {
+            document.getElementById('confirm-title').innerText = t; document.getElementById('confirm-msg').innerText = m; pendingConfirmAction = fn;
+            const btns = document.querySelectorAll('#modal-confirm button');
+            btns[0].style.display = alert ? 'none' : 'block'; 
+            btns[1].innerText = alert ? 'ตกลง' : 'ยืนยัน';
+            btns[1].onclick = alert ? () => closeModal('modal-confirm') : executePendingConfirm;
+            document.getElementById('modal-confirm').classList.remove('hidden');
+        }
+        window.executePendingConfirm = async () => { if(pendingConfirmAction) await pendingConfirmAction(); closeModal('modal-confirm'); }
+        
+        /**
+         * Toggles the geometry editing mode.
+         * Enters/Exits edit mode and handles saving the currently edited layer.
+         */
+        window.toggleEditGeometry = async () => {
+            if (!validateAuth()) return;
+
+            // 1. ตรวจสอบว่ามีพื้นที่ให้แก้ไขไหม
+            const hasLayers = entities.some(e => e.type === 'area' || e.type === 'road');
+            if (!hasLayers) {
+                showConfirmModal("ไม่พบพื้นที่", "กรุณาสร้างอาณาจักรหรือเส้นทางก่อนใช้งานโหมดแก้ไข", null, true);
+                return;
+            }
+            
+            const btn = document.getElementById('btn-edit-geom');
+            isEditMode = !isEditMode; // สลับสถานะ เปิด/ปิด
+
+            if (isEditMode) {
+                // --- เปิดใช้งาน ---
+                if(document.getElementById('draw-submenu').classList.contains('active')) window.toggleDrawMenu();
+                if(isMultiSelectMode) toggleMultiSelectMode(); // ปิดโหมด Multi-Select ถ้าเปิดอยู่
+                
+                btn.classList.add('bg-pink-100', 'ring-2', 'ring-pink-300');
+                showToast("🔧 เปิดโหมดแก้ไข: จิ้มที่พื้นที่หรือเส้นทางที่ต้องการแก้เส้นได้เลย");
+                map.closePopup(); 
+            } else {
+                // --- ปิดใช้งาน (บันทึก) ---
+                if (window.editingLayer) {
+                    window.editingLayer.editing.disable(); // ปิดการแก้ไขบนแผนที่
+                    
+                    // บันทึกลง Firebase
+                    try {
+                        const geoJson = JSON.stringify(window.editingLayer.toGeoJSON());
+                        const docRef = doc(getEntityCollectionRef(), window.editingLayer.options.entityId);
+                        await setDoc(docRef, { geoJson: geoJson }, { merge: true });
+                        showToast("บันทึกรูปทรงเรียบร้อย ✅");
+                    } catch(e) {
+                        console.error(e);
+                        showToast("เกิดข้อผิดพลาดในการบันทึก");
+                    }
+                }
+                
+                // Clear state and re-render the map to ensure all layers are in normal mode
+                window.editingLayer = null;
+                window.editingLayerId = null;
+                renderMap();
+
+                btn.classList.remove('bg-pink-100', 'ring-2', 'ring-pink-300');
+                showToast("ปิดโหมดแก้ไข");
+            }
+        };
+        
+        function updateParentSelect(rank) {
+            const s = document.getElementById('inp-parent'); s.innerHTML = '<option value="">-- เป็นอิสระ --</option>';
+            entities.filter(e => getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value="${p.id}\">${p.name}</option>`);
+        }
         function getRank(id) { return HIERARCHY.find(x=>x.id===id)?.rank || 0; }
         function getHierarchyName(id) { return HIERARCHY.find(x=>x.id===id)?.name || id; }
-        document.getElementById('inp-flag').onchange = (e) => { /* ... unchanged ... */ }
-        
-        // --- NEW: Open Sub Region Manager Logic (Added promotion checks) ---
-        window.openSubRegionManager = (parentId) => {
-            const parentEnt = entities.find(e => e.id === parentId);
-            // Only show main layers as children for clarity in the list
-            const children = entities.filter(e => e.parentId === parentId && !e.isWater && !e.isSubLayer).sort((a,b) => a.name.localeCompare(b.name));
-            
-            document.getElementById('sub-region-parent-id').value = parentId;
-            document.getElementById('sub-region-parent-name').innerText = parentEnt.name;
 
-            const listContainer = document.getElementById('sub-region-list');
-            listContainer.innerHTML = '';
-
-            if (children.length === 0) {
-                listContainer.innerHTML = '<div class="text-center text-gray-400 p-4">ไม่มีเขตย่อยในสังกัด</div>';
-                document.getElementById('transfer-child-select').innerHTML = '<option value="">-- ไม่มีเขตย่อย --</option>';
-            } else {
-                let childOptions = '<option value="">-- เลือกเขตย่อย --</option>';
-                children.forEach(c => {
-                    // Check if this child itself has sub-layers (from fusion)
-                    const isFused = entities.some(e => e.parentId === c.id && e.isSubLayer);
-                    
-                    listContainer.innerHTML += `
-                        <div class="flex justify-between items-center p-2 rounded-lg bg-white shadow-sm border border-gray-100">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full" style="background-color:${c.color}"></span>
-                                <span class="font-bold text-sm">${c.name}</span>
-                                <span class="text-xs text-gray-500">(${getHierarchyName(c.level)})</span>
-                                ${isFused ? '<span class="text-[10px] text-purple-500 font-bold ml-1"> (Fusion)</span>' : ''}
-                            </div>
-                            <button onclick="window.confirmDelete('${c.id}')" class="text-red-400 hover:text-red-600"><span class="material-icons-round text-sm">delete</span></button>
-                        </div>
-                    `;
-                    childOptions += `<option value="${c.id}">${c.name} (${getHierarchyName(c.level)})</option>`;
-                });
-                document.getElementById('transfer-child-select').innerHTML = childOptions;
+        document.getElementById('inp-flag').onchange = (e) => {
+            if(e.target.files[0]) {
+                const r = new FileReader(); r.onload = (ev) => { 
+                    document.getElementById('preview-flag').src = ev.target.result; 
+                    document.getElementById('preview-flag').classList.remove('hidden');
+                    document.getElementById('preview-flag-placeholder').classList.add('hidden');
+                }; r.readAsDataURL(e.target.files[0]);
             }
-
-            // Setup Target Selector (All areas with higher rank)
-            const targetSelect = document.getElementById('transfer-target-select');
-            targetSelect.innerHTML = '<option value="">-- เลือกเขตแม่ปลายทาง --</option>';
-            const currentRank = getRank(parentEnt.level);
-            
-            entities.filter(e => getRank(e.level) > currentRank && !e.isWater && e.id !== parentId).forEach(p => {
-                 targetSelect.innerHTML += `<option value="${p.id}">${p.name} (${getHierarchyName(p.level)})</option>`;
-            });
-            
-            // Check for special promotions and render buttons
-            checkSpecialPromotions(parentId);
-
-            document.getElementById('modal-sub-regions').classList.remove('hidden');
         }
-
-        window.executeTransfer = async () => { /* ... unchanged ... */ }
     </script>
 </body>
 </html>
