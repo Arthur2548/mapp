@@ -1088,14 +1088,14 @@
             map.on(L.Draw.Event.CREATED, onDrawCreated);
             map.on(L.Draw.Event.EDITED, onDrawEdited);
             
-            editHandler = new L.EditToolbar.Edit(map, {
-        featureGroup: drawnItems,
-        selectedPathOptions: {
-            dashArray: '10, 10',
-            fill: true,
-            fillColor: '#fe57a1', // สีชมพูขณะแก้ไข
-            fillOpacity: 0.1,
-            maintainColor: false
+           new L.EditToolbar.Edit(map, {
+    featureGroup: drawnItems,
+    selectedPathOptions: {
+        dashArray: '10, 10',
+        fill: true,
+        fillColor: '#fe57a1',
+        fillOpacity: 0.1,
+        maintainColor: false
         }
     });
         }
