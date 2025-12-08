@@ -485,6 +485,11 @@
         .cesium-viewer-animationContainer { display: none !important; }
         .cesium-viewer-timelineContainer { display: none !important; }
 
+        /* Fix for Popups in Edit Mode (Disable pointer events on Map when in edit mode) */
+        .leaflet-editing {
+            cursor: default !important; /* Reset cursor when handles are active */
+        }
+        
     </style>
 </head>
 <body class="mode-2d">
@@ -954,10 +959,13 @@
         // Globals
         let db, auth, userId;
         let map, drawnItems; // Leaflet
-        let editHandler = null;
+        let viewer; // Cesium
+        
+        // ** NEW GLOBALS FOR EDIT MODE **
         let isEditMode = false;     // เช็คว่ากดปุ่มแก้ไขอยู่ไหม
         let editingLayer = null;    // เก็บว่ากำลังแก้ไข Layer ไหนอยู่
-        let viewer; // Cesium
+        // ********************************
+
         let entities = []; 
         let currentDrawLayer = null;
         let mapLayers = {};
@@ -1088,16 +1096,17 @@
             map.on(L.Draw.Event.CREATED, onDrawCreated);
             map.on(L.Draw.Event.EDITED, onDrawEdited);
             
+           // โค้ดส่วนนี้สำคัญมาก เพื่อให้ Leaflet Draw ผสมคุณสมบัติ .editing ให้ Layer ใน drawnItems
            new L.EditToolbar.Edit(map, {
-    featureGroup: drawnItems,
-    selectedPathOptions: {
-        dashArray: '10, 10',
-        fill: true,
-        fillColor: '#fe57a1',
-        fillOpacity: 0.1,
-        maintainColor: false
-        }
-    });
+                featureGroup: drawnItems,
+                selectedPathOptions: {
+                    dashArray: '10, 10',
+                    fill: true,
+                    fillColor: '#fe57a1',
+                    fillOpacity: 0.1,
+                    maintainColor: false
+                }
+            });
         }
 
         // --- Cesium Setup (3D) ---
@@ -1602,7 +1611,7 @@
             });
         }
 
-        // --- Leaflet Rendering Logic (UPDATED FOR MULTI-SELECT) ---
+        // --- Leaflet Rendering Logic (UPDATED FOR EDIT MODE FIX) ---
         function renderMap() {
             if(!map || !drawnItems) return;
             drawnItems.clearLayers();
@@ -1661,44 +1670,50 @@
                             dashArray: isSelected ? '8, 8' : (ent.isColony ? '5, 10' : null)
                         },
                          onEachFeature: (f, l) => {
-                        l.options.entityId = ent.id;
+                            l.options.entityId = ent.id;
 
-                     // --- เริ่มชุดคำสั่งคลิกแบบใหม่ ---
-                          l.on('click', async (e) => {
-                          L.DomEvent.stopPropagation(e);
-                          L.DomEvent.preventDefault(e);
+                            // *** โค้ดที่ได้รับการแก้ไข: จัดการการคลิกใหม่ทั้งหมด ***
+                            l.on('click', async (e) => {
+                                L.DomEvent.stopPropagation(e); // สำคัญ: หยุดการกระจาย Event เพื่อไม่ให้เกิด Popup ซ้อน
+                                L.DomEvent.preventDefault(e);
 
-                 // กรณี 1: โหมดแก้ไข (Click to Edit)
-                    if (window.isEditMode) {
-                    if (ent.type !== 'area' && ent.type !== 'road') return;
+                                // กรณี 1: โหมดแก้ไข (Click to Edit)
+                                if (window.isEditMode) {
+                                    // แก้ไขได้เฉพาะ Area (Polygon) และ Road (Polyline)
+                                    if (ent.type !== 'area' && ent.type !== 'road') return;
 
-                     // ถ้ามีตัวอื่นแก้ค้างอยู่ ให้บันทึกตัวนั้นก่อน
-                   if (window.editingLayer && window.editingLayer !== l) {
-                       window.editingLayer.editing.disable();
-                const oldRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
-                setDoc(oldRef, { geoJson: JSON.stringify(window.editingLayer.toGeoJSON()) }, { merge: true });
-            }
+                                    // ถ้ามี Layer อื่นกำลังถูกแก้อยู่ ให้ปิดการแก้ไขตัวนั้นและบันทึกก่อน
+                                    if (window.editingLayer && window.editingLayer !== l) {
+                                        window.editingLayer.editing.disable();
+                                        const oldRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
+                                        setDoc(oldRef, { geoJson: JSON.stringify(window.editingLayer.toGeoJSON()) }, { merge: true });
+                                    }
 
-            // เริ่มแก้ไขตัวปัจจุบัน
-            l.editing.enable();
-            window.editingLayer = l;
-            showToast(`กำลังแก้ไข: ${ent.name}`);
-            return;
-        }
+                                    // ปิด Popup ที่อาจเปิดอยู่
+                                    map.closePopup();
 
-        // กรณี 2: โหมดเลือกหลายอัน (Multi-Select)
-        if (isMultiSelectMode && ent.type === 'area' && !ent.isWater) {
-            if (selectedIds.has(ent.id)) selectedIds.delete(ent.id);
-            else selectedIds.add(ent.id);
-            updateSelectionUI();
-            renderMap();
-            return;
-        }
+                                    // เปิดใช้งานการแก้ไข Layer ที่คลิก
+                                    l.editing.enable();
+                                    window.editingLayer = l;
+                                    showToast(`กำลังแก้ไข: ${ent.name}`);
+                                    return; // ออกจากฟังก์ชัน ไม่ต้องไปเรียกเงื่อนไขอื่น
+                                }
 
-        // กรณี 3: ปกติ (แสดง Popup)
-        l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext)).openPopup();
-    });
-                            // *******************************
+                                // กรณี 2: โหมดเลือกหลายอัน (Multi-Select เดิม)
+                                if (isMultiSelectMode && ent.type === 'area' && !ent.isWater) {
+                                    if (selectedIds.has(ent.id)) selectedIds.delete(ent.id);
+                                    else selectedIds.add(ent.id);
+                                    updateSelectionUI();
+                                    renderMap();
+                                    return;
+                                }
+
+                                // กรณี 3: โหมดปกติ (แสดง Popup Info)
+                                // ถ้าไม่เข้าโหมด 1 หรือ 2 ให้แสดง Popup
+                                l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext)).openPopup();
+                            });
+                            // *******************************************************
+
 
                             if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
                                 const center = l.getBounds().getCenter();
@@ -1717,10 +1732,7 @@
                                 drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
                             }
                             
-                            // Only bind popup if not in selection mode (handled implicitly by stopPropagation above, but good to keep cleaner)
-                            if (!isMultiSelectMode) {
-                                l.bindPopup(createPopupContent(ent, visuals.fillColor, visuals.colorContext));
-                            }
+                            // ⚠️ โค้ดเดิมที่ bind Popup นอก l.on('click') ถูกลบออกไปแล้ว
                         }
                     }).addTo(drawnItems);
 
@@ -2367,40 +2379,52 @@
         window.executePendingConfirm = async () => { if(pendingConfirmAction) await pendingConfirmAction(); closeModal('modal-confirm'); }
         
         window.toggleEditGeometry = async () => {
-    const btn = document.getElementById('btn-edit-geom');
-    isEditMode = !isEditMode; // สลับสถานะ เปิด/ปิด
-
-    if (isEditMode) {
-        // --- เปิดใช้งาน ---
-        if(document.getElementById('draw-submenu').classList.contains('active')) window.toggleDrawMenu();
-        
-        btn.classList.add('bg-pink-100', 'ring-2', 'ring-pink-300');
-        showToast("🔧 เปิดโหมดแก้ไข: จิ้มที่พื้นที่ที่ต้องการแก้เส้นได้เลย");
-    } else {
-        // --- ปิดใช้งาน (บันทึก) ---
-        if (window.editingLayer) {
-            window.editingLayer.editing.disable(); // ปิดการแก้ไขบนแผนที่
-            
-            // บันทึกลง Firebase
-            try {
-                const geoJson = JSON.stringify(window.editingLayer.toGeoJSON());
-                const docRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
-                await setDoc(docRef, { geoJson: geoJson }, { merge: true });
-                showToast("บันทึกเรียบร้อย ✅");
-            } catch(e) {
-                console.error(e);
-                showToast("เกิดข้อผิดพลาดในการบันทึก");
+            // 1. ตรวจสอบว่ามีพื้นที่ให้แก้ไขไหม
+            const hasLayers = entities.some(e => e.type === 'area' || e.type === 'road');
+            if (!hasLayers) {
+                showConfirmModal("ไม่พบพื้นที่", "กรุณาสร้างอาณาจักรหรือเส้นทางก่อนใช้งานโหมดแก้ไข", null, true);
+                return;
             }
-            window.editingLayer = null;
-        }
+            
+            const btn = document.getElementById('btn-edit-geom');
+            isEditMode = !isEditMode; // สลับสถานะ เปิด/ปิด
 
-        btn.classList.remove('bg-pink-100', 'ring-2', 'ring-pink-300');
-        showToast("ปิดโหมดแก้ไข");
-    }
-};
+            if (isEditMode) {
+                // --- เปิดใช้งาน ---
+                if(document.getElementById('draw-submenu').classList.contains('active')) window.toggleDrawMenu();
+                
+                btn.classList.add('bg-pink-100', 'ring-2', 'ring-pink-300');
+                showToast("🔧 เปิดโหมดแก้ไข: จิ้มที่พื้นที่ที่ต้องการแก้เส้นได้เลย");
+                // ปิดการคลิก 2D Map เพื่อป้องกันการซ้อนทับ (Leaflet Map Click)
+                map.off('click');
+            } else {
+                // --- ปิดใช้งาน (บันทึก) ---
+                if (window.editingLayer) {
+                    window.editingLayer.editing.disable(); // ปิดการแก้ไขบนแผนที่
+                    
+                    // บันทึกลง Firebase
+                    try {
+                        const geoJson = JSON.stringify(window.editingLayer.toGeoJSON());
+                        const docRef = doc(db, 'artifacts', appId, 'users', window.userId, 'fantasy_empires', window.editingLayer.options.entityId);
+                        await setDoc(docRef, { geoJson: geoJson }, { merge: true });
+                        showToast("บันทึกเรียบร้อย ✅");
+                    } catch(e) {
+                        console.error(e);
+                        showToast("เกิดข้อผิดพลาดในการบันทึก");
+                    }
+                    window.editingLayer = null;
+                }
+
+                btn.classList.remove('bg-pink-100', 'ring-2', 'ring-pink-300');
+                showToast("ปิดโหมดแก้ไข");
+                // คืนค่าคลิก 2D Map (ถ้ามี)
+                map.on('click', () => { /* Handle default map click if needed */ });
+            }
+        };
+        
         function updateParentSelect(rank) {
             const s = document.getElementById('inp-parent'); s.innerHTML = '<option value="">-- เป็นอิสระ --</option>';
-            entities.filter(e => getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+            entities.filter(e => getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value="${p.id}\">${p.name}</option>`);
         }
         function getRank(id) { return HIERARCHY.find(x=>x.id===id)?.rank || 0; }
         function getHierarchyName(id) { return HIERARCHY.find(x=>x.id===id)?.name || id; }
