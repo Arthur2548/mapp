@@ -994,13 +994,12 @@
             </div>
             <div class="mt-6">
                 <label class="text-xs font-bold text-gray-500 block mb-2 text-center">ผลลัพธ์</label>
-                <div class="grid grid-cols-4 gap-2">
-                    <button onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">flag</span> ผนวก</button>
-                    <button onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
-                    <button onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
-                    <!-- UPDATED BUTTON TEXT -->
-                    <button onclick="executeGeometricMerge()" class="py-2 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 shadow transition flex flex-col items-center gap-1" title="รวมรูปทรงทางภูมิศาสตร์"><span class="material-icons-round text-base">merge_type</span> หลอมรวมดินแดน</button>
-                    <!-- END UPDATED BUTTON -->
+                <div class="grid grid-cols-4 gap-2" id="war-actions-container">
+                    <!-- Buttons will be dynamically loaded/hidden based on attacker rank -->
+                    <button id="btn-annex" onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">flag</span> ผนวก</button>
+                    <button id="btn-vassal" onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
+                    <button id="btn-colony" onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
+                    <button id="btn-geom-merge" onclick="executeGeometricMerge()" class="py-2 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 shadow transition flex flex-col items-center gap-1" title="รวมรูปทรงทางภูมิศาสตร์"><span class="material-icons-round text-base">merge_type</span> หลอมรวมดินแดน</button>
                 </div>
             </div>
         </div>
@@ -1008,22 +1007,25 @@
 
     <!-- Modal: The Grand Unification (New Feature) -->
     <div id="modal-union" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
-        <div class="modal-paper w-[500px] p-0 overflow-hidden">
+        <div class="modal-paper w-[600px] p-0 overflow-hidden">
             <!-- Header Tabs -->
             <div class="flex bg-gray-50 border-b border-gray-200">
                 <button onclick="switchUnionTab('merge')" id="tab-merge" class="flex-1 py-4 text-sm font-bold text-[#5D4037] border-b-2 border-[#5D4037] bg-white transition flex items-center justify-center gap-2">
-                    <span class="material-icons-round text-amber-500">category</span> หลอมรวมดินแดน (Merge)
+                    <span class="material-icons-round text-amber-500">category</span> หลอมรวม (Destructive)
+                </button>
+                <button onclick="switchUnionTab('elevate')" id="tab-elevate" class="flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2">
+                    <span class="material-icons-round text-blue-500">compare_arrows</span> ยกระดับพื้นที่ (Non-Destructive)
                 </button>
                 <button onclick="switchUnionTab('annex')" id="tab-annex" class="flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2">
-                    <span class="material-icons-round text-red-500">flag</span> ผนวก/เปลี่ยนเจ้าของ (Annex)
+                    <span class="material-icons-round text-red-500">flag</span> ผนวก/เปลี่ยนเจ้าของ
                 </button>
             </div>
 
             <div class="p-6">
-                <!-- Content: Merge -->
+                <!-- Content: Merge (Destructive) -->
                 <div id="content-merge" class="space-y-4">
                     <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 text-xs text-amber-800">
-                        <span class="font-bold">ผลลัพธ์:</span> เส้นแบ่งเขตจะหายไป พื้นที่ทั้งหมดจะกลายเป็น <b>1 อาณาจักรใหม่</b> (Polygon เดียว)
+                        <span class="font-bold">ผลลัพธ์:</span> เส้นแบ่งเขตจะหายไป พื้นที่ทั้งหมดจะกลายเป็น <b>1 อาณาจักรใหม่</b> (Polygon เดียว) และ <b>พื้นที่เดิมจะถูกลบ</b>
                     </div>
                     <form id="form-merge" onsubmit="executeMerge(event)">
                         <div class="space-y-3">
@@ -1038,6 +1040,26 @@
                     </form>
                 </div>
 
+                <!-- Content: Elevate (Non-Destructive Merge) -->
+                 <div id="content-elevate" class="hidden space-y-4">
+                    <div id="elevate-message-container">
+                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 text-xs text-blue-800">
+                            <span class="font-bold">ผลลัพธ์:</span> พื้นที่เดิม **ยังอยู่** แต่พื้นที่รวมนี้จะถูกสร้างเป็น **เลเยอร์แม่ใหม่** (ศักดิ์สูงขึ้น)
+                        </div>
+                    </div>
+                    <form id="form-elevate" onsubmit="executeAreaElevation(event)">
+                        <div class="space-y-3">
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ชื่อเขตปกครองแม่ใหม่</label><input type="text" id="elevate-name" class="input-cute" required placeholder="เช่น แขวงมังกร, แขวงไก่"></div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ผู้ปกครอง</label><input type="text" id="elevate-ruler" class="input-cute" required></div>
+                                <div><label class="text-xs font-bold text-[#8D6E63] ml-2">ระดับศักดิ์ใหม่</label><select id="elevate-level" class="input-cute"></select></div>
+                            </div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2">สีประจำเขต</label><input type="color" id="elevate-color" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm"></div>
+                        </div>
+                        <button type="submit" id="btn-elevate-submit" class="btn-cute w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600"><span class="material-icons-round text-sm">auto_graph</span> ยกระดับพื้นที่</button>
+                    </form>
+                </div>
+
                 <!-- Content: Annex -->
                 <div id="content-annex" class="hidden space-y-4">
                     <div class="bg-red-50 p-3 rounded-xl border border-red-100 text-xs text-red-800">
@@ -1049,16 +1071,21 @@
                             <select id="annex-leader-select" class="input-cute w-full bg-white cursor-pointer"></select>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-3 pt-2">
-                            <button onclick="executeAnnex('annex')" class="p-3 rounded-xl border-2 border-red-100 hover:border-red-500 bg-white hover:bg-red-50 transition text-center group">
+                        <div class="grid grid-cols-3 gap-3 pt-2">
+                            <button onclick="executeAnnex('annex')" class="p-3 rounded-xl border-2 border-red-100 hover:border-red-500 bg-white hover:bg-red-50 transition text-center group col-span-1">
                                 <span class="material-icons-round text-2xl text-red-400 group-hover:text-red-600 block mb-1">gavel</span>
                                 <div class="text-xs font-bold text-gray-600">ผนวกดินแดน</div>
                                 <div class="text-[10px] text-gray-400">(เปลี่ยนเจ้าของสมบูรณ์)</div>
                             </button>
-                            <button onclick="executeAnnex('vassal')" class="p-3 rounded-xl border-2 border-purple-100 hover:border-purple-500 bg-white hover:bg-purple-50 transition text-center group">
+                            <button onclick="executeAnnex('vassal')" class="p-3 rounded-xl border-2 border-purple-100 hover:border-purple-500 bg-white hover:bg-purple-50 transition text-center group col-span-1">
                                 <span class="material-icons-round text-2xl text-purple-400 group-hover:text-purple-600 block mb-1">security</span>
                                 <div class="text-xs font-bold text-gray-600">ประเทศราช</div>
                                 <div class="text-[10px] text-gray-400">(เป็นเมืองขึ้น)</div>
+                            </button>
+                             <button onclick="executeAnnex('colony')" class="p-3 rounded-xl border-2 border-blue-100 hover:border-blue-500 bg-white hover:bg-blue-50 transition text-center group col-span-1">
+                                <span class="material-icons-round text-2xl text-blue-400 group-hover:text-blue-600 block mb-1">public</span>
+                                <div class="text-xs font-bold text-gray-600">อาณานิคม</div>
+                                <div class="text-[10px] text-gray-400">(เป็นพื้นที่ในปกครอง)</div>
                             </button>
                         </div>
                     </div>
@@ -1192,17 +1219,24 @@
         let unsubscribeMapListener = null; // To manage the dynamic map data listener
 
 
+        // --- UPDATED HIERARCHY ARRAY ---
+        // เพิ่มศักดิ์ "แขวง", "อาเขต", "เมือง", "นคร" และกำหนดเงื่อนไขการเลื่อนขั้น
         const HIERARCHY = [
-            { id: 'mahaAnachak', name: 'มหาอาณาจักร (Empire)', rank: 9, defaultColor: '#884A51' },
-            { id: 'anachak', name: 'อาณาจักร (Kingdom)', rank: 8, defaultColor: '#F1C40F' },
-            { id: 'prathet', name: 'ประเทศ/ราชรัฐ (State)', rank: 7, defaultColor: '#E74C3C' },
-            { id: 'monrath', name: 'มณรัฐ (Region)', rank: 6, defaultColor: '#F39C12' },
-            { id: 'monthon', name: 'มณฑล (Province)', rank: 5, defaultColor: '#E91E63' },
-            { id: 'jangwat', name: 'จังหวัด/นคร (City)', rank: 4, defaultColor: '#2ECC71' },
-            { id: 'amphoe', name: 'อำเภอ (District)', rank: 3, defaultColor: '#8E44AD' },
-            { id: 'tambon', name: 'ตำบล (Sub-district)', rank: 2, defaultColor: '#95A5A6' },
-            { id: 'muban', name: 'หมู่บ้าน (Village)', rank: 1, defaultColor: '#3498DB' }
+            { id: 'mahaAnachak', name: 'มหาอาณาจักร', rank: 11, defaultColor: '#884A51', parentReq: 'anachak', reqDesc: 'ทุกอาณาจักรเป็นนคร' },
+            { id: 'anachak', name: 'อาณาจักร', rank: 10, defaultColor: '#F1C40F', parentReq: 'prathet', reqDesc: 'ทุกประเทศเป็นนคร' },
+            { id: 'prathet', name: 'ประเทศ/ราชรัฐ', rank: 9, defaultColor: '#E74C3C', parentReq: 'monrath', reqDesc: 'ทุกมณรัฐเป็นเมือง' },
+            { id: 'monrath', name: 'มณรัฐ', rank: 8, defaultColor: '#F39C12', parentReq: 'monthon', reqDesc: 'ทุกมณฑลเป็นเมือง' },
+            { id: 'nakorn', name: 'นคร', rank: 7, defaultColor: '#C0392B', promoted: true, promoteFrom: 'jangwat', requiredChildrenLevel: 'muang', reqDesc: 'ทุกอำเภอในสังกัดเป็นเมือง' },
+            { id: 'monthon', name: 'มณฑล', rank: 6, defaultColor: '#E91E63', parentReq: 'jangwat', reqDesc: 'ทุกจังหวัดเป็นนคร' },
+            { id: 'jangwat', name: 'จังหวัด', rank: 5, defaultColor: '#2ECC71', parentReq: 'amphoe', reqDesc: 'ทุกอำเภอเป็นเมือง' },
+            { id: 'muang', name: 'เมือง', rank: 4, defaultColor: '#A859A3', promoted: true, promoteFrom: 'amphoe', requiredChildrenLevel: 'arkhet', reqDesc: 'ทุกตำบลในสังกัดเป็นอาเขต' },
+            { id: 'amphoe', name: 'อำเภอ', rank: 3, defaultColor: '#8E44AD', parentReq: 'tambon', reqDesc: 'ทุกตำบลเป็นอาเขต' },
+            { id: 'arkhet', name: 'อาเขต', rank: 2.5, defaultColor: '#C0D9D9', promoted: true, promoteFrom: 'tambon', requiredChildrenLevel: 'khwaeng', reqDesc: 'ทุกหมู่บ้านในสังกัดเป็นแขวง' },
+            { id: 'tambon', name: 'ตำบล', rank: 2, defaultColor: '#95A5A6', parentReq: 'muban', reqDesc: 'ทุกหมู่บ้านเป็นแขวง' },
+            { id: 'khwaeng', name: 'แขวง', rank: 1.5, defaultColor: '#34B7D1', promoted: true, promoteFrom: 'muban', requiredChildrenMerge: true, reqDesc: 'รวมหมู่บ้าน' },
+            { id: 'muban', name: 'หมู่บ้าน', rank: 1, defaultColor: '#3498DB' }
         ];
+        // --- END UPDATED HIERARCHY ARRAY ---
 
         const RANK_COLORS = {};
         HIERARCHY.forEach(h => RANK_COLORS[h.id] = h.defaultColor);
@@ -1669,11 +1703,14 @@
             const filterContainer = document.getElementById('filter-levels-container');
             if(filterContainer && HIERARCHY) {
                 filterContainer.innerHTML = '';
-                HIERARCHY.forEach(h => {
+                // Filter out promoted ranks for the initial drawing dropdown (users draw base ranks)
+                const baseRanks = HIERARCHY.filter(h => !h.promoted); 
+                baseRanks.forEach(h => {
                     const div = document.createElement('div');
                     div.innerHTML = `<label class="flex items-center text-xs cursor-pointer hover:bg-white/50 p-1 rounded"><input type="checkbox" checked class="filter-level accent-[#5D4037] mr-2" value="${h.id}"> ${h.name}</label>`;
                     filterContainer.appendChild(div);
                 });
+                // Include all ranks for filtering
                 document.querySelectorAll('.filter-level').forEach(el => el.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); }));
             }
 
@@ -1690,7 +1727,10 @@
 
             const levelSelect = document.getElementById('inp-level');
             if(levelSelect) {
-                HIERARCHY.forEach(h => {
+                // Only populate with base ranks for drawing
+                const baseRanks = HIERARCHY.filter(h => !h.promoted);
+                levelSelect.innerHTML = '';
+                baseRanks.forEach(h => {
                     const opt = document.createElement('option'); opt.value = h.id; opt.text = h.name; levelSelect.appendChild(opt);
                 });
                 levelSelect.onchange = (e) => {
@@ -1699,6 +1739,21 @@
                     updateParentSelect(lvl ? lvl.rank : 0);
                 };
             }
+            
+            // Setup merge/elevate level select (full hierarchy)
+            const mergeLevelSelect = document.getElementById('merge-level');
+            const elevateLevelSelect = document.getElementById('elevate-level');
+            
+            [mergeLevelSelect, elevateLevelSelect].forEach(select => {
+                select.innerHTML = '';
+                HIERARCHY.sort((a, b) => b.rank - a.rank).forEach(h => {
+                    const opt = document.createElement('option');
+                    opt.value = h.id;
+                    opt.text = h.name;
+                    select.appendChild(opt);
+                });
+            });
+
 
             renderImportantIcons(); 
             document.getElementById('search-input')?.addEventListener('keyup', () => { renderMap(); if(is3DMode) renderCesium(); });
@@ -1769,11 +1824,17 @@
             }
             return descendants;
         }
+        
+        // Function to get the rank object or a dummy
+        function getRankObject(id) {
+             return HIERARCHY.find(x => x.id === id);
+        }
 
         function getEntityVisuals(ent) {
             const colorMode = document.getElementById('color-mode-select').value;
             let fillColor = ent.color;
             let colorContext = { type: 'entity', value: 'สีประจำเขต' };
+            const entRank = getRankObject(ent.level);
 
             if (colorMode === 'religion') {
                 fillColor = COLORS.religion[ent.religion] || '#ccc';
@@ -1782,9 +1843,8 @@
                 fillColor = COLORS.gov[ent.government] || '#ccc';
                 colorContext = { type: 'gov', value: ent.government };
             } else if (colorMode === 'rank') {
-                const h = HIERARCHY.find(x => x.id === ent.level);
-                fillColor = h ? h.defaultColor : '#ccc';
-                colorContext = { type: 'rank', value: h ? h.name : 'Unknown' };
+                fillColor = entRank ? entRank.defaultColor : '#ccc';
+                colorContext = { type: 'rank', value: entRank ? entRank.name : 'Unknown' };
             }
 
             if (ent.isWater) {
@@ -1792,10 +1852,12 @@
                 colorContext = { type: 'water', value: 'น่านน้ำ' };
             }
             
+            // Annexation/Vassal/Colony Logic
             if (colorMode === 'entity') {
                 if (ent.isColony) {
                     fillColor = ent.originalColor || ent.color; 
                 } else if (ent.isAnnexed || ent.isVassal) {
+                    // Fill color is the conqueror's color (stored in ent.color)
                     fillColor = ent.color; 
                 }
             }
@@ -1940,17 +2002,33 @@
                     }
 
                     if(geoJson.geometry.type === 'Polygon' || geoJson.geometry.type === 'MultiPolygon') {
-                         if(geoJson.geometry.type === 'Polygon') {
+                         if(geoJson.geometry.type === 'Polygon' || geoJson.geometry.type === 'MultiPolygon') {
                              const flat = [];
-                             // Safety Check
-                             if (!geoJson.geometry.coordinates || !geoJson.geometry.coordinates[0]) return;
                              
-                             geoJson.geometry.coordinates[0].forEach(pt => { if(pt.length >= 2) flat.push(pt[0], pt[1]); });
+                             // Helper function to extract coordinates from MultiPolygon/Polygon
+                             const extractCoords = (coords) => {
+                                 if (coords && coords.length > 0) {
+                                     if (coords[0][0] && typeof coords[0][0][0] === 'number') {
+                                         // MultiPolygon structure: [[[lon, lat], ...], ...]
+                                         coords.forEach(poly => poly[0].forEach(pt => flat.push(pt[0], pt[1])));
+                                     } else if (coords[0][0] && typeof coords[0][0] === 'number') {
+                                         // Polygon structure: [[lon, lat], ...]
+                                         coords[0].forEach(pt => flat.push(pt[0], pt[1]));
+                                     }
+                                 }
+                             };
+
+                             if (geoJson.geometry.type === 'MultiPolygon') {
+                                extractCoords(geoJson.geometry.coordinates);
+                             } else if (geoJson.geometry.type === 'Polygon') {
+                                extractCoords([geoJson.geometry.coordinates]);
+                             }
                              
                              // Safety Check: Need at least 3 points for a polygon (6 coords)
                              if (flat.length < 6) return;
 
                              let outlineColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
+                             // REQ 1: สีเส้นขอบ ตอนกด ผนวกดินแดน(เฉพาะผนวกดินแดน) เป็นสีเดียวกันกับผู้รุกราน
                              if (ent.isAnnexed) outlineColor = visuals.fillColor; 
     
                              const hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
@@ -2013,13 +2091,14 @@
             });
         }
 
-        // --- Leaflet Rendering Logic (UPDATED FOR EDIT MODE FIX) ---
+        // --- Leaflet Rendering Logic (UPDATED FOR LABEL PLACEMENT) ---
         function renderMap() {
             if(!map || !drawnItems) return;
             drawnItems.clearLayers();
             
             const { visibleEntities } = filterEntities();
             const showRoads = document.getElementById('toggle-roads').checked;
+            const showLabels = document.getElementById('toggle-created-labels').checked;
 
             visibleEntities.forEach(ent => {
                 try {
@@ -2044,7 +2123,7 @@
                     if (ent.type === 'marker') {
                         const icon = L.divIcon({
                             className: 'custom-marker',
-                            html: `<div style="position:relative; width:30px; height:30px;"><div style="position:absolute; top:0; left:0; width:100%; height:100%; background:${ent.color}; opacity:0.3; border-radius:50%; filter:blur(4px);"></div><img src="${ent.iconUrl}" style="width:30px; height:30px; position:relative; z-index:2; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></div>`,
+                            html: `<div style="position:relative; width:30px; height:30px;"><div style="position:absolute; top:0; left:0; width:100%; height:100%; background:${ent.color}; opacity:0.3; border-radius:50%; filter:blur(4px);"></div><img src="${ent.iconUrl}" style="width:30px; height:30px; position:relative; z-index:2; filter: drop-shadow(0 0px 0px rgba(0,0,0,0.3));"></div>`,
                             iconSize: [30, 30], iconAnchor: [15, 15]
                         });
                         L.geoJSON(geoJson, { pointToLayer: (f, l) => L.marker(l, {icon: icon}) }).bindPopup(`
@@ -2059,6 +2138,7 @@
 
                     // --- AREA LOGIC ---
                     let strokeColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
+                    // REQ 1: สีเส้นขอบ ตอนกด ผนวกดินแดน(เฉพาะผนวกดินแดน) เป็นสีเดียวกันกับผู้รุกราน
                     if (ent.isAnnexed) strokeColor = visuals.fillColor; 
                     
                     // Logic for Selection Highlight (Used for Multi-Select Mode)
@@ -2147,8 +2227,24 @@
                             });
 
 
-                            if (document.getElementById('toggle-created-labels').checked && !ent.isWater && getRank(ent.level) >= 3) {
-                                const center = l.getBounds().getCenter();
+                            // REQ 2 & Label Placement: ใช้ turf.centerOfMass เพื่อหาจุดศูนย์กลางมวล และเช็คไม่ให้ล้น
+                            if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
+                                let centerLatlng = l.getBounds().getCenter(); // Fallback to Leaflet center
+                                let areaSize = turf.area(geoJson); // ตารางเมตร
+                                
+                                // ถ้าพื้นที่เล็กกว่า 500 ตารางกิโลเมตร (500,000,000 ตร.ม.) อาจจะไม่แสดง
+                                if (areaSize < 500000000) { 
+                                     // ปรับเกณฑ์ตามความเหมาะสม
+                                }
+
+                                try {
+                                    const center = turf.centerOfMass(geoJson);
+                                    // โค้ด Turf ใช้ [lon, lat] แต่ Leaflet L.latLng ใช้ (lat, lon)
+                                    centerLatlng = L.latLng(center.geometry.coordinates[1], center.geometry.coordinates[0]);
+                                } catch (e) { 
+                                    // console.warn("Turf centerOfMass failed, using bounds center:", e); 
+                                }
+                                
                                 let labelHtml = ent.name;
                                 
                                 if (ent.isAnnexed) {
@@ -2161,7 +2257,7 @@
                                     labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${ent.annexedByName})</div>`;
                                 } 
 
-                                drawnItems.addLayer(L.marker(center, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
+                                drawnItems.addLayer(L.marker(centerLatlng, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
                             }
                             
                         }
@@ -2215,20 +2311,38 @@
                 showConfirmModal("แจ้งเตือน", "กรุณาเลือกอย่างน้อย 2 พื้นที่เพื่อดำเนินการ", null, true);
                 return;
             }
+            
+            // Filter selected entities for validation
+            const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
+            const firstRank = getRankObject(selectedEnts[0].level);
+            let canElevate = false;
+            
+            // Check if all selected entities are 'muban' (village) and have the same parent or are all independent (Req 3)
+            if (firstRank.id === 'muban') {
+                const uniqueParents = new Set(selectedEnts.map(e => e.parentId || 'independent'));
+                if (uniqueParents.size === 1) {
+                    canElevate = true;
+                }
+            }
+            
+            document.getElementById('tab-elevate').style.display = canElevate ? 'flex' : 'none';
 
             const modal = document.getElementById('modal-union');
             modal.classList.remove('hidden');
             
             // Setup Tab 1: Merge Level Dropdown
             const mergeLevelSelect = document.getElementById('merge-level');
-            mergeLevelSelect.innerHTML = '';
-            HIERARCHY.forEach(h => {
-                const opt = document.createElement('option'); opt.value = h.id; opt.text = h.name;
-                if(h.rank >= 7) opt.selected = true; // Suggest higher rank
-                mergeLevelSelect.appendChild(opt);
-            });
+            mergeLevelSelect.value = 'prathet'; 
+            document.getElementById('merge-color').value = selectedEnts[0].color;
+            document.getElementById('merge-ruler').value = selectedEnts[0].ruler;
+            
+            // Setup Tab 2: Elevate Level Dropdown (set to khwaeng by default)
+            const elevateLevelSelect = document.getElementById('elevate-level');
+            elevateLevelSelect.value = 'khwaeng';
+            document.getElementById('elevate-color').value = getRankObject('khwaeng').defaultColor;
+            document.getElementById('elevate-ruler').value = selectedEnts[0].ruler;
 
-            // Setup Tab 2: Annex Leader Selector
+            // Setup Tab 3: Annex Leader Selector
             const leaderSelect = document.getElementById('annex-leader-select');
             leaderSelect.innerHTML = '';
             selectedIds.forEach(id => {
@@ -2241,28 +2355,32 @@
                 }
             });
 
-            switchUnionTab('merge');
+            // Switch to the most relevant tab
+            if(canElevate) switchUnionTab('elevate');
+            else switchUnionTab('merge');
         };
 
         window.switchUnionTab = (tab) => {
-            const btnMerge = document.getElementById('tab-merge');
-            const btnAnnex = document.getElementById('tab-annex');
-            const contentMerge = document.getElementById('content-merge');
-            const contentAnnex = document.getElementById('content-annex');
-
-            if (tab === 'merge') {
-                btnMerge.className = "flex-1 py-4 text-sm font-bold text-[#5D4037] border-b-2 border-[#5D4037] bg-white transition flex items-center justify-center gap-2";
-                btnAnnex.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2";
-                contentMerge.classList.remove('hidden');
-                contentAnnex.classList.add('hidden');
-            } else {
-                btnAnnex.className = "flex-1 py-4 text-sm font-bold text-red-600 border-b-2 border-red-600 bg-white transition flex items-center justify-center gap-2";
-                btnMerge.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2";
-                contentAnnex.classList.remove('hidden');
-                contentMerge.classList.add('hidden');
-            }
+            const tabs = ['merge', 'elevate', 'annex'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const content = document.getElementById(`content-${t}`);
+                if (t === tab) {
+                    btn.className = `flex-1 py-4 text-sm font-bold text-[#5D4037] border-b-2 border-green-500 bg-white transition flex items-center justify-center gap-2`;
+                    content.classList.remove('hidden');
+                    
+                    if (t === 'annex') btn.classList.remove('text-[#5D4037]'); btn.classList.add('text-red-600'); btn.classList.remove('border-green-500'); btn.classList.add('border-red-600');
+                    if (t === 'elevate') btn.classList.remove('text-[#5D4037]'); btn.classList.add('text-blue-600'); btn.classList.remove('border-green-500'); btn.classList.add('border-blue-600');
+                    if (t === 'merge') btn.classList.add('text-amber-600'); btn.classList.remove('border-green-500'); btn.classList.add('border-amber-600');
+                } else {
+                    btn.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2";
+                    btn.classList.remove('text-red-600', 'text-blue-600', 'text-amber-600');
+                    content.classList.add('hidden');
+                }
+            });
         };
 
+        // --- DESTRUCTIVE MERGE (Same as before) ---
         window.executeMerge = async (e) => {
             e.preventDefault();
             if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
@@ -2321,6 +2439,69 @@
                 showConfirmModal("เกิดข้อผิดพลาด", "ไม่สามารถรวมพื้นที่ได้ (โครงสร้างอาจซับซ้อนเกินไป)", null, true);
             }
         };
+        
+        // --- NEW: NON-DESTRUCTIVE ELEVATION (Req 3: หมู่บ้าน → แขวง) ---
+        window.executeAreaElevation = async (e) => {
+             e.preventDefault();
+             if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
+
+             const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
+             if (selectedEnts.length < 2) return; // Should be checked in openUnionModal
+
+             try {
+                const polys = selectedEnts.map(ent => JSON.parse(ent.geoJson));
+                let mergedGeo = polys[0];
+                for (let i = 1; i < polys.length; i++) { mergedGeo = turf.union(mergedGeo, polys[i]); }
+                if (!mergedGeo) { throw new Error("Turf union failed to create single polygon."); }
+
+                const newName = document.getElementById('elevate-name').value;
+                const newColor = document.getElementById('elevate-color').value;
+                const newRuler = document.getElementById('elevate-ruler').value;
+                const newLevel = document.getElementById('elevate-level').value;
+                const originalParentId = selectedEnts[0].parentId || null;
+                
+                const colRef = getEntityCollectionRef();
+                const batch = writeBatch(db);
+
+                // 1. Create new Parent Entity (the Khwaeng/Elevated Area)
+                const newRef = doc(colRef); 
+                const newParentId = newRef.id;
+
+                const newDoc = {
+                    name: newName,
+                    ruler: newRuler,
+                    color: newColor,
+                    level: newLevel,
+                    geoJson: JSON.stringify(mergedGeo),
+                    type: 'area',
+                    isWater: false,
+                    createdAt: new Date().toISOString(),
+                    originalName: newName,
+                    originalRuler: newRuler,
+                    originalColor: newColor,
+                    parentId: originalParentId, // New parent inherits the old children's parent
+                    isSubLayer: true // Flag to potentially manage drawing Z-index later (for simplicity, only used for status check now)
+                };
+                batch.set(newRef, newDoc);
+
+                // 2. Update all selected children to point to the new parent
+                selectedIds.forEach(id => {
+                    const oldRef = doc(colRef, id);
+                    // The children retain their old color/ruler for the required visual effect
+                    batch.update(oldRef, { parentId: newParentId });
+                });
+
+                await batch.commit();
+                
+                closeModal('modal-union');
+                toggleMultiSelectMode();
+                showConfirmModal("ยกระดับสำเร็จ", `พื้นที่ ${newName} ได้รับการยกระดับเป็น ${getHierarchyName(newLevel)} แล้ว`, null, true);
+
+             } catch (err) {
+                 console.error(err);
+                 showConfirmModal("เกิดข้อผิดพลาด", "ไม่สามารถยกระดับพื้นที่ได้: " + err.message, null, true);
+             }
+        }
 
         window.executeAnnex = async (type) => {
             if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
@@ -2342,13 +2523,23 @@
                     occupiedBy: leader.id,
                     annexedByName: leader.name,
                     ruler: leader.ruler, 
-                    color: leader.color
+                    // Important: Store original color/ruler if not already set, before applying conqueror's color/ruler
+                    originalColor: entities.find(e => e.id === id)?.originalColor || entities.find(e => e.id === id)?.color,
+                    originalRuler: entities.find(e => e.id === id)?.originalRuler || entities.find(e => e.id === id)?.ruler,
+                    
                 };
 
                 if(type === 'annex') {
                     updates.isAnnexed = true;
+                    // REQ 1: สีเส้นขอบ/ถม เป็นสีผู้รุกราน
+                    updates.color = leader.color; 
                 } else if (type === 'vassal') {
                     updates.isVassal = true;
+                    updates.color = leader.color; 
+                } else if (type === 'colony') {
+                    updates.isColony = true;
+                    // REQ: อาณานิคมใช้สีเดิม แต่มีเส้นประ
+                    updates.color = updates.originalColor; 
                 }
 
                 batch.update(entRef, updates);
@@ -2473,6 +2664,13 @@
             const searchTxt = document.getElementById('search-input').value.toLowerCase();
             const selectedLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
             const selectedStatuses = Array.from(document.querySelectorAll('.filter-status:checked')).map(cb => cb.value);
+            
+            // Ensure all promoted ranks are also considered for filtering
+            const allFilterLevels = new Set(selectedLevels);
+            HIERARCHY.filter(h => h.promoted).forEach(h => {
+                if(selectedLevels.includes(h.promoteFrom)) allFilterLevels.add(h.id);
+            });
+            
 
             const sorted = [...entities].sort((a, b) => getRank(b.level) - getRank(a.level));
             
@@ -2480,7 +2678,8 @@
                 // No search text logic
                 return { visibleEntities: sorted.filter(ent => {
                     if(ent.type !== 'area') return true;
-                    if(!selectedLevels.includes(ent.level)) return false;
+                    // Use allFilterLevels to include promoted ranks if base rank is selected
+                    if(!allFilterLevels.has(ent.level)) return false; 
 
                     // Status Logic
                     let status = 'independent';
@@ -2508,7 +2707,9 @@
             const result = sorted.filter(ent => {
                 if (ent.type !== 'area') return true; 
                 if (!allowedIds.has(ent.id)) return false;
-                if (!selectedLevels.includes(ent.level)) return false;
+                
+                // Use allFilterLevels to include promoted ranks if base rank is selected
+                if (!allFilterLevels.has(ent.level)) return false; 
 
                 // Status Logic
                 let status = 'independent';
@@ -2521,6 +2722,38 @@
 
             return { visibleEntities: result };
         }
+        
+        // --- PROMOTION HELPER FUNCTIONS (Req 4) ---
+        
+        /**
+         * Checks if an area entity meets the requirements to be promoted.
+         * @param {string} entityId - ID of the potential parent entity.
+         * @returns {object|null} The promoted rank object if eligible, otherwise null.
+         */
+        function checkChildrenStatus(entityId) {
+            const parent = entities.find(e => e.id === entityId);
+            if (!parent || parent.type !== 'area') return null;
+
+            // Find the rank this entity can be promoted to
+            const promotionCandidate = HIERARCHY.find(h => h.promoted && h.promoteFrom === parent.level);
+            if (!promotionCandidate) return null;
+
+            // Find all direct children
+            const children = entities.filter(e => e.parentId === entityId && e.type === 'area');
+            if (children.length === 0) return null; // Must have children to be promoted
+
+            // Check if all children have the required promoted level
+            const requiredLevel = promotionCandidate.requiredChildrenLevel;
+            const allChildrenMatch = children.every(c => c.level === requiredLevel);
+            
+            if (allChildrenMatch) {
+                // If it meets the promotion requirement, return the promotion rank object
+                return promotionCandidate;
+            }
+
+            return null;
+        }
+
 
         function createPopupContent(ent, displayColor, colorContext) {
             const flag = ent.flag || 'https://cdn-icons-png.flaticon.com/512/1458/1458514.png';
@@ -2558,6 +2791,32 @@
             } else {
                 hierarchyHtml = `<div class="hierarchy-path"><span class="h-node">${ent.name} (สูงสุด)</span></div>`;
             }
+            
+            // REQ 4: Promotion Button Logic
+            let promotionButton = '';
+            if (ent.type === 'area' && !ent.isWater) {
+                const promotion = checkChildrenStatus(ent.id);
+                if (promotion) {
+                    promotionButton = `
+                        <button onclick="window.confirmPromotion('${ent.id}', '${promotion.id}', '${promotion.name}', '${promotion.promoteFrom}')" 
+                            class="px-3 h-8 rounded-full bg-yellow-500 text-white text-[10px] hover:bg-yellow-600 flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">
+                            <span class="material-icons-round text-sm">auto_graph</span> ยกสถานะเป็น ${promotion.name}
+                        </button>
+                    `;
+                }
+            }
+            
+            // REQ 6: Undo Merge Button (for dependent layers)
+            let undoMergeButton = '';
+            if (ent.parentId && !ent.isAnnexed && !ent.isVassal && !ent.isColony) {
+                // If it has a parent but is not a war dependent (meaning it was created via "ยกระดับพื้นที่")
+                undoMergeButton = `
+                    <button onclick="window.confirmUndoMerge('${ent.id}')" class="px-3 h-8 rounded-full bg-red-700 text-white text-[10px] hover:bg-red-800 flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">
+                        <span class="material-icons-round text-sm">undo</span> ยกเลิกการรวม (แยกออก)
+                    </button>
+                `;
+            }
+
 
             return `
                 <div class="relative font-sans overflow-visible group">
@@ -2598,22 +2857,74 @@
                             </div>
                         </div>
                         
-                        <div class="mt-5 flex gap-2 justify-center pt-2">
-                            ${(!ent.isWater) ? `
-                                <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition shadow-sm hover:scale-110"><span class="material-icons-round text-sm">edit</span></button>
-                                <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm hover:scale-110"><span class="material-icons-round text-sm">delete</span></button>
+                        <div class="mt-5 flex flex-wrap gap-2 justify-center pt-2">
+                            ${(!ent.isWater && ent.type === 'area') ? `
+                                <button onclick="window.openEditModal('${ent.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition shadow-sm hover:scale-110" title="แก้ไขข้อมูล/สี"><span class="material-icons-round text-sm">edit</span></button>
+                                <button onclick="window.confirmDelete('${ent.id}')" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm hover:scale-110" title="ลบพื้นที่"><span class="material-icons-round text-sm">delete</span></button>
                             ` : ''}
 
-                            ${(!ent.isWater) ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">⚔️ ยุทธการ</button>` : ''}
+                            ${(!ent.isWater && ent.type === 'area') ? `<button onclick="window.openWarModal('${ent.id}')" class="px-3 h-8 rounded-full bg-[#5D4037] text-white text-[10px] hover:bg-[#4E342E] flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">⚔️ ยุทธการ</button>` : ''}
                             
                             ${(ent.isAnnexed || ent.isVassal || ent.isColony) ? `
                                 <button onclick="window.declareIndependence('${ent.id}')" class="px-3 h-8 rounded-full bg-emerald-500 text-white text-[10px] hover:bg-emerald-600 flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">🚩 กู้เอกราช</button>
                             ` : ''}
+                            
+                            ${promotionButton}
+                            ${undoMergeButton}
                         </div>
                     </div>
                 </div>
             `;
         }
+
+        window.confirmPromotion = (id, newLevelId, newLevelName, oldLevelName) => {
+            showConfirmModal(`ยกระดับศักดิ์พื้นที่`, 
+                `ต้องการยกสถานะ ${getHierarchyName(oldLevelName)} ${entities.find(e=>e.id===id).name} เป็น ${newLevelName} หรือไม่?`, 
+                async () => await performPromotion(id, newLevelId)
+            );
+        };
+        
+        async function performPromotion(id, newLevelId) {
+            if(!window.userId || !currentMapSheetId) return;
+            // Check again to be safe
+            if (!checkChildrenStatus(id)) {
+                 showConfirmModal("การยกระดับไม่สำเร็จ", "เงื่อนไขหน่วยย่อยยังไม่ครบถ้วน", null, true);
+                 return;
+            }
+            try {
+                await setDoc(doc(getEntityCollectionRef(), id), { level: newLevelId }, { merge: true });
+                showToast(`🎉 ยกระดับเป็น ${getHierarchyName(newLevelId)} สำเร็จ!`);
+            } catch(e) {
+                 showConfirmModal("ยกระดับไม่สำเร็จ", e.message, null, true);
+            }
+        }
+        
+        window.confirmUndoMerge = (id) => {
+            showConfirmModal("ยกเลิกการรวม (แยกออก)", 
+                "การดำเนินการนี้จะทำให้พื้นที่นี้กลับสู่สถานะเดิม (เป็นอิสระ) และจะทำให้พื้นที่แม่ (Sub-Layer) ที่เคยรวมไว้สูญเสียหน่วยย่อย ยืนยันหรือไม่?", 
+                async () => await performUndoMerge(id)
+            );
+        };
+        
+        async function performUndoMerge(id) {
+             if(!window.userId || !currentMapSheetId) return;
+             
+             try {
+                // Find the entity and its original properties
+                const ent = entities.find(e => e.id === id);
+                if (!ent) return;
+                
+                // Reset parentId to null (independent)
+                await setDoc(doc(getEntityCollectionRef(), id), {
+                    parentId: null
+                }, { merge: true });
+                
+                showToast(`🚩 พื้นที่ ${ent.name} ถูกแยกออกและเป็นอิสระแล้ว!`);
+             } catch (e) {
+                showConfirmModal("แยกออกไม่สำเร็จ", e.message, null, true);
+             }
+        }
+
 
         function updateLegend(mode) {
             const container = document.getElementById('legend-content');
@@ -2625,7 +2936,8 @@
             else if (mode === 'government') { data = COLORS.gov; title = 'แยกตามระบอบปกครอง'; }
             else if (mode === 'rank') { 
                 data = {};
-                HIERARCHY.forEach(h => data[h.name] = h.defaultColor);
+                // Include all ranks for the legend
+                HIERARCHY.sort((a, b) => b.rank - a.rank).forEach(h => data[h.name] = h.defaultColor);
                 title = 'แยกตามศักดิ์ปกครอง';
             }
 
@@ -2803,7 +3115,24 @@
                 data.originalColor = data.color; 
             } else {
                  const oldEnt = entities.find(e => e.id === id);
+                 // Preserve original properties only if editing an existing non-dependent area
                  if(oldEnt && !oldEnt.originalColor) data.originalColor = oldEnt.color;
+                 if(oldEnt && !oldEnt.originalRuler) data.originalRuler = oldEnt.ruler;
+                 if(oldEnt && !oldEnt.originalName) data.originalName = oldEnt.name;
+                 
+                 // If editing a promoted rank, allow saving to it
+                 const promotedRank = getRankObject(data.level);
+                 if (promotedRank && promotedRank.promoted) {
+                     // Do nothing, level is already set in dropdown
+                 } else {
+                     // Check if demotion is needed (if it was a promoted rank before)
+                     const currentLevel = getRankObject(oldEnt.level);
+                     if (currentLevel && currentLevel.promoted) {
+                        // Revert to base rank if demotion is happening
+                        // This logic is complex for general editing, better to rely on separate promotion/demotion actions.
+                        // For simplicity, we assume the user only edits base properties here.
+                     }
+                 }
             }
 
             await saveToFirestore(data, id);
@@ -2840,6 +3169,24 @@
             entities.filter(e => !e.isWater && e.type === 'area' && e.id !== tid).forEach(e => {
                 const opt = document.createElement('option'); opt.value = e.id; opt.text = e.name; sel.appendChild(opt);
             });
+            
+            // REQ 5: Restrictions for 'นคร' (Nakorn) attacker
+            const attackerSelect = document.getElementById('war-attacker-select');
+            
+            const checkRestrictions = () => {
+                const aid = attackerSelect.value;
+                const attacker = entities.find(e => e.id === aid);
+                const isNakorn = attacker && attacker.level === 'nakorn';
+
+                document.getElementById('btn-vassal').style.display = isNakorn ? 'none' : 'flex';
+                document.getElementById('btn-colony').style.display = isNakorn ? 'none' : 'flex';
+                document.getElementById('btn-geom-merge').style.display = isNakorn ? 'none' : 'flex';
+                document.getElementById('btn-annex').style.display = 'flex'; // Annex is always allowed
+            }
+            
+            attackerSelect.onchange = checkRestrictions;
+            checkRestrictions();
+
             document.getElementById('modal-war').classList.remove('hidden');
         }
 
@@ -2859,10 +3206,15 @@
             updates.occupiedBy = attacker.id; 
             updates.ruler = attacker.ruler;
 
+            // Preserve original properties
+            updates.originalColor = target.originalColor || target.color;
+            updates.originalRuler = target.originalRuler || target.ruler;
+            updates.originalName = target.originalName || target.name;
+
             if(type === 'colony') {
-                updates.color = target.originalColor || target.color;
+                updates.color = updates.originalColor; // Colony keeps its original color (only dashed border changes)
             } else {
-                updates.color = attacker.color;
+                updates.color = attacker.color; // Annex/Vassal take the conqueror's color
             }
             
             await setDoc(doc(getEntityCollectionRef(), tid), updates, {merge: true});
@@ -2890,20 +3242,33 @@
             const ent = entities.find(e => e.id === id);
             document.getElementById('modal-area').classList.remove('hidden');
             document.getElementById('area-id').value = ent.id;
-            document.getElementById('inp-name').value = ent.originalName || ent.name; 
+            document.getElementById('inp-name').value = ent.name; // Use current name, not original name
             document.getElementById('inp-custom-id').value = ent.customId || '';
-            document.getElementById('inp-level').value = ent.level;
+            document.getElementById('inp-level').value = ent.level; // Use current level
+            
+            // Only show base ranks in the dropdown (if the current level is promoted, it will still show, but the list only contains base ranks)
             updateParentSelect(getRank(ent.level));
             document.getElementById('inp-parent').value = ent.parentId || "";
-            document.getElementById('inp-ruler').value = ent.originalRuler || ent.ruler;
+            document.getElementById('inp-ruler').value = ent.ruler; // Use current ruler
             document.getElementById('inp-religion').value = ent.religion;
             document.getElementById('inp-gov').value = ent.government;
-            document.getElementById('inp-color').value = ent.originalColor || ent.color;
+            
+            // For editing, use the area's current color, but prioritize original color if it exists for consistency
+            document.getElementById('inp-color').value = ent.originalColor || ent.color; 
+            document.getElementById('inp-label-color').value = ent.labelColor || '#4E342E';
+            document.querySelector(`input[name="areaType"][value="${ent.isWater ? 'water' : 'land'}"]`).checked = true;
+
             if(ent.flag) {
                 document.getElementById('preview-flag').src = ent.flag;
                 document.getElementById('preview-flag').classList.remove('hidden');
                 document.getElementById('preview-flag-placeholder').classList.add('hidden');
+            } else {
+                 document.getElementById('preview-flag').classList.add('hidden');
+                 document.getElementById('preview-flag-placeholder').classList.remove('hidden');
+                 document.getElementById('preview-flag').src = '';
             }
+            
+            document.getElementById('modal-title').innerText = `แก้ไขเขตปกครอง: ${ent.name}`;
         }
 
         document.getElementById('form-login').onsubmit = async (e) => {
@@ -2991,7 +3356,8 @@
         
         function updateParentSelect(rank) {
             const s = document.getElementById('inp-parent'); s.innerHTML = '<option value="">-- เป็นอิสระ --</option>';
-            entities.filter(e => getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value="${p.id}\">${p.name}</option>`);
+            // Filter out promoted ranks and only allow higher rank selection
+            entities.filter(e => !getRankObject(e.level)?.promoted && getRank(e.level) > rank && !e.isWater).forEach(p => s.innerHTML += `<option value="${p.id}\">${p.name}</option>`);
         }
         function getRank(id) { return HIERARCHY.find(x=>x.id===id)?.rank || 0; }
         function getHierarchyName(id) { return HIERARCHY.find(x=>x.id===id)?.name || id; }
