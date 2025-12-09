@@ -498,6 +498,97 @@
             /* This is the class for the vertices, not the path itself */
             border: 2px solid #FFD700 !important;
         }
+
+        /* --- THAI DECREE MODAL STYLES --- */
+        .decree-overlay {
+            background-color: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(5px);
+            transition: opacity 0.5s;
+            z-index: 9999;
+        }
+
+        .decree-paper {
+            background: linear-gradient(145deg, #1A1A1A 0%, #000000 100%);
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.4), 0 0 10px rgba(0,0,0,0.5);
+            border: 4px solid #333;
+            animation: decreePop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        @keyframes decreePop {
+            0% { transform: scale(0.7) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        
+        @keyframes goldPulse {
+            0% { text-shadow: 0 0 5px #FFD700, 0 0 10px #FFB74D; }
+            50% { text-shadow: 0 0 8px #FFF8E1, 0 0 15px #FFD700; }
+            100% { text-shadow: 0 0 5px #FFD700, 0 0 10px #FFB74D; }
+        }
+
+        @keyframes goldSmoke {
+            0% { transform: translateY(0) scale(1); opacity: 0.05; }
+            50% { opacity: 0.1; }
+            100% { transform: translateY(-30px) scale(1.1); opacity: 0.05; }
+        }
+
+        .decree-title {
+            font-family: 'Mali', cursive;
+            color: #FFD700;
+            animation: goldPulse 3s infinite;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 183, 77, 0.6);
+            font-weight: 700;
+        }
+
+        .decree-text {
+            font-family: 'Sarabun', sans-serif;
+            font-weight: 500;
+            color: #FFE0B2;
+            text-shadow: 0 0 2px #5D4037;
+            line-height: 1.8;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Gold Mist Effect */
+        .gold-mist::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, rgba(255, 215, 0, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+            animation: goldSmoke 20s infinite alternate-reverse;
+        }
+
+        /* Gold Kannon Separator (Simplified with SVG-like line) */
+        .kannon-divider {
+            height: 3px;
+            background: radial-gradient(circle, #FFF8E1 0%, #FFD700 50%, #5D4037 100%);
+            border-radius: 3px;
+            box-shadow: 0 0 5px #FFD700;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        /* Custom Button */
+        .btn-decree {
+            background: linear-gradient(to right, #212121, #000000);
+            color: #FFD700;
+            border: 2px solid #FFD700;
+            border-radius: 12px;
+            padding: 10px 30px;
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s;
+        }
+        .btn-decree:hover {
+            box-shadow: 0 0 20px #FFD700, 0 0 5px #FFF8E1;
+            transform: scale(1.05);
+            background: linear-gradient(to right, #333333, #1A1A1A);
+        }
         
     </style>
 </head>
@@ -907,9 +998,9 @@
                     <button onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">flag</span> ผนวก</button>
                     <button onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
                     <button onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
-                    <!-- NEW BUTTON FOR GEOMETRIC MERGE -->
-                    <button onclick="executeGeometricMerge()" class="py-2 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 shadow transition flex flex-col items-center gap-1" title="รวมรูปทรงทางภูมิศาสตร์"><span class="material-icons-round text-base">merge_type</span> หลอมรวมรูปทรง</button>
-                    <!-- END NEW BUTTON -->
+                    <!-- UPDATED BUTTON TEXT -->
+                    <button onclick="executeGeometricMerge()" class="py-2 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 shadow transition flex flex-col items-center gap-1" title="รวมรูปทรงทางภูมิศาสตร์"><span class="material-icons-round text-base">merge_type</span> หลอมรวมดินแดน</button>
+                    <!-- END UPDATED BUTTON -->
                 </div>
             </div>
         </div>
@@ -989,6 +1080,61 @@
             </form>
         </div>
     </div>
+
+    <!-- NEW DECREE MODAL -->
+    <div id="modal-decree" class="fixed inset-0 decree-overlay hidden flex items-center justify-center" onclick="closeModal('modal-decree')">
+        <div class="decree-paper w-full max-w-lg p-8 relative gold-mist" onclick="event.stopPropagation()">
+            
+            <!-- Header/Emblem -->
+            <div class="text-center mb-6 relative">
+                <div class="w-24 h-24 mx-auto mb-4 relative z-10">
+                    <!-- Emblem with Gold Glow and Smoke effect -->
+                    <div class="w-full h-full rounded-full border-4 border-[#FFD700] p-1 shadow-[0_0_15px_rgba(255,215,0,0.8)] flex items-center justify-center bg-black/50">
+                        <span class="material-icons-round text-6xl text-[#FFD700] rotate-45 opacity-80" style="text-shadow: 0 0 10px #FFD700;">satellite_alt</span>
+                    </div>
+                </div>
+                
+                <!-- Title: Rank + Name Collapse -->
+                <h2 id="decree-title-text" class="text-3xl decree-title pt-2 mb-4 drop-shadow-lg">
+                    {ศักดิ์พื้นที่}{ชื่อพื้นที่ถูกรุกราน} ล่มสลาย
+                </h2>
+
+                <!-- Curved Gold Separator -->
+                <div class="kannon-divider w-3/4 mx-auto"></div>
+            </div>
+
+            <!-- Decree Content -->
+            <div class="decree-text text-center text-sm space-y-4 px-4 overflow-y-auto max-h-80 custom-scrollbar">
+                <div class="text-base font-bold text-[#FFB74D]">
+                    โดยราชโองการแห่งแผ่นดิน
+                </div>
+                <p>
+                    ณ ยามที่ทิวาและราตรีบรรจบกัน บัดนี้ขอประกาศแก่หมู่เทวา ฟ้าดิน และสรรพชนทั่วทั้งปฐมภพให้ทราบโดยทั่วกันว่า
+                </p>
+                <p>
+                    ดินแดน <b id="decree-target-name" class="decree-title font-bold text-amber-300">...</b> อันเคยตั้งมั่นรุ่งเรือง บัดนี้ล่วงถึงคราวเปลี่ยนผันแห่งโชคชะตา
+                </p>
+                <p>
+                    ด้วยอำนาจแห่งชัยชนะและราชธรรมอันแผ่ไพศาล ดินแดนนั้นได้ถูกหลอมรวมเป็นอันหนึ่งอันเดียวกับ <b id="decree-attacker-name" class="decree-title font-bold text-amber-300">...</b>
+                </p>
+                <p>
+                    เส้นพรมแดนที่เคยแบ่งแยกบัดนี้เลือนหายดังหมอกในอรุณรุ่ง
+                </p>
+                <p>
+                    นับแต่นี้แผ่นดินใหม่จักเป็นสุวรรณปฐพีเดียวกันสืบไป
+                </p>
+            </div>
+            
+            <!-- Footer Button -->
+            <div class="mt-8 text-center">
+                <button onclick="closeModal('modal-decree')" class="btn-decree">
+                    รับทราบ
+                </button>
+                <div class="text-[10px] text-gray-600 mt-2">คลิกที่ใดก็ได้เพื่อปิด</div>
+            </div>
+        </div>
+    </div>
+    <!-- END NEW DECREE MODAL -->
 
     <!-- Modal: Rename Map Sheet ถูกนำออก -->
 
@@ -2219,13 +2365,13 @@
          * Geometric Merge: Attacker absorbs Target, deleting both and creating a single new merged polygon.
          */
         window.executeGeometricMerge = () => {
-             showConfirmModal("ยืนยันการหลอมรวม", "การดำเนินการนี้จะรวมรูปทรงของดินแดนฝ่ายรุกและเป้าหมายเข้าด้วยกัน และจะลบข้อมูลเดิมทั้งสองออก ยืนยันหรือไม่?", 
+             showConfirmModal("ยืนยันการหลอมรวมดินแดน", "การดำเนินการนี้จะรวมรูปทรงของดินแดนฝ่ายรุกและเป้าหมายเข้าด้วยกัน และจะลบข้อมูลเดิมทั้งสองออก ยืนยันหรือไม่?", 
                  async () => await performGeometricMerge()
              );
         };
         
         async function performGeometricMerge() {
-            if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
+            if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); closeModal('modal-confirm'); return; }
 
             const tid = document.getElementById('war-target-id').value;
             const aid = document.getElementById('war-attacker-select').value;
@@ -2275,7 +2421,7 @@
 
                 const batch = writeBatch(db);
                 const colRef = getEntityCollectionRef();
-
+                
                 // 1. Create new merged entity
                 const newRef = doc(colRef); 
                 batch.set(newRef, newDoc);
@@ -2287,12 +2433,30 @@
                 await batch.commit();
                 
                 closeModal('modal-war');
-                showConfirmModal("สำเร็จ", `อาณาจักร ${attacker.name} ได้หลอมรวมดินแดนกับ ${target.name} แล้ว`, null, true);
+                // *** CALL NEW DECREE MODAL AFTER SUCCESS ***
+                showFusionDecreeModal(attacker, target);
 
             } catch (err) {
                 console.error("Geometric Merge Error:", err);
                 showConfirmModal("เกิดข้อผิดพลาด", "ไม่สามารถรวมพื้นที่ได้ (โครงสร้างอาจซับซ้อนเกินไป): " + err.message, null, true);
             }
+        }
+        
+        /**
+         * Shows the dramatic ancient Thai decree modal.
+         * @param {Object} attacker - The conquering entity.
+         * @param {Object} target - The conquered entity.
+         */
+        function showFusionDecreeModal(attacker, target) {
+            const targetRankName = getHierarchyName(target.level);
+            
+            // 1. Set dynamic text content
+            document.getElementById('decree-title-text').innerText = `${targetRankName}${target.name} ล่มสลาย`;
+            document.getElementById('decree-target-name').innerText = target.name;
+            document.getElementById('decree-attacker-name').innerText = attacker.name;
+
+            // 2. Display modal
+            document.getElementById('modal-decree').classList.remove('hidden');
         }
 
 
