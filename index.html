@@ -79,7 +79,7 @@
             cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height=32') 0 32, crosshair !important;
         }
         
-        /* NEW: Cursor for splitting */
+        /* NEW: Cursor for splitting (Knife) */
         .cursor-knife {
             cursor: url('https://api.iconify.design/mdi:knife.svg?color=%2300BCD4&width=32&height=32') 16 16, crosshair !important;
         }
@@ -404,7 +404,7 @@
             background: #FFF8E1;
         }
 
-        /* --- FANTASY POPUP STYLING --- */
+        /* --- FANTASY POPUP STYLING (Used by Leaflet and Cesium) --- */
         .leaflet-popup-content-wrapper {
             background: rgba(255, 253, 245, 0.95);
             border-radius: 24px;
@@ -415,6 +415,36 @@
         }
         .leaflet-popup-content { margin: 0 !important; width: 320px !important; }
         .leaflet-popup-tip { background: #FFF; }
+        
+        /* Custom Cesium Popup */
+        #cesium-popup {
+            min-width: 320px;
+            max-width: 320px;
+            pointer-events: auto; /* Allow clicks */
+            border-radius: 24px;
+            background: rgba(255, 253, 245, 0.95);
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.2), 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid #FFF;
+        }
+        #cesium-popup .popup-container {
+             /* Reuse the content wrapper style for consistency */
+             margin: 0 !important;
+             width: 100% !important;
+        }
+        #cesium-popup .popup-arrow {
+            /* Custom arrow for Cesium popup */
+            position: absolute;
+            bottom: -8px; 
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 16px; 
+            height: 16px;
+            background: #FFF;
+            border-bottom: 2px solid #EEE;
+            border-right: 2px solid #EEE;
+            z-index: 10;
+            pointer-events: none;
+        }
         
         /* Sparkle Animation */
         @keyframes floatSparkle {
@@ -773,9 +803,11 @@
         <!-- New Draw Menu Group -->
         <div class="tool-group">
             <div id="draw-submenu" class="tool-submenu">
+                <!-- เปลี่ยน startFreehandMode() ให้วาดแบบ Polygon อิสระ -->
                 <div class="tool-btn tool-btn-sub" onclick="startFreehandMode()" title="วาดด้วยปากกา (อิสระ)">
                     <span class="material-icons-round text-amber-800">edit</span>
                 </div>
+                <!-- วาดแบบจุด (Point-to-Point Polygon) -->
                 <div class="tool-btn tool-btn-sub" onclick="startPointMode()" title="วาดเส้นจุด (ทีละจุด)">
                     <span class="material-icons-round text-blue-600">timeline</span>
                 </div>
@@ -814,10 +846,10 @@
         <div id="map"></div>
         <div id="cesiumContainer"></div>
         
-        <!-- CUSTOM CESIUM POPUP -->
-        <div id="cesium-popup" class="absolute hidden bg-white rounded-2xl shadow-2xl z-[2000] w-[300px] pointer-events-auto transition-opacity duration-200 border-2 border-white/50">
-            <div id="cesium-popup-content"></div>
-            <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white transform rotate-45 border-b-2 border-r-2 border-gray-100"></div> 
+        <!-- CUSTOM CESIUM POPUP (ใช้แสดงผลเหมือน Popup ของ Leaflet) -->
+        <div id="cesium-popup" class="absolute hidden bg-white rounded-2xl shadow-2xl z-[2000] w-[320px] pointer-events-auto transition-opacity duration-200 border-2 border-white/50" onclick="document.getElementById('cesium-popup').classList.add('hidden')">
+            <div id="cesium-popup-content" class="popup-container"></div>
+            <div class="popup-arrow"></div> 
         </div>
     </div>
 
@@ -1626,6 +1658,7 @@
             // Use the initial selected base layer when initializing
             const initialProvider = cesiumBaseLayer === 'nolabels' ? CARTO_IMAGERY_PROVIDER : ESRI_IMAGERY_PROVIDER;
 
+            // ปิด UI/Widget ต่างๆ ที่ไม่จำเป็น
             viewer = new Cesium.Viewer('cesiumContainer', {
                 animation: false,
                 baseLayerPicker: false,
@@ -1655,26 +1688,32 @@
             const popupDiv = document.getElementById('cesium-popup');
             const popupContent = document.getElementById('cesium-popup-content');
             
+            // Cesium Click Handler for Popups and Selection
             viewer.screenSpaceEventHandler.setInputAction((click) => {
                 const pickedObject = viewer.scene.pick(click.position);
+                
+                // Reset popup and selection
+                selectedCesiumEntity = null;
+                popupDiv.classList.add('hidden');
+                
                 if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.entityDataId) {
                     selectedCesiumEntity = pickedObject.id;
                     const ent = entities.find(e => e.id === selectedCesiumEntity.entityDataId);
                     
                     if (ent) {
                         const visuals = getEntityVisuals(ent);
+                        // ใช้ฟังก์ชันสร้าง Popup เดียวกันกับ Leaflet เพื่อความสอดคล้อง
                         popupContent.innerHTML = createPopupContent(ent, visuals.fillColor, visuals.colorContext);
                         popupDiv.classList.remove('hidden');
                     }
-                } else {
-                    selectedCesiumEntity = null;
-                    popupDiv.classList.add('hidden');
                 }
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+            // Post-Render Listener to update Popup position
             viewer.scene.postRender.addEventListener(() => {
                 if (selectedCesiumEntity && !popupDiv.classList.contains('hidden')) {
                     let position;
+                    // Cesium entities might have position or centerPosition defined
                     if(selectedCesiumEntity.position) {
                         position = selectedCesiumEntity.position.getValue(viewer.clock.currentTime);
                     } else if(selectedCesiumEntity.centerPosition) {
@@ -1682,9 +1721,10 @@
                     }
 
                     if (position) {
+                        // Project 3D position to 2D screen coordinates
                         const canvasPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, position);
                         if (canvasPosition) {
-                            // Calculate position based on popup size
+                            // Calculate position based on popup size (320px width)
                             popupDiv.style.top = (canvasPosition.y - popupDiv.offsetHeight - 20) + 'px';
                             popupDiv.style.left = (canvasPosition.x - popupDiv.offsetWidth / 2) + 'px';
                         }
@@ -1726,6 +1766,9 @@
             const body = document.body;
             const btnIcon = document.getElementById('globe-btn-icon');
             
+            // ซ่อน Cesium Popup ทันทีเมื่อสลับโหมด
+            document.getElementById('cesium-popup').classList.add('hidden');
+            
             if(is3DMode) {
                 body.classList.remove('mode-2d'); body.classList.add('mode-3d');
                 btnIcon.src = "https://api.iconify.design/noto:map-of-japan.svg";
@@ -1738,6 +1781,7 @@
                 btnIcon.src = "https://api.iconify.design/noto:globe-showing-asia-australia.svg";
                 if(viewer) viewer.scene.postRender.removeEventListener(updateCompass3D);
                 document.getElementById('compass-icon').style.transform = 'rotate(0deg)';
+                map.closePopup();
             }
         }
 
@@ -1876,8 +1920,9 @@
             
             // Setup merge/elevate level select (full hierarchy)
             const mergeLevelSelect = document.getElementById('merge-level');
+            const elevateLevelSelect = document.getElementById('elevate-level'); // Add elevate select here
             
-            [mergeLevelSelect].forEach(select => {
+            [mergeLevelSelect, elevateLevelSelect].forEach(select => { // Apply to both selects
                 select.innerHTML = '';
                 HIERARCHY.sort((a, b) => b.rank - a.rank).forEach(h => {
                     const opt = document.createElement('option');
@@ -1902,6 +1947,7 @@
             renderMap(); if(is3DMode) renderCesium();
         };
 
+        // --- UPDATED checkModeAndDraw to handle 3D Mode switching ---
         window.checkModeAndDraw = (type) => {
             if (!currentMapSheetId) {
                 showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด");
@@ -1911,18 +1957,22 @@
                  showToast("กรุณาปิดโหมดเลือกหลายพื้นที่ก่อนวาด");
                  return;
             }
+            // ** REQ: สลับกลับไป 2D เมื่อพยายามวาด/แก้ไข **
             if(is3DMode) {
-                toggleGlobeMode();
+                toggleGlobeMode(); // สลับไป 2D
                 showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดเครื่องมือวาดอีกครั้ง", null, true);
                 return;
             }
+            
             // ถ้าอยู่ในโหมดแก้ไขอยู่ ให้ปิดก่อน
             if (isEditMode) {
                 toggleEditGeometry();
             }
+            
             if(type === 'polygon') window.toggleDrawMenu(); 
             else if(type === 'polyline') window.startDrawPolyline();
             else if(type === 'marker') window.startDrawMarker();
+            else if(type === 'edit') window.toggleEditGeometry(); // For toggleEditGeometry to be called
         }
         
         // --- NEW: Toggle Draw Menu ---
@@ -2066,7 +2116,7 @@
             element.classList.add('selected');
         }
 
-        // --- Cesium Rendering Logic ---
+        // --- Cesium Rendering Logic (UPDATED FOR LABEL PLACEMENT AND POPUP DATA) ---
         function renderCesium() {
             if(!viewer) return;
             
@@ -2105,7 +2155,7 @@
                             },
                             name: ent.name
                         });
-                        roadEnt.entityDataId = ent.id;
+                        roadEnt.entityDataId = ent.id; // Store ID for click handling
                         return;
                     }
 
@@ -2124,7 +2174,7 @@
                             },
                             name: ent.name
                         });
-                        markerEnt.entityDataId = ent.id;
+                        markerEnt.entityDataId = ent.id; // Store ID for click handling
                         
                         // Marker Label
                         if(showLabels) {
@@ -2151,11 +2201,12 @@
                              // Helper function to extract coordinates from MultiPolygon/Polygon
                              const extractCoords = (coords) => {
                                  if (coords && coords.length > 0) {
+                                     // Check for MultiPolygon structure: [[[lon, lat], ...], ...]
                                      if (coords[0][0] && typeof coords[0][0][0] === 'number') {
-                                         // MultiPolygon structure: [[[lon, lat], ...], ...]
                                          coords.forEach(poly => poly[0].forEach(pt => flat.push(pt[0], pt[1])));
-                                     } else if (coords[0][0] && typeof coords[0][0] === 'number') {
-                                         // Polygon structure: [[lon, lat], ...]
+                                     } 
+                                     // Check for Polygon structure: [[lon, lat], ...]
+                                     else if (coords[0][0] && typeof coords[0][0] === 'number') {
                                          coords[0].forEach(pt => flat.push(pt[0], pt[1]));
                                      }
                                  }
@@ -2185,11 +2236,13 @@
                                     material: Cesium.Color.fromCssColorString(visuals.fillColor).withAlpha(ent.isWater ? 0.5 : globalOpacity),
                                     outline: !ent.isColony,
                                     outlineColor: Cesium.Color.fromCssColorString(outlineColor),
-                                    outlineWidth: 2
+                                    outlineWidth: 2,
+                                    height: 0, // Ensure it sits on the globe
+                                    extrudedHeight: 0.1 // Small height to ensure visibility
                                 },
                                 name: ent.name
                              });
-                             polyEnt.entityDataId = ent.id;
+                             polyEnt.entityDataId = ent.id; // Store ID for click handling
 
                              // Colony Dashed Line Fix
                              if (ent.isColony) {
@@ -2209,6 +2262,7 @@
                              // Center Label Logic
                              try {
                                 const center = turf.centerOfMass(geoJson);
+                                // Set centerPosition property on the entity for popup positioning
                                 polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1]);
 
                                 // Area Label
@@ -2237,7 +2291,8 @@
                                             outlineWidth: 3,
                                             verticalOrigin: Cesium.VerticalOrigin.TOP,
                                             pixelOffset: new Cesium.Cartesian2(0, offset), // Adjusted offset
-                                            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2000000)
+                                            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2000000),
+                                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
                                         }
                                     });
                                 }
@@ -2618,11 +2673,17 @@
         }
 
 
-        // --- War Room / Split Territory Logic ---
+        // --- War Room / Split Territory Logic (UPDATED FOR SPLIT CURSOR) ---
 
         window.startSplitTerritoryMode = () => {
             if (!validateAuth()) return;
-            if (is3DMode) toggleGlobeMode(); // Switch to 2D
+            // ** REQ: สลับไป 2D ถ้าอยู่ใน 3D **
+            if (is3DMode) {
+                toggleGlobeMode(); // Switch to 2D
+                // This function will be called again after the user confirms the switch
+                showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดปุ่ม 'แบ่งแยกดินแดน' อีกครั้ง", null, true);
+                return;
+            }
             
             const tid = document.getElementById('war-target-id').value;
             const target = entities.find(e => e.id === tid);
@@ -2638,7 +2699,7 @@
             closeModal('modal-war');
             map.closePopup();
 
-            // Set special cursor
+            // ** REQ: Set special cursor (ปากกา) - ใช้ cursor-knife แทนเพื่อให้สอดคล้องกับเครื่องมือตัด **
             document.getElementById('map').classList.add('cursor-knife');
             
             // Start drawing a polyline
@@ -2910,6 +2971,13 @@
                 showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนใช้งานโหมดเลือกหลายพื้นที่");
                 return;
             }
+            // ** REQ: สลับไป 2D ถ้าอยู่ใน 3D **
+            if(is3DMode) {
+                toggleGlobeMode();
+                showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการเลือก กรุณากดปุ่ม 'จัดการหลายพื้นที่' อีกครั้ง", null, true);
+                return;
+            }
+            
             if (isEditMode) {
                 // ปิดโหมดแก้ไขก่อน
                 toggleEditGeometry();
@@ -3646,9 +3714,10 @@
             }
         }
 
-        window.startDrawPolygon = () => new L.Draw.Polygon(map).enable();
-        window.startDrawPolyline = () => new L.Draw.Polyline(map).enable();
-        window.startDrawMarker = () => new L.Draw.Marker(map).enable();
+        // --- UPDATED Draw Functions to use checkModeAndDraw ---
+        window.startDrawPolygon = () => checkModeAndDraw('polygon');
+        window.startDrawPolyline = () => checkModeAndDraw('polyline');
+        window.startDrawMarker = () => checkModeAndDraw('marker');
         window.toggleFullScreen = async () => {
              try {
                 if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
@@ -3661,43 +3730,55 @@
         // --- NEW: Custom Draw Modes ---
         window.startPointMode = () => {
              if (!currentMapSheetId) { showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด"); return; }
-             window.toggleDrawMenu();
-             const drawer = new L.Draw.Polygon(map, {
-                 shapeOptions: {
-                     color: '#FFB74D',
-                     weight: 2
-                 }
-             });
-             drawer.enable();
+             checkModeAndDraw('polygon'); // Check for 3D/Edit mode first
              
-             // Hook for Right Click Delete
-             const handler = (e) => {
-                 // Check if enabled and has internal poly
-                 if(drawer._enabled && drawer._poly && drawer._poly.getLatLngs().length > 0) {
-                     drawer.deleteLastVertex();
-                 }
-             };
-             
-             map.on('contextmenu', handler);
-             
-             // Remove hook when draw ends
-             map.once(L.Draw.Event.CREATED, () => map.off('contextmenu', handler));
-             // Also remove if tool disabled manually (optional, Leaflet Draw handles disable)
+             // If in 2D and not in edit mode (checked by checkModeAndDraw), proceed
+             if (!is3DMode && !isEditMode) {
+                 window.toggleDrawMenu();
+                 const drawer = new L.Draw.Polygon(map, {
+                     shapeOptions: {
+                         color: '#FFB74D',
+                         weight: 2
+                     }
+                 });
+                 drawer.enable();
+                 
+                 // Hook for Right Click Delete
+                 const handler = (e) => {
+                     // Check if enabled and has internal poly
+                     if(drawer._enabled && drawer._poly && drawer._poly.getLatLngs().length > 0) {
+                         drawer.deleteLastVertex();
+                     }
+                 };
+                 
+                 map.on('contextmenu', handler);
+                 
+                 // Remove hook when draw ends
+                 map.once(L.Draw.Event.CREATED, () => map.off('contextmenu', handler));
+             }
         };
 
         window.startFreehandMode = () => {
             if (!currentMapSheetId) { showToast("⚠️ กรุณาสร้างหรือเลือกกระดาษแผนที่ก่อนวาด"); return; }
-            window.toggleDrawMenu();
-            isFreehand = true;
-            map.dragging.disable();
-            document.getElementById('map').classList.add('cursor-pen');
-            map.on('mousedown', onFreehandDown);
-            map.on('mouseup', onFreehandUp);
+            checkModeAndDraw('polygon'); // Check for 3D/Edit mode first
+
+            // If in 2D and not in edit mode (checked by checkModeAndDraw), proceed
+            if (!is3DMode && !isEditMode) {
+                window.toggleDrawMenu();
+                isFreehand = true;
+                map.dragging.disable();
+                // ** REQ: เคอร์เซอร์รูปปากกา **
+                document.getElementById('map').classList.add('cursor-pen');
+                map.on('mousedown', onFreehandDown);
+                map.on('mouseup', onFreehandUp);
+                showToast("วาดรูปทรงอิสระ (ลากเมาส์แล้วปล่อยเพื่อจบ)");
+            }
         };
 
         function onFreehandDown(e) {
             map.on('mousemove', onFreehandMove);
             freehandPath = [e.latlng];
+            // Use a temporary layer on Leaflet to show the path
             tempLine = L.polyline(freehandPath, {color: '#FFB74D', weight: 3}).addTo(map);
         }
 
@@ -3712,21 +3793,20 @@
             map.off('mouseup', onFreehandUp);
             
             // Close the loop
-            freehandPath.push(freehandPath[0]);
+            if(freehandPath.length > 5) {
+                 freehandPath.push(freehandPath[0]);
+                 const poly = L.polygon(freehandPath);
+                 const event = { layer: poly, layerType: 'polygon' };
+                 onDrawCreated(event); // Treat as a created polygon
+            } else {
+                 showToast("วาดไม่สำเร็จ: กรุณาวาดเส้นยาวพอสมควร");
+            }
             
-            // Cleanup temp line
+            // Cleanup temp line and reset state
             if(tempLine) map.removeLayer(tempLine);
             map.dragging.enable();
             document.getElementById('map').classList.remove('cursor-pen');
             isFreehand = false;
-
-            if(freehandPath.length > 5) {
-                // Simplify path to reduce points (using Turf is overkill for simple, but handy if imported)
-                // Let's just make polygon directly
-                const poly = L.polygon(freehandPath);
-                const event = { layer: poly, layerType: 'polygon' };
-                onDrawCreated(event);
-            }
         }
 
 
@@ -4058,6 +4138,12 @@
          */
         window.toggleEditGeometry = async () => {
             if (!validateAuth()) return;
+            // ** REQ: สลับไป 2D ถ้าอยู่ใน 3D **
+            if(is3DMode) {
+                toggleGlobeMode();
+                showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการแก้ไขรูปทรง กรุณากดปุ่ม 'แก้ไขรูปทรง' อีกครั้ง", null, true);
+                return;
+            }
 
             // 1. ตรวจสอบว่ามีพื้นที่ให้แก้ไขไหม
             const hasLayers = entities.some(e => e.type === 'area' || e.type === 'road');
