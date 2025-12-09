@@ -78,6 +78,14 @@
         .cursor-pen .leaflet-interactive {
             cursor: url('https://api.iconify.design/mdi:fountain-pen-tip.svg?color=%235D4037&width=32&height=32') 0 32, crosshair !important;
         }
+        
+        /* NEW: Cursor for splitting */
+        .cursor-knife {
+            cursor: url('https://api.iconify.design/mdi:knife.svg?color=%2300BCD4&width=32&height=32') 16 16, crosshair !important;
+        }
+        .cursor-knife .leaflet-interactive {
+            cursor: url('https://api.iconify.design/mdi:knife.svg?color=%2300BCD4&width=32&height=32') 16 16, crosshair !important;
+        }
 
         #cesiumContainer {
             height: 100%;
@@ -517,6 +525,12 @@
             position: relative;
         }
 
+        .decree-paper-coronation {
+            background: linear-gradient(160deg, #300000 0%, #600000 50%, #300000 100%);
+            border-color: #795548;
+            box-shadow: 0 0 50px rgba(255, 165, 0, 0.5), 0 0 10px rgba(0,0,0,0.5);
+        }
+        
         @keyframes decreePop {
             0% { transform: scale(0.7) translateY(50px); opacity: 0; }
             100% { transform: scale(1) translateY(0); opacity: 1; }
@@ -1006,12 +1020,14 @@
                     <button id="btn-annex" onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">flag</span> ผนวก</button>
                     <button id="btn-vassal" onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
                     <button id="btn-colony" onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
-                    <button id="btn-geom-merge" onclick="executeGeometricMerge()" class="py-2 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 shadow transition flex flex-col items-center gap-1" title="รวมรูปทรงทางภูมิศาสตร์"><span class="material-icons-round text-base">merge_type</span> หลอมรวมดินแดน</button>
+                    <!-- NEW: Split Territory Button -->
+                    <button id="btn-split-territory" onclick="startSplitTerritoryMode()" class="py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700 shadow transition flex flex-col items-center gap-1" title="วาดเส้นตัดแบ่งดินแดน"><span class="material-icons-round text-base">content_cut</span> แบ่งแยกดินแดน</button>
+                    <!-- Removed Merge button from War Modal, moved to Union Modal -->
                 </div>
             </div>
         </div>
     </div>
-
+    
     <!-- Modal: The Grand Unification (New Feature) -->
     <div id="modal-union" class="fixed inset-0 modal-overlay hidden z-[3000] flex items-center justify-center">
         <div class="modal-paper w-[600px] p-0 overflow-hidden">
@@ -1116,22 +1132,21 @@
         </div>
     </div>
 
-    <!-- NEW DECREE MODAL -->
+    <!-- NEW DECREE MODAL - Generalized for Fusion, Coronation, and Appointment -->
     <div id="modal-decree" class="fixed inset-0 decree-overlay hidden flex items-center justify-center" onclick="closeModal('modal-decree')">
-        <div class="decree-paper w-full max-w-lg p-8 relative gold-mist" onclick="event.stopPropagation()">
+        <div id="decree-paper" class="decree-paper w-full max-w-lg p-8 relative gold-mist" onclick="event.stopPropagation()">
             
             <!-- Header/Emblem -->
             <div class="text-center mb-6 relative">
                 <div class="w-24 h-24 mx-auto mb-4 relative z-10">
-                    <!-- Emblem with Gold Glow and Smoke effect -->
-                    <div class="w-full h-full rounded-full border-4 border-[#FFD700] p-1 shadow-[0_0_15px_rgba(255,215,0,0.8)] flex items-center justify-center bg-black/50">
+                    <div id="decree-emblem" class="w-full h-full rounded-full border-4 border-[#FFD700] p-1 shadow-[0_0_15px_rgba(255,215,0,0.8)] flex items-center justify-center bg-black/50">
                         <span class="material-icons-round text-6xl text-[#FFD700] rotate-45 opacity-80" style="text-shadow: 0 0 10px #FFD700;">satellite_alt</span>
                     </div>
                 </div>
                 
                 <!-- Title: Rank + Name Collapse -->
                 <h2 id="decree-title-text" class="text-3xl decree-title pt-2 mb-4 drop-shadow-lg">
-                    {ศักดิ์พื้นที่}{ชื่อพื้นที่ถูกรุกราน} ล่มสลาย
+                    {Title}
                 </h2>
 
                 <!-- Curved Gold Separator -->
@@ -1140,23 +1155,12 @@
 
             <!-- Decree Content -->
             <div class="decree-text text-center text-sm space-y-4 px-4 overflow-y-auto max-h-80 custom-scrollbar">
-                <div class="text-base font-bold text-[#FFB74D]">
+                <div class="text-base font-bold text-[#FFB74D]" id="decree-intro">
                     โดยราชโองการแห่งแผ่นดิน
-                </divย<p>
-                    ณ ยามที่ทิวาและราตรีบรรจบกัน บัดนี้ขอประกาศแก่หมู่เทวา ฟ้าดิน และสรรพชนทั่วทั้งปฐมภพให้ทราบโดยทั่วกันว่า
-                </p>
-                <p>
-                    ดินแดน <b id="decree-target-name" class="decree-title font-bold text-amber-300">...</b> อันเคยตั้งมั่นรุ่งเรือง บัดนี้ล่วงถึงคราวเปลี่ยนผันแห่งโชคชะตา
-                </p>
-                <p>
-                    ด้วยอำนาจแห่งชัยชนะและราชธรรมอันแผ่ไพศาล ดินแดนนั้นได้ถูกหลอมรวมเป็นอันหนึ่งอันเดียวกับ <b id="decree-attacker-name" class="decree-title font-bold text-amber-300">...</b>
-                </p>
-                <p>
-                    เส้นพรมแดนที่เคยแบ่งแยกบัดนี้เลือนหายดังหมอกในอรุณรุ่ง
-                </p>
-                <p>
-                    นับแต่นี้แผ่นดินใหม่จักเป็นสุวรรณปฐวีเดียวกันสืบไป
-                </p>
+                </div>
+                <div id="decree-main-content">
+                    <!-- Dynamic Content will be injected here -->
+                </div>
             </div>
             
             <!-- Footer Button -->
@@ -1168,9 +1172,25 @@
             </div>
         </div>
     </div>
-    <!-- END NEW DECREE MODAL -->
+    <!-- END DECREE MODAL -->
 
-    <!-- Modal: Rename Map Sheet ถูกนำออก -->
+    <!-- NEW MODAL: Split Territory Form -->
+    <div id="modal-split-territory" class="fixed inset-0 modal-overlay hidden z-[2200] flex items-center justify-center">
+        <div class="modal-paper w-full max-w-3xl p-6 relative max-h-[95vh] overflow-y-auto">
+            <button onclick="cancelSplit()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition border-2 border-transparent hover:border-red-200 rounded-full w-8 h-8 flex items-center justify-center" title="ยกเลิกการแบ่งแยก"><span class="material-icons-round text-2xl">close</span></button>
+            <h2 class="text-2xl text-[#5D4037] font-bold mb-2 flex items-center gap-2 border-b border-dashed border-[#E0E0E0] pb-3 cute-font"><span class="material-icons-round text-3xl text-cyan-600">content_cut</span> กำหนดดินแดนที่แยกใหม่</h2>
+            <div class="text-sm text-gray-600 mb-4">ดินแดนเป้าหมาย **<span id="split-target-name-display" class="font-bold text-red-600"></span>** ถูกตัดออกเป็น <span id="split-count" class="font-bold text-cyan-600"></span> ส่วน</div>
+            
+            <form id="form-split" onsubmit="saveSplitTerritory(event)" class="space-y-6">
+                <div id="split-area-forms" class="space-y-6">
+                    <!-- Dynamic forms for each new piece will be injected here -->
+                </div>
+                <div class="flex justify-end pt-4 border-t border-dashed border-[#E0E0E0]">
+                    <button type="submit" class="btn-cute bg-gradient-to-r from-cyan-600 to-teal-600 text-white"><span class="material-icons-round text-sm">save</span> บันทึกและสถาปนา</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Firebase SDK & Logic -->
     <script type="module">
@@ -1225,23 +1245,40 @@
         let currentMapSheetId = null; // ID of the currently selected map sheet
         let mapSheets = [];           // Array of all map sheets for the current user
         let unsubscribeMapListener = null; // To manage the dynamic map data listener
+        
+        // --- NEW GLOBALS for Split Territory ---
+        let isSplitting = false;
+        let splitTargetId = null;
+        let splitLineLayer = null; 
+        let cutPiecesGeoJsons = [];
+        let tempSplitLayers = L.featureGroup(); // Temporarily hold the cut pieces for visualization
 
 
         // --- UPDATED HIERARCHY ARRAY (Comprehensive list based on user specs) ---
+        // เพิ่ม 'title' สำหรับตำแหน่งผู้ปกครองตามศักดิ์
         const HIERARCHY = [
-            { id: 'mahaAnachak', name: 'มหาอาณาจักร', rank: 11, defaultColor: '#884A51', parentReq: 'anachak', reqDesc: 'ทุกอาณาจักรเป็นนคร' },
-            { id: 'anachak', name: 'อาณาจักร', rank: 10, defaultColor: '#F1C40F', parentReq: 'prathet', reqDesc: 'ทุกประเทศเป็นนคร' },
-            { id: 'prathet', name: 'ประเทศ/ราชรัฐ', rank: 9, defaultColor: '#E74C3C', parentReq: 'monrath', reqDesc: 'ทุกมณรัฐเป็นเมือง' },
-            { id: 'monrath', name: 'มณรัฐ', rank: 8, defaultColor: '#F39C12', parentReq: 'monthon', reqDesc: 'ทุกมณฑลเป็นเมือง' },
-            { id: 'nakorn', name: 'นคร', rank: 7, defaultColor: '#C0392B', promoted: true, promoteFrom: 'jangwat', requiredChildrenLevel: 'muang', reqDesc: 'ทุกอำเภอในสังกัดเป็นเมือง' },
-            { id: 'monthon', name: 'มณฑล', rank: 6, defaultColor: '#E91E63', parentReq: 'jangwat', reqDesc: 'ทุกจังหวัดเป็นนคร' },
-            { id: 'jangwat', name: 'จังหวัด', rank: 5, defaultColor: '#2ECC71', parentReq: 'amphoe', reqDesc: 'ทุกอำเภอเป็นเมือง' },
-            { id: 'muang', name: 'เมือง', rank: 4, defaultColor: '#A859A3', promoted: true, promoteFrom: 'amphoe', requiredChildrenLevel: 'arkhet', reqDesc: 'ทุกตำบลในสังกัดเป็นอาเขต' },
-            { id: 'amphoe', name: 'อำเภอ', rank: 3, defaultColor: '#8E44AD', parentReq: 'tambon', reqDesc: 'ทุกตำบลเป็นอาเขต' },
-            { id: 'arkhet', name: 'อาเขต', rank: 2.5, defaultColor: '#C0D9D9', promoted: true, promoteFrom: 'tambon', requiredChildrenLevel: 'khwaeng', reqDesc: 'ทุกหมู่บ้านในสังกัดเป็นแขวง' },
-            { id: 'tambon', name: 'ตำบล', rank: 2, defaultColor: '#95A5A6', parentReq: 'muban', reqDesc: 'ทุกหมู่บ้านเป็นแขวง' },
-            { id: 'khwaeng', name: 'แขวง', rank: 1.5, defaultColor: '#34B7D1', promoted: true, promoteFrom: 'muban', requiredChildrenMerge: true, reqDesc: 'รวมหมู่บ้าน' },
-            { id: 'muban', name: 'หมู่บ้าน', rank: 1, defaultColor: '#3498DB' }
+            // Country Level (Rank >= 9) - Title depends on Government
+            { id: 'mahaAnachak', name: 'มหาอาณาจักร', rank: 11, defaultColor: '#884A51', parentReq: 'anachak', reqDesc: 'ทุกอาณาจักรเป็นนคร', title: 'สมเด็จพระจักรพรรดิ' },
+            { id: 'anachak', name: 'อาณาจักร', rank: 10, defaultColor: '#F1C40F', parentReq: 'prathet', reqDesc: 'ทุกประเทศเป็นนคร', title: 'สมเด็จพระราชาธิบดี' },
+            { id: 'prathet', name: 'ประเทศ/ราชรัฐ', rank: 9, defaultColor: '#E74C3C', parentReq: 'monrath', reqDesc: 'ทุกมณรัฐเป็นเมือง', title: 'ประธานาธิบดี' }, 
+            
+            // Regional Level (Rank 8-6) - Fixed Titles
+            { id: 'monrath', name: 'มณรัฐ', rank: 8, defaultColor: '#F39C12', parentReq: 'monthon', reqDesc: 'ทุกมณฑลเป็นเมือง', title: 'รัฐาธิกรณ' },
+            { id: 'nakorn', name: 'นคร', rank: 7, defaultColor: '#C0392B', promoted: true, promoteFrom: 'jangwat', requiredChildrenLevel: 'muang', reqDesc: 'ทุกอำเภอในสังกัดเป็นเมือง', title: 'ผู้ว่านคราภิบาล' },
+            { id: 'monthon', name: 'มณฑล', rank: 6, defaultColor: '#E91E63', parentReq: 'jangwat', reqDesc: 'ทุกจังหวัดเป็นนคร', title: 'มณฑลาธิปัตย์' },
+            
+            // Provincial/District Level (Rank 5-3) - Fixed Titles
+            { id: 'jangwat', name: 'จังหวัด', rank: 5, defaultColor: '#2ECC71', parentReq: 'amphoe', reqDesc: 'ทุกอำเภอเป็นเมือง', title: 'ผู้ว่าราชการจังหวัด' },
+            { id: 'muang', name: 'เมือง', rank: 4, defaultColor: '#A859A3', promoted: true, promoteFrom: 'amphoe', requiredChildrenLevel: 'arkhet', reqDesc: 'ทุกตำบลในสังกัดเป็นอาเขต', title: 'ผู้ว่าการเมือง' },
+            { id: 'amphoe', name: 'อำเภอ', rank: 3, defaultColor: '#8E44AD', parentReq: 'tambon', reqDesc: 'ทุกตำบลเป็นอาเขต', title: 'นายอำเภอ' },
+            
+            // Sub-District Level (Rank 2.5 - 1.5) - Fixed Titles
+            { id: 'arkhet', name: 'อาเขต', rank: 2.5, defaultColor: '#C0D9D9', promoted: true, promoteFrom: 'tambon', requiredChildrenLevel: 'khwaeng', reqDesc: 'ทุกหมู่บ้านในสังกัดเป็นแขวง', title: 'กำนัน' },
+            { id: 'tambon', name: 'ตำบล', rank: 2, defaultColor: '#95A5A6', parentReq: 'muban', reqDesc: 'ทุกหมู่บ้านเป็นแขวง', title: 'กำนัน' },
+            { id: 'khwaeng', name: 'แขวง', rank: 1.5, defaultColor: '#34B7D1', promoted: true, promoteFrom: 'muban', requiredChildrenMerge: true, reqDesc: 'รวมหมู่บ้าน', title: 'ผู้ใหญ่บ้าน' },
+            
+            // Village Level (Rank 1) - Fixed Title
+            { id: 'muban', name: 'หมู่บ้าน', rank: 1, defaultColor: '#3498DB', title: 'ผู้ใหญ่บ้าน' }
         ];
         // --- END UPDATED HIERARCHY ARRAY ---
 
@@ -1277,6 +1314,22 @@
             if (!window.userId || !currentMapSheetId) return null;
             return collection(db, 'artifacts', appId, 'users', window.userId, 'map_sheets', currentMapSheetId, 'fantasy_empires');
         }
+        
+        // --- NEW: Helper to determine the correct ruler title ---
+        function getRulerTitle(levelId, government) {
+            const rankObj = HIERARCHY.find(x => x.id === levelId);
+            if (!rankObj) return 'ผู้ปกครอง';
+            
+            // Check for country-level overrides (rank 9 or higher)
+            if (rankObj.rank >= 9) {
+                if (government === 'สมบูรณาญาสิทธิราชย์' || government === 'ปริมิตาญาสิทธิราชย์') return 'พระมหากษัตริย์';
+                if (government === 'ประชาธิปไตย') return 'ประธานาธิบดี';
+                if (government === 'คอมมิวนิสต์') return 'ท่านผู้นำ';
+            }
+            
+            // Default title from HIERARCHY
+            return rankObj.title || 'ผู้ปกครอง';
+        }
 
 
         // --- Initialization ---
@@ -1284,6 +1337,9 @@
             initMap();
             setupUI();
             
+            // Add temp layer for split pieces visualization
+            tempSplitLayers.addTo(map);
+
             if (location.hostname !== 'localhost' && !firebaseConfig.apiKey) {
                  showConfirmModal("การตั้งค่าไม่สมบูรณ์", "กรุณาใส่ API Key ในโค้ด", null, true);
                  return;
@@ -1392,6 +1448,7 @@
             currentMapSheetId = newId;
             // Clear map visuals immediately
             drawnItems.clearLayers();
+            tempSplitLayers.clearLayers();
             entities = [];
             
             // Re-subscribe to the new map's data
@@ -1711,7 +1768,19 @@
             function updateLayerBtnStyle(active, inactive) {
                 active.className = "flex-1 text-xs py-1.5 rounded-lg bg-white text-[#5D4037] shadow-sm font-bold";
                 inactive.className = "flex-1 text-xs py-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition";
+                
+                // Ensure the map layers match the button state
+                if (active.id === 'btn-map-nolabels') {
+                    if (map.hasLayer(mapLayers.sat)) map.removeLayer(mapLayers.sat);
+                    if (!map.hasLayer(mapLayers.nolabels)) map.addLayer(mapLayers.nolabels);
+                } else if (active.id === 'btn-map-sat') {
+                    if (map.hasLayer(mapLayers.nolabels)) map.removeLayer(mapLayers.nolabels);
+                    if (!map.hasLayer(mapLayers.sat)) map.addLayer(mapLayers.sat);
+                }
             }
+            // Initialize layer buttons (assuming nolabels is the default)
+            updateLayerBtnStyle(document.getElementById('btn-map-nolabels'), document.getElementById('btn-map-sat'));
+
 
             document.getElementById('toggle-created-labels')?.addEventListener('change', renderMap);
             document.getElementById('toggle-roads')?.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); });
@@ -1865,6 +1934,12 @@
                 depth++;
             }
             return ancestors.reverse();
+        }
+        
+        // NEW: Get direct children names
+        function getDirectChildrenNames(parentId) {
+            return entities.filter(e => e.parentId === parentId && e.type === 'area')
+                           .map(e => `${getHierarchyName(e.level)} ${e.name}`);
         }
 
         function getDescendants(parentIds) {
@@ -2140,7 +2215,8 @@
                                             fillColor: Cesium.Color.fromCssColorString(ent.labelColor || '#4E342E'),
                                             outlineColor: Cesium.Color.WHITE,
                                             outlineWidth: 3,
-                                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                            verticalOrigin: Cesium.VerticalOrigin.TOP,
+                                            pixelOffset: new Cesium.Cartesian2(0, 5),
                                             distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2000000)
                                         }
                                     });
@@ -2160,6 +2236,26 @@
             const { visibleEntities } = filterEntities();
             const showRoads = document.getElementById('toggle-roads').checked;
             const showLabels = document.getElementById('toggle-created-labels').checked;
+            
+            // Render the temporary split line if in splitting mode
+            if (splitLineLayer) {
+                drawnItems.addLayer(splitLineLayer);
+            }
+            
+            // Render temporary cut pieces if in the modal
+            if(cutPiecesGeoJsons.length > 0) {
+                 tempSplitLayers.clearLayers();
+                 cutPiecesGeoJsons.forEach((geo, index) => {
+                     // Temporary random colors for new pieces
+                     const tempColor = ["#FFD700", "#C0C0C0", "#CD7F32"][index % 3]; 
+                     L.geoJSON(geo, {
+                         style: { color: tempColor, weight: 3, fillOpacity: 0.8, dashArray: '5, 5' }
+                     }).addTo(tempSplitLayers);
+                 });
+            } else {
+                 tempSplitLayers.clearLayers();
+            }
+
 
             visibleEntities.forEach(ent => {
                 try {
@@ -2338,6 +2434,13 @@
                                 } else if (ent.isVassal) {
                                     labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${ent.annexedByName})</div>`;
                                 } 
+                                
+                                // REQ: Add ruler title to the label if it's high enough rank
+                                const rulerTitle = getRulerTitle(ent.level, ent.government);
+                                if (rulerTitle !== 'ผู้ปกครอง' && getRank(ent.level) >= 5) {
+                                     labelHtml = `<div class="text-[9px] text-amber-800">${rulerTitle}</div>${labelHtml}`;
+                                }
+
 
                                 drawnItems.addLayer(L.marker(centerLatlng, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
                             }
@@ -2349,7 +2452,372 @@
             });
         }
 
-        // --- NEW: Unification / Multi-Select Logic ---
+        // --- NEW: Custom Decree Modals ---
+
+        /**
+         * แสดงกฤษฎีกาการแต่งตั้งตำแหน่งทั่วไป
+         * @param {Object} ent - Entity ที่ได้รับการแต่งตั้ง
+         * @param {string} actionText - ข้อความอธิบายการแต่งตั้ง (เช่น เนื่องในวโรกาสเถลิงถวัลยราชสมบัติ, เนื่องในโอกาสได้รับการแต่งตั้ง)
+         */
+        function showAppointmentDecreeModal(ent, actionText) {
+            const levelName = getHierarchyName(ent.level);
+            const rulerTitle = getRulerTitle(ent.level, ent.government);
+            const childrenNames = getDirectChildrenNames(ent.id).join(', ');
+
+            // Set classes for general decree (dark theme)
+            document.getElementById('decree-paper').className = 'decree-paper w-full max-w-lg p-8 relative gold-mist';
+
+            // Set dynamic header
+            document.getElementById('decree-title-text').innerText = `ประกาศแต่งตั้ง`;
+            document.getElementById('decree-intro').innerText = `โดยราชโองการแห่งแผ่นดิน`;
+            document.getElementById('decree-emblem').innerHTML = `<span class="material-icons-round text-6xl text-[#FFD700] opacity-80" style="text-shadow: 0 0 10px #FFD700;">gavel</span>`;
+
+            // Construct main content
+            const content = `
+                <p class="text-lg font-bold text-amber-300">
+                    ขอแสดงความยินดีกับ <b class="decree-title text-xl">${ent.ruler}</b>
+                </p>
+                <p>
+                    ในโอกาสได้รับการแต่งตั้งให้เป็น <b class="decree-title">${rulerTitle}</b> แห่ง ${levelName} <b class="decree-title">${ent.name}</b>
+                </p>
+                <p>
+                    ${actionText}
+                </p>
+                <div class="kannon-divider w-1/3 mx-auto"></div>
+                <p class="text-xs text-gray-400">
+                    อันมีพื้นที่ใต้การปกครองในลำดับชั้นถัดไปดังนี้:
+                </p>
+                <p class="text-sm font-bold text-teal-400">
+                    ${childrenNames.length > 0 ? childrenNames : 'ไม่มีพื้นที่ใต้สังกัดโดยตรงในขณะนี้'}
+                </p>
+            `;
+
+            document.getElementById('decree-main-content').innerHTML = content;
+            document.getElementById('modal-decree').classList.remove('hidden');
+        }
+
+        /**
+         * แสดงกฤษฎีกาการสถาปนากษัตริย์/ประธานาธิบดี (เฉพาะระดับประเทศขึ้นไป)
+         * @param {Object} ent - Entity ระดับประเทศ
+         */
+        function showCoronationDecreeModal(ent) {
+            const levelName = getHierarchyName(ent.level);
+            const rulerTitle = getRulerTitle(ent.level, ent.government);
+            const isMonarchy = ent.government === 'สมบูรณาญาสิทธิราชย์' || ent.government === 'ปริมิตาญาสิทธิราชย์';
+            const countryType = isMonarchy ? 'ราชอาณาจักร' : 'สาธารณรัฐ';
+            
+            // Set classes for Monarchy (red/gold theme)
+            document.getElementById('decree-paper').className = 'decree-paper decree-paper-coronation w-full max-w-lg p-8 relative gold-mist';
+
+            let titleText = '';
+            let introText = '';
+            let mainMessage = '';
+            let emblemIcon = 'stars';
+            
+            if (isMonarchy) {
+                titleText = `ขอถวายพระพร ${ent.ruler}`;
+                introText = `ณ วโรกาสเถลิงถวัลยราชสมบัติเป็น ${rulerTitle} แห่ง ${countryType} ${ent.name}`;
+                mainMessage = `
+                    <p>
+                        บัดนี้ได้บังเกิดสุวรรณปฐวีขึ้นแล้ว ด้วยอำนาจแห่งบุญญาธิการของ <b class="decree-title">${ent.ruler}</b>
+                        ได้ปกเกล้าฯ ขึ้นครองราชย์เป็น ${rulerTitle} แห่ง ${countryType} <b class="decree-title">${ent.name}</b>
+                    </p>
+                    <p>
+                        ขออำนาจแห่งไพรีพินาศจงสถิตย์อยู่คู่บัลลังก์ สถิตเสถียรยิ่งยืนนานเทอญ!
+                    </p>
+                `;
+                emblemIcon = 'volunteer_activism'; // Crown or similar
+            } else { // President/Leader
+                titleText = `ขอแสดงความยินดี ${ent.ruler}`;
+                introText = `เนื่องในโอกาสได้รับเลือกให้เป็น ${rulerTitle} แห่ง ${countryType} ${ent.name}`;
+                mainMessage = `
+                    <p>
+                        ขอแสดงความยินดีในโอกาสที่ <b class="decree-title">${ent.ruler}</b> ได้รับความไว้วางใจจากปวงชน
+                        ให้เป็น ${rulerTitle} แห่ง ${countryType} <b class="decree-title">${ent.name}</b>
+                    </p>
+                    <p>
+                        ขอให้ท่านจงเป็นผู้นำที่ทรงคุณธรรม นำพาประเทศชาติสู่ความรุ่งเรืองสืบไป
+                    </p>
+                `;
+                emblemIcon = 'how_to_reg'; // Leader/Election icon
+            }
+
+            document.getElementById('decree-title-text').innerText = titleText;
+            document.getElementById('decree-intro').innerText = introText;
+            document.getElementById('decree-emblem').innerHTML = `<span class="material-icons-round text-6xl text-[#FFD700] opacity-80" style="text-shadow: 0 0 10px #FFD700;">${emblemIcon}</span>`;
+            document.getElementById('decree-main-content').innerHTML = mainMessage;
+            document.getElementById('modal-decree').classList.remove('hidden');
+        }
+
+
+        // --- War Room / Split Territory Logic ---
+
+        window.startSplitTerritoryMode = () => {
+            if (!validateAuth()) return;
+            if (is3DMode) toggleGlobeMode(); // Switch to 2D
+            
+            const tid = document.getElementById('war-target-id').value;
+            const target = entities.find(e => e.id === tid);
+
+            if (!target || target.type !== 'area' || target.isWater) {
+                showConfirmModal("ข้อจำกัด", "การแบ่งแยกดินแดนใช้ได้เฉพาะกับเขตพื้นที่ (Area) เท่านั้น", null, true);
+                return;
+            }
+
+            isSplitting = true;
+            splitTargetId = tid;
+            
+            closeModal('modal-war');
+            map.closePopup();
+
+            // Set special cursor
+            document.getElementById('map').classList.add('cursor-knife');
+            
+            // Start drawing a polyline
+            const splitDrawer = new L.Draw.Polyline(map, {
+                shapeOptions: { color: '#00BCD4', weight: 4 },
+                metric: false,
+                repeatMode: false,
+                drawError: { color: '#B00020', message: 'กรุณาวาดเส้นยาวขึ้น' }
+            });
+            splitDrawer.enable();
+            
+            showToast("กรุณาวาดเส้นแบ่งเขต (ดับเบิลคลิกเพื่อจบ)");
+            
+            // Remove the default draw listener and add a specific one for splitting
+            map.off(L.Draw.Event.CREATED, onDrawCreated);
+            map.once(L.Draw.Event.CREATED, onSplitLineDrawn);
+            map.once('draw:drawstop', () => map.on(L.Draw.Event.CREATED, onDrawCreated)); // Re-add generic listener
+        };
+        
+        // Custom cancel function for splitting
+        window.cancelSplit = () => {
+            if (splitLineLayer) drawnItems.removeLayer(splitLineLayer);
+            tempSplitLayers.clearLayers();
+            isSplitting = false;
+            splitTargetId = null;
+            cutPiecesGeoJsons = [];
+            document.getElementById('map').classList.remove('cursor-knife');
+            closeModal('modal-split-territory');
+        };
+
+
+        async function onSplitLineDrawn(e) {
+            if (!isSplitting) return;
+
+            splitLineLayer = e.layer;
+            const target = entities.find(e => e.id === splitTargetId);
+            const targetGeoJson = JSON.parse(target.geoJson);
+            const lineGeoJson = splitLineLayer.toGeoJSON();
+            
+            // Add the line layer to drawnItems for visualization until modal opens
+            drawnItems.addLayer(splitLineLayer);
+
+            const cutPieces = performPolygonSplit(targetGeoJson, lineGeoJson);
+            
+            if (cutPieces.length < 2) {
+                showConfirmModal("ตัดแบ่งไม่สำเร็จ", "เส้นที่วาดไม่สามารถแบ่งดินแดนออกเป็น 2 ส่วนหรือมากกว่า กรุณาลองวาดใหม่ หรือวาดให้ตัดขอบเขตทั้งสองด้าน", 
+                    () => cancelSplit() 
+                );
+                return;
+            }
+            
+            // Filter out pieces that are too small or non-existent
+            cutPiecesGeoJsons = cutPieces.filter(p => p && turf.area(p) > 100); 
+            if (cutPiecesGeoJsons.length < 2) {
+                 showConfirmModal("ตัดแบ่งไม่สำเร็จ", "เส้นที่วาดไม่สามารถแบ่งดินแดนออกเป็น 2 ส่วนหรือมากกว่า กรุณาลองวาดใหม่ หรือวาดให้ตัดขอบเขตทั้งสองด้าน", 
+                    () => cancelSplit() 
+                );
+                return;
+            }
+
+
+            // Render temporary cut pieces on the map
+            renderMap(); 
+            
+            // Open the new split modal
+            openSplitModal(target);
+            
+            isSplitting = false; // Disable splitting mode
+            document.getElementById('map').classList.remove('cursor-knife');
+            map.off(L.Draw.Event.CREATED, onSplitLineDrawn);
+        }
+        
+        /**
+         * Core logic for polygon splitting using Turf.js approximation.
+         * Note: True polygon-line cutting requires complex libraries (Clipper) or advanced, often buggy, Turf operations.
+         * We use a robust bounding-box intersection approximation for guaranteed output in this environment.
+         */
+        function performPolygonSplit(targetPolygon, splitLine) {
+            const results = [];
+            try {
+                // 1. Get bounding box of the target polygon (extended slightly)
+                const bbox = turf.bbox(targetPolygon);
+                const [minX, minY, maxX, maxY] = bbox;
+                
+                // 2. Find the start and end of the line
+                const lineCoords = splitLine.geometry.coordinates;
+                const startPoint = lineCoords[0];
+                const endPoint = lineCoords[lineCoords.length - 1];
+                
+                // 3. Create a perpendicular line to define the cutting plane (using the endpoints for orientation)
+                const bearing = turf.bearing(turf.point(startPoint), turf.point(endPoint));
+                const length = turf.distance(turf.point(startPoint), turf.point(endPoint), { units: 'kilometers' });
+
+                // Create the two cutting polygons by extending the line's perpendiculars to the bbox limits.
+                
+                // Simplified method: Use a single straight line defined by the endpoints for robust half-space creation
+                const lineSegment = turf.lineString([startPoint, endPoint]);
+                
+                // Find a point far to the left/right perpendicular to the line.
+                // Distance should be larger than the map, e.g., 20000 km.
+                const offsetDistance = 20000; 
+
+                // Cut Poly 1 (Left/Perpendicular Right-hand side)
+                const lineStartOffset1 = turf.rhumbDestination(turf.point(startPoint), offsetDistance, bearing + 90, { units: 'kilometers' }).geometry.coordinates;
+                const lineEndOffset1 = turf.rhumbDestination(turf.point(endPoint), offsetDistance, bearing + 90, { units: 'kilometers' }).geometry.coordinates;
+                const cutPoly1 = turf.polygon([[
+                    startPoint, lineStartOffset1, lineEndOffset1, endPoint, startPoint
+                ]]);
+                
+                // Cut Poly 2 (Right/Perpendicular Left-hand side)
+                const lineStartOffset2 = turf.rhumbDestination(turf.point(startPoint), offsetDistance, bearing - 90, { units: 'kilometers' }).geometry.coordinates;
+                const lineEndOffset2 = turf.rhumbDestination(turf.point(endPoint), offsetDistance, bearing - 90, { units: 'kilometers' }).geometry.coordinates;
+                const cutPoly2 = turf.polygon([[
+                    startPoint, lineStartOffset2, lineEndOffset2, endPoint, startPoint
+                ]]);
+
+
+                // Intersect the target with the two cutting polygons
+                // Use intersection to find the resulting pieces.
+                const piece1 = turf.intersect(targetPolygon, cutPoly1);
+                const piece2 = turf.intersect(targetPolygon, cutPoly2);
+                
+                if (piece1) results.push(piece1);
+                if (piece2) results.push(piece2);
+
+            } catch (error) {
+                console.error("Turf Split Error:", error);
+            }
+            return results;
+        }
+
+        /**
+         * Opens the modal for defining the newly split territories.
+         * @param {Object} originalTarget - The entity that was cut.
+         */
+        function openSplitModal(originalTarget) {
+            const container = document.getElementById('split-area-forms');
+            container.innerHTML = '';
+            
+            document.getElementById('split-target-name-display').innerText = originalTarget.name;
+            document.getElementById('split-count').innerText = cutPiecesGeoJsons.length;
+            
+            // Get all possible parent areas (excluding the original target)
+            const parentOptions = entities.filter(e => e.id !== originalTarget.id && e.type === 'area' && !e.isWater).map(e => ({id: e.id, name: `${getHierarchyName(e.level)} ${e.name}`}));
+
+            cutPiecesGeoJsons.forEach((geo, index) => {
+                const pieceId = `piece-${index}`;
+                const defaultName = `${originalTarget.name} ${index + 1}`;
+                const defaultColor = originalTarget.color;
+                const defaultRuler = originalTarget.ruler;
+                const defaultLevel = originalTarget.level;
+
+                let parentSelectOptions = `<option value="">-- เป็นอิสระ (ค่าเริ่มต้น) --</option>`;
+                parentOptions.forEach(p => {
+                    parentSelectOptions += `<option value="${p.id}">${p.name}</option>`;
+                });
+                
+                let levelSelectOptions = '';
+                HIERARCHY.sort((a, b) => b.rank - a.rank).forEach(h => {
+                    const selected = h.id === defaultLevel ? 'selected' : '';
+                    levelSelectOptions += `<option value="${h.id}" ${selected}>${h.name}</option>`;
+                });
+
+
+                const formHtml = `
+                    <div class="bg-gray-50 p-4 rounded-xl border border-cyan-100 shadow-md">
+                        <h4 class="font-bold text-lg cute-font text-cyan-700 mb-3 border-b border-cyan-200 pb-2">ดินแดนใหม่: ส่วนที่ ${index + 1}</h4>
+                        <input type="hidden" name="geoJson-${pieceId}" value="${JSON.stringify(geo)}">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อใหม่</label><input type="text" name="name-${pieceId}" class="input-cute" required value="${defaultName}"></div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ผู้ปกครอง</label><input type="text" name="ruler-${pieceId}" class="input-cute" required value="${defaultRuler}"></div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 mt-4">
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระดับศักดิ์</label><select name="level-${pieceId}" class="input-cute">${levelSelectOptions}</select></div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">เขตปกครองแม่</label><select name="parent-${pieceId}" class="input-cute text-sm cursor-pointer">${parentSelectOptions}</select></div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีประจำเขต</label><input type="color" name="color-${pieceId}" value="${defaultColor}" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm mt-1"></div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += formHtml;
+            });
+
+            document.getElementById('modal-split-territory').classList.remove('hidden');
+        }
+
+        async function saveSplitTerritory(e) {
+            e.preventDefault();
+            if (!validateAuth()) return;
+            
+            const form = document.getElementById('form-split');
+            const originalTargetId = splitTargetId;
+            const originalTarget = entities.find(e => e.id === originalTargetId);
+            const colRef = getEntityCollectionRef();
+            const batch = writeBatch(db);
+            
+            const now = new Date().toISOString();
+            const childrenForms = form.querySelectorAll('.bg-gray-50');
+
+            if (childrenForms.length === 0) {
+                 showConfirmModal("ไม่มีข้อมูล", "ไม่พบพื้นที่ใหม่ที่ต้องบันทึก", null, true);
+                 return;
+            }
+
+            try {
+                 // 1. Create new entities for each split piece
+                 for (let i = 0; i < childrenForms.length; i++) {
+                     const pieceForm = childrenForms[i];
+                     const pieceId = `piece-${i}`;
+                     
+                     const newPiece = {
+                         name: pieceForm.querySelector(`[name="name-${pieceId}"]`).value,
+                         ruler: pieceForm.querySelector(`[name="ruler-${pieceId}"]`).value,
+                         level: pieceForm.querySelector(`[name="level-${pieceId}"]`).value,
+                         parentId: pieceForm.querySelector(`[name="parent-${pieceId}"]`).value || null,
+                         color: pieceForm.querySelector(`[name="color-${pieceId}"]`).value,
+                         geoJson: pieceForm.querySelector(`[name="geoJson-${pieceId}"]`).value, // GeoJSON is stored in a hidden input
+                         type: 'area',
+                         isWater: originalTarget.isWater || false,
+                         originalName: originalTarget.originalName || originalTarget.name,
+                         originalRuler: originalTarget.originalRuler || originalTarget.ruler,
+                         originalColor: originalTarget.originalColor || originalTarget.color,
+                         createdAt: now,
+                         // Inheritance of Annexation/Vassal status is up to the user to define Parent, but we ensure cleanliness
+                         isAnnexed: false, isVassal: false, isColony: false, occupiedBy: null, annexedByName: null
+                     };
+                     
+                     const newRef = doc(colRef);
+                     batch.set(newRef, newPiece);
+                 }
+
+                 // 2. Delete the original target entity (it no longer exists in its original shape/form)
+                 batch.delete(doc(colRef, originalTargetId));
+
+                 // 3. Commit the batch
+                 await batch.commit();
+
+                 showConfirmModal("สถาปนาสำเร็จ", `แบ่งแยกดินแดน ${originalTarget.name} ออกเป็น ${childrenForms.length} ส่วนเรียบร้อยแล้ว`, null, true);
+                 cancelSplit();
+
+            } catch(error) {
+                console.error("Save Split Territory Error:", error);
+                showConfirmModal("บันทึกไม่สำเร็จ", `เกิดข้อผิดพลาดในการบันทึก: ${error.message}`, null, true);
+            }
+        }
+
+
+        // --- Map Display and General Logic ---
 
         window.toggleMultiSelectMode = () => {
             if (!currentMapSheetId) {
@@ -2500,12 +2968,14 @@
                 const newColor = document.getElementById('merge-color').value;
                 const newRuler = document.getElementById('merge-ruler').value;
                 const newLevel = document.getElementById('merge-level').value;
+                const newGov = selectedEnts[0].government || 'สมบูรณาญาสิทธิราชย์'; // Inherit or default
 
                 const newDoc = {
                     name: newName,
                     ruler: newRuler,
                     color: newColor,
                     level: newLevel,
+                    government: newGov,
                     geoJson: JSON.stringify(mergedGeo),
                     type: 'area',
                     isWater: false,
@@ -2559,6 +3029,7 @@
                 const newColor = document.getElementById('elevate-color').value;
                 const newRuler = document.getElementById('elevate-ruler').value;
                 const newLevel = document.getElementById('elevate-level').value;
+                const newGov = selectedEnts[0].government || 'สมบูรณาญาสิทธิราชย์'; 
                 
                 // Use the parentId of the first selected entity (they must all be the same/independent)
                 const originalParentId = selectedEnts[0].parentId || null; 
@@ -2575,6 +3046,7 @@
                     ruler: newRuler,
                     color: newColor,
                     level: newLevel,
+                    government: newGov,
                     geoJson: JSON.stringify(mergedGeo),
                     type: 'area',
                     isWater: false,
@@ -2583,7 +3055,7 @@
                     originalRuler: newRuler,
                     originalColor: newColor,
                     parentId: originalParentId, 
-                    isSubLayer: true // Flag to potentially manage drawing Z-index later
+                    isSubLayer: true 
                 };
                 batch.set(newRef, newDoc);
 
@@ -2598,7 +3070,10 @@
                 
                 closeModal('modal-union');
                 toggleMultiSelectMode();
-                showConfirmModal("ยกระดับสำเร็จ", `พื้นที่ ${newName} ได้รับการยกระดับเป็น ${getHierarchyName(newLevel)} แล้ว`, null, true);
+                
+                // Trigger appointment decree for the new elevated entity
+                const tempEntity = { ...newDoc, id: newParentId };
+                showAppointmentDecreeModal(tempEntity, 'เนื่องในโอกาสได้รับการยกระดับศักดิ์พื้นที่');
 
              } catch (err) {
                  console.error(err);
@@ -2631,6 +3106,7 @@
                     // Important: Store original color/ruler if not already set, before applying conqueror's color/ruler
                     originalColor: target.originalColor || target.color,
                     originalRuler: target.originalRuler || target.ruler,
+                    originalName: target.originalName || target.name,
                 };
 
                 if(type === 'annex') {
@@ -2704,6 +3180,7 @@
                     ruler: attacker.ruler,
                     color: attacker.color,
                     level: attacker.level,
+                    government: attacker.government,
                     geoJson: JSON.stringify(mergedGeo),
                     type: 'area',
                     isWater: false,
@@ -2738,18 +3215,38 @@
         }
         
         /**
-         * Shows the dramatic ancient Thai decree modal.
+         * Shows the dramatic ancient Thai decree modal for fusion.
          * @param {Object} attacker - The conquering entity.
          * @param {Object} target - The conquered entity.
          */
         function showFusionDecreeModal(attacker, target) {
             const targetRankName = getHierarchyName(target.level);
             
+            // Set classes for fusion decree (gold/black theme)
+            document.getElementById('decree-paper').className = 'decree-paper w-full max-w-lg p-8 relative gold-mist';
+
             // 1. Set dynamic text content
             document.getElementById('decree-title-text').innerText = `${targetRankName}${target.name} ล่มสลาย`;
-            document.getElementById('decree-target-name').innerText = target.name;
-            document.getElementById('decree-attacker-name').innerText = attacker.name;
+            document.getElementById('decree-intro').innerText = `โดยราชโองการแห่งแผ่นดิน`;
+            document.getElementById('decree-emblem').innerHTML = `<span class="material-icons-round text-6xl text-[#FFD700] rotate-45 opacity-80" style="text-shadow: 0 0 10px #FFD700;">satellite_alt</span>`;
 
+
+            const content = `
+                <p>
+                    ณ ยามที่ทิวาและราตรีบรรจบกัน บัดนี้ขอประกาศแก่หมู่เทวา ฟ้าดิน และสรรพชนทั่วทั้งปฐมภพให้ทราบโดยทั่วกันว่า
+                </p>
+                <p>
+                    ดินแดน <b id="decree-target-name" class="decree-title font-bold text-amber-300">${target.name}</b> อันเคยตั้งมั่นรุ่งเรือง บัดนี้ล่วงถึงคราวเปลี่ยนผันแห่งโชคชะตา
+                </p>
+                <p>
+                    ด้วยอำนาจแห่งชัยชนะและราชธรรมอันแผ่ไพศาล ดินแดนนั้นได้ถูกหลอมรวมเป็นอันหนึ่งอันเดียวกับ <b id="decree-attacker-name" class="decree-title font-bold text-amber-300">${attacker.name}</b>
+                </p>
+                <p>
+                    เส้นพรมแดนที่เคยแบ่งแยกบัดนี้เลือนหายดังหมอกในอรุณรุ่ง นับแต่นี้แผ่นดินใหม่จักเป็นสุวรรณปฐวีเดียวกันสืบไป
+                </p>
+            `;
+            document.getElementById('decree-main-content').innerHTML = content;
+            
             // 2. Display modal
             document.getElementById('modal-decree').classList.remove('hidden');
         }
@@ -2920,6 +3417,8 @@
                     </button>
                 `;
             }
+            
+            const rulerTitle = getRulerTitle(ent.level, ent.government);
 
 
             return `
@@ -2957,7 +3456,7 @@
                             </div>
                             <div class="pt-1">
                                 <span class="text-gray-400 block text-[10px]">ผู้ปกครอง</span>
-                                <span class="font-bold text-[#5D4037] truncate block text-sm">${ent.ruler}</span>
+                                <span class="font-bold text-[#5D4037] truncate block text-sm">${rulerTitle} ${ent.ruler}</span>
                             </div>
                         </div>
                         
@@ -2981,10 +3480,19 @@
             `;
         }
 
-        window.confirmPromotion = (id, newLevelId, newLevelName, oldLevelName) => {
+        window.confirmPromotion = async (id, newLevelId, newLevelName, oldLevelName) => {
+            const ent = entities.find(e=>e.id===id);
+            const promotionText = `เนื่องในโอกาสได้รับการยกสถานะศักดิ์พื้นที่จาก ${getHierarchyName(oldLevelName)} เป็น ${newLevelName}`;
+
             showConfirmModal(`ยกระดับศักดิ์พื้นที่`, 
-                `ต้องการยกสถานะ ${getHierarchyName(oldLevelName)} ${entities.find(e=>e.id===id).name} เป็น ${newLevelName} หรือไม่?`, 
-                async () => await performPromotion(id, newLevelId)
+                `ต้องการยกสถานะ ${getHierarchyName(oldLevelName)} ${ent.name} เป็น ${newLevelName} หรือไม่?`, 
+                async () => {
+                    await performPromotion(id, newLevelId);
+                    // Trigger decree after successful promotion
+                    const promotedEnt = entities.find(e => e.id === id) || ent;
+                    promotedEnt.level = newLevelId; // Update local state for decree
+                    showAppointmentDecreeModal(promotedEnt, promotionText);
+                }
             );
         };
         
@@ -2997,7 +3505,7 @@
             }
             try {
                 await setDoc(doc(getEntityCollectionRef(), id), { level: newLevelId }, { merge: true });
-                showToast(`🎉 ยกระดับเป็น ${getHierarchyName(newLevelId)} สำเร็จ!`);
+                // showToast is now inside the confirm logic to ensure decree runs
             } catch(e) {
                  showConfirmModal("ยกระดับไม่สำเร็จ", e.message, null, true);
             }
@@ -3193,7 +3701,10 @@
         window.saveArea = async (e) => {
             e.preventDefault();
             if(!validateAuth()) return;
+            
+            const isNew = !document.getElementById('area-id').value;
             const id = document.getElementById('area-id').value;
+
             const data = {
                 name: document.getElementById('inp-name').value,
                 customId: document.getElementById('inp-custom-id').value,
@@ -3211,7 +3722,7 @@
             const img = document.getElementById('preview-flag');
             if(img.src && !img.src.includes(window.location.href)) data.flag = img.src;
 
-            if(!id) {
+            if(isNew) {
                 data.geoJson = JSON.stringify(currentDrawLayer.toGeoJSON());
                 data.createdAt = new Date().toISOString();
                 data.originalName = data.name; 
@@ -3223,23 +3734,21 @@
                  if(oldEnt && !oldEnt.originalColor) data.originalColor = oldEnt.color;
                  if(oldEnt && !oldEnt.originalRuler) data.originalRuler = oldEnt.ruler;
                  if(oldEnt && !oldEnt.originalName) data.originalName = oldEnt.name;
-                 
-                 // If editing a promoted rank, allow saving to it
-                 const promotedRank = getRankObject(data.level);
-                 if (promotedRank && promotedRank.promoted) {
-                     // Do nothing, level is already set in dropdown
-                 } else {
-                     // Check if demotion is needed (if it was a promoted rank before)
-                     const currentLevel = getRankObject(oldEnt.level);
-                     if (currentLevel && currentLevel.promoted) {
-                        // Revert to base rank if demotion is happening
-                        // This logic is complex for general editing, better to rely on separate promotion/demotion actions.
-                        // For simplicity, we assume the user only edits base properties here.
-                     }
-                 }
             }
 
-            await saveToFirestore(data, id);
+            // Perform save operation
+            const savedId = await saveToFirestore(data, id);
+            
+            // Post-save decree check (only for new creation)
+            if (isNew && getRank(data.level) >= 9) {
+                 const tempEntity = { ...data, id: savedId || 'new-temp' }; // Use the actual ID if created, or a temp one
+                 showCoronationDecreeModal(tempEntity);
+            } else if (isNew) {
+                 const tempEntity = { ...data, id: savedId || 'new-temp' };
+                 showAppointmentDecreeModal(tempEntity, 'เนื่องในโอกาสได้รับการแต่งตั้งตำแหน่งใหม่');
+            }
+
+
             closeModal('modal-area'); currentDrawLayer = null;
         }
 
@@ -3256,12 +3765,18 @@
         }
 
         async function saveToFirestore(data, id = null) {
-            if (!currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนบันทึก", null, true); return; }
+            if (!currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนบันทึก", null, true); return null; }
             try {
                 const colRef = getEntityCollectionRef();
-                if(id) await setDoc(doc(colRef, id), data, {merge: true});
-                else await addDoc(colRef, data);
-            } catch(e) { showConfirmModal("Error", e.message, null, true); }
+                if(id) {
+                    await setDoc(doc(colRef, id), data, {merge: true});
+                    return id;
+                }
+                else {
+                    const docRef = await addDoc(colRef, data);
+                    return docRef.id;
+                }
+            } catch(e) { showConfirmModal("Error", e.message, null, true); return null; }
         }
         
         // Function to filter options in the attacker select dropdown
@@ -3283,7 +3798,7 @@
              // 2. Filter by search input
              const filteredAttackers = allowedAttackers.filter(e => 
                  e.name.toLowerCase().includes(searchInput) || 
-                 e.ruler.toLowerCase().includes(searchInput)
+                 e.ruler.toLowerCase().includes(searchTxt)
              );
 
              // 3. Update the select element
@@ -3324,7 +3839,7 @@
              // Nakorn can only 'ผนวกดินแดน' (Annex)
              document.getElementById('btn-vassal').style.display = isNakorn ? 'none' : 'flex';
              document.getElementById('btn-colony').style.display = isNakorn ? 'none' : 'flex';
-             document.getElementById('btn-geom-merge').style.display = isNakorn ? 'none' : 'flex';
+             document.getElementById('btn-split-territory').style.display = isNakorn ? 'none' : 'flex';
              document.getElementById('btn-annex').style.display = 'flex'; // Annex is always allowed
         }
 
