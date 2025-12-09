@@ -2268,7 +2268,7 @@
                  tempSplitLayers.clearLayers();
                  cutPiecesGeoJsons.forEach((geo, index) => {
                      // Temporary random colors for new pieces
-                     const tempColor = ["#FFD700", "#C0C0C0", "#CD7F32"][index % 3]; 
+                     const tempColor = ["#00BCD4", "#80DEEA", "#4DD0E1"][index % 3]; 
                      L.geoJSON(geo, {
                          style: { color: tempColor, weight: 3, fillOpacity: 0.8, dashArray: '5, 5' }
                      }).addTo(tempSplitLayers);
@@ -2604,8 +2604,8 @@
                     หาได้รวมกันเป็นผืนสุวรรณปฐพีเดียวกันดังแต่ก่อนไม่
                 </p>
                 <p>
-                    ขอความสุขสวัสดีจงมีแต่ <b class="decree-title">${newRankName}${newName}</b> และอีก ${newPieces.length - 1} ส่วนที่แยกจากกัน
-                    ด้วยเทอญ
+                    ขอความสุขสวัสดีจงมีแต่ <b class="decree-title">${newRankName}${newName}</b>
+                    ด้วยเทอญ (และอีก ${newPieces.length - 1} ส่วนที่แยกจากกัน)
                 </p>
                 <div class="text-xs text-gray-500 mt-4">
                     พื้นที่ ${originalEnt.name} ถูกแบ่งออกเป็น ${newPieces.length} ส่วน และได้ลบพื้นที่เดิมทิ้งแล้ว
@@ -2628,7 +2628,7 @@
             const target = entities.find(e => e.id === tid);
 
             if (!target || target.type !== 'area' || target.isWater) {
-                showConfirmModal("ข้อจำกัด", "การแบ่งแยกดินแดนใช้ได้เฉพาะกับเขตพื้นที่ (Area) เท่านั้น", null, true);
+                showConfirmModal("ข้อจำกัด", "การแบ่งแยกดินแดนใช้ได้เฉพาะกับเขตพื้นที่ (Area) ที่ไม่ใช่ผืนน้ำเท่านั้น", null, true);
                 return;
             }
 
@@ -2643,7 +2643,7 @@
             
             // Start drawing a polyline
             const splitDrawer = new L.Draw.Polyline(map, {
-                shapeOptions: { color: '#00BCD4', weight: 4 },
+                shapeOptions: { color: '#00BCD4', weight: 4, dashArray: '10, 5' },
                 metric: false,
                 repeatMode: false,
                 drawError: { color: '#B00020', message: 'กรุณาวาดเส้นยาวขึ้น' }
@@ -2671,14 +2671,28 @@
 
 
         async function onSplitLineDrawn(e) {
-            if (!isSplitting) return;
+            if (!splitTargetId) {
+                if (e.layer) drawnItems.removeLayer(e.layer);
+                showToast("ยกเลิกการแบ่งแยกเนื่องจากไม่พบพื้นที่เป้าหมาย");
+                return;
+            }
 
             splitLineLayer = e.layer;
             const target = entities.find(e => e.id === splitTargetId);
+            
+            if (!target || target.type !== 'area') {
+                 if (e.layer) drawnItems.removeLayer(e.layer);
+                 showToast("ยกเลิก: พื้นที่เป้าหมายไม่ถูกต้อง");
+                 return;
+            }
+
+            // Must use a temporary layer to get its GeoJSON correctly (Leaflet layer)
+            const lineLayerForGeoJson = L.polyline(splitLineLayer.getLatLngs());
+            const lineGeoJson = lineLayerForGeoJson.toGeoJSON();
             const targetGeoJson = JSON.parse(target.geoJson);
-            const lineGeoJson = splitLineLayer.toGeoJSON();
             
             // Add the line layer to drawnItems for visualization until modal opens
+            // Note: splitLineLayer is the actual L.Draw object, adding it here will keep it visible.
             drawnItems.addLayer(splitLineLayer);
 
             const cutPieces = performPolygonSplit(targetGeoJson, lineGeoJson);
@@ -2691,7 +2705,9 @@
             }
             
             // Filter out pieces that are too small or non-existent
+            // Use turf.area to ensure pieces have meaningful size (area is in square meters)
             cutPiecesGeoJsons = cutPieces.filter(p => p && turf.area(p) > 100); 
+            
             if (cutPiecesGeoJsons.length < 2) {
                  showConfirmModal("ตัดแบ่งไม่สำเร็จ", "เส้นที่วาดไม่สามารถแบ่งดินแดนออกเป็น 2 ส่วนหรือมากกว่า กรุณาลองวาดใหม่ หรือวาดให้ตัดขอบเขตทั้งสองด้าน", 
                     () => cancelSplit() 
@@ -2706,58 +2722,49 @@
             // Open the new split modal
             openSplitModal(target);
             
-            isSplitting = false; // Disable splitting mode
             document.getElementById('map').classList.remove('cursor-knife');
-            map.off(L.Draw.Event.CREATED, onDrawCreated);
+            // Do NOT re-add the generic listener here, L.Draw.Event.CREATED is re-added in startSplitTerritoryMode cleanup
         }
         
         /**
          * Core logic for polygon splitting using Turf.js approximation.
-         * Note: True polygon-line cutting requires complex libraries (Clipper) or advanced, often buggy, Turf operations.
-         * We use a robust bounding-box intersection approximation for guaranteed output in this environment.
+         * The implementation uses the line to create two large cutting polygons (half-planes)
+         * and intersects the target with them.
+         * @param {Object} targetPolygon - GeoJSON Polygon/MultiPolygon of the entity to cut.
+         * @param {Object} splitLine - GeoJSON LineString for the cutting line.
          */
         function performPolygonSplit(targetPolygon, splitLine) {
             const results = [];
             try {
-                // 1. Get bounding box of the target polygon (extended slightly)
-                const bbox = turf.bbox(targetPolygon);
-                const [minX, minY, maxX, maxY] = bbox;
-                
-                // 2. Find the start and end of the line
                 const lineCoords = splitLine.geometry.coordinates;
                 const startPoint = lineCoords[0];
                 const endPoint = lineCoords[lineCoords.length - 1];
                 
-                // 3. Create a perpendicular line to define the cutting plane (using the endpoints for orientation)
-                const bearing = turf.bearing(turf.point(startPoint), turf.point(endPoint));
-                const length = turf.distance(turf.point(startPoint), turf.point(endPoint), { units: 'kilometers' });
-
-                // Create the two cutting polygons by extending the line's perpendiculars to the bbox limits.
-                
-                // Simplified method: Use a single straight line defined by the endpoints for robust half-space creation
-                const lineSegment = turf.lineString([startPoint, endPoint]);
-                
-                // Find a point far to the left/right perpendicular to the line.
-                // Distance should be larger than the map, e.g., 20000 km.
+                // Use a distance larger than any map feature (20,000 km)
                 const offsetDistance = 20000; 
-
-                // Cut Poly 1 (Left/Perpendicular Right-hand side)
-                const lineStartOffset1 = turf.rhumbDestination(turf.point(startPoint), offsetDistance, bearing + 90, { units: 'kilometers' }).geometry.coordinates;
-                const lineEndOffset1 = turf.rhumbDestination(turf.point(endPoint), offsetDistance, bearing + 90, { units: 'kilometers' }).geometry.coordinates;
+                const units = 'kilometers';
+                
+                // Calculate the bearing of the line
+                const bearing = turf.bearing(turf.point(startPoint), turf.point(endPoint));
+                
+                // --- Cutting Polygon 1 (Right Side / Bearing + 90) ---
+                const lineStartOffset1 = turf.rhumbDestination(turf.point(startPoint), offsetDistance, bearing + 90, { units }).geometry.coordinates;
+                const lineEndOffset1 = turf.rhumbDestination(turf.point(endPoint), offsetDistance, bearing + 90, { units }).geometry.coordinates;
+                // Create a polygon by connecting the original endpoints to their offset points
                 const cutPoly1 = turf.polygon([[
                     startPoint, lineStartOffset1, lineEndOffset1, endPoint, startPoint
                 ]]);
                 
-                // Cut Poly 2 (Right/Perpendicular Left-hand side)
-                const lineStartOffset2 = turf.rhumbDestination(turf.point(startPoint), offsetDistance, bearing - 90, { units: 'kilometers' }).geometry.coordinates;
-                const lineEndOffset2 = turf.rhumbDestination(turf.point(endPoint), offsetDistance, bearing - 90, { units: 'kilometers' }).geometry.coordinates;
+                // --- Cutting Polygon 2 (Left Side / Bearing - 90) ---
+                const lineStartOffset2 = turf.rhumbDestination(turf.point(startPoint), offsetDistance, bearing - 90, { units }).geometry.coordinates;
+                const lineEndOffset2 = turf.rhumbDestination(turf.point(endPoint), offsetDistance, bearing - 90, { units }).geometry.coordinates;
+                // Create the second cutting polygon
                 const cutPoly2 = turf.polygon([[
                     startPoint, lineStartOffset2, lineEndOffset2, endPoint, startPoint
                 ]]);
 
 
                 // Intersect the target with the two cutting polygons
-                // Use intersection to find the resulting pieces.
                 const piece1 = turf.intersect(targetPolygon, cutPoly1);
                 const piece2 = turf.intersect(targetPolygon, cutPoly2);
                 
@@ -2786,7 +2793,8 @@
 
             cutPiecesGeoJsons.forEach((geo, index) => {
                 const pieceId = `piece-${index}`;
-                const defaultName = `${originalTarget.name} ${index + 1}`;
+                // Use Original Entity's properties as default for the new pieces
+                const defaultName = `${originalTarget.name}-${index + 1}`;
                 const defaultColor = originalTarget.color;
                 const defaultRuler = originalTarget.ruler;
                 const defaultLevel = originalTarget.level;
@@ -2806,7 +2814,7 @@
                 const formHtml = `
                     <div class="bg-gray-50 p-4 rounded-xl border border-cyan-100 shadow-md">
                         <h4 class="font-bold text-lg cute-font text-cyan-700 mb-3 border-b border-cyan-200 pb-2">ดินแดนใหม่: ส่วนที่ ${index + 1}</h4>
-                        <input type="hidden" name="geoJson-${pieceId}" value="${JSON.stringify(geo)}">
+                        <input type="hidden" name="geoJson-${pieceId}" value='${JSON.stringify(geo)}'>
                         <div class="grid grid-cols-2 gap-4">
                             <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อใหม่</label><input type="text" name="name-${pieceId}" class="input-cute" required value="${defaultName}"></div>
                             <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ผู้ปกครอง</label><input type="text" name="ruler-${pieceId}" class="input-cute" required value="${defaultRuler}"></div>
@@ -2850,6 +2858,7 @@
                      const pieceForm = childrenForms[i];
                      const pieceId = `piece-${i}`;
                      
+                     // Read values from dynamically generated input names
                      const newPiece = {
                          name: pieceForm.querySelector(`[name="name-${pieceId}"]`).value,
                          ruler: pieceForm.querySelector(`[name="ruler-${pieceId}"]`).value,
@@ -2859,13 +2868,16 @@
                          geoJson: pieceForm.querySelector(`[name="geoJson-${pieceId}"]`).value, // GeoJSON is stored in a hidden input
                          type: 'area',
                          isWater: originalTarget.isWater || false,
+                         
+                         // Inheritance of Original/Status
                          originalName: originalTarget.originalName || originalTarget.name,
                          originalRuler: originalTarget.originalRuler || originalTarget.ruler,
                          originalColor: originalTarget.originalColor || originalTarget.color,
+                         
                          government: originalTarget.government || 'สมบูรณาญาสิทธิราชย์', // Inherit
                          religion: originalTarget.religion || 'พุทธ', // Inherit
                          createdAt: now,
-                         // Inheritance of Annexation/Vassal status is up to the user to define Parent, but we ensure cleanliness
+                         // Clean new areas from old annexation status
                          isAnnexed: false, isVassal: false, isColony: false, occupiedBy: null, annexedByName: null
                      };
                      
@@ -3445,7 +3457,7 @@
                 statusBadge = '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-200">ประเทศราช</span>';
                 subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(ประเทศราชของ ${ent.annexedByName})</div>`;
             } else if (ent.isColony) {
-                statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-200">อาณานิคม</span>';
+                statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-100">อาณานิคม</span>';
                 subStatus = `<div class="text-[11px] text-red-600 font-bold mt-1">(อาณานิคมของ ${ent.annexedByName})</div>`;
             } else if (ent.isWater) {
                 statusBadge = '<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full border border-blue-100">น่านน้ำ</span>';
