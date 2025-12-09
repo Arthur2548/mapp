@@ -1045,6 +1045,7 @@
                     <div id="elevate-message-container">
                         <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 text-xs text-blue-800">
                             <span class="font-bold">ผลลัพธ์:</span> พื้นที่เดิม **ยังอยู่** แต่พื้นที่รวมนี้จะถูกสร้างเป็น **เลเยอร์แม่ใหม่** (ศักดิ์สูงขึ้น)
+                            <div class="mt-2 text-gray-600 font-normal">เหมาะสำหรับสร้างเขตปกครองระดับสูงจากหน่วยย่อยหลายหน่วย เช่น รวมหมู่บ้านหลายหมู่บ้านเป็น *แขวง*</div>
                         </div>
                     </div>
                     <form id="form-elevate" onsubmit="executeAreaElevation(event)">
@@ -1202,6 +1203,7 @@
         let pendingConfirmAction = null; 
         let is3DMode = false;
         let selectedCesiumEntity = null;
+        let cesiumBaseLayer = 'nolabels'; // Track the currently selected base layer mode ('nolabels' or 'sat')
         
 
         // --- NEW GLOBALS for Freehand ---
@@ -1219,8 +1221,7 @@
         let unsubscribeMapListener = null; // To manage the dynamic map data listener
 
 
-        // --- UPDATED HIERARCHY ARRAY ---
-        // เพิ่มศักดิ์ "แขวง", "อาเขต", "เมือง", "นคร" และกำหนดเงื่อนไขการเลื่อนขั้น
+        // --- UPDATED HIERARCHY ARRAY (Comprehensive list based on user specs) ---
         const HIERARCHY = [
             { id: 'mahaAnachak', name: 'มหาอาณาจักร', rank: 11, defaultColor: '#884A51', parentReq: 'anachak', reqDesc: 'ทุกอาณาจักรเป็นนคร' },
             { id: 'anachak', name: 'อาณาจักร', rank: 10, defaultColor: '#F1C40F', parentReq: 'prathet', reqDesc: 'ทุกประเทศเป็นนคร' },
@@ -1531,10 +1532,26 @@
                  }
             });
         }
+        
+        // ** NEW CESIUM IMAGERY PROVIDERS **
+        const CARTO_IMAGERY_PROVIDER = new Cesium.UrlTemplateImageryProvider({
+            url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
+            subdomains: ['a', 'b', 'c', 'd'],
+            credit: '&copy; OpenStreetMap &copy; CARTO'
+        });
+
+        const ESRI_IMAGERY_PROVIDER = new Cesium.ArcGisMapServerImageryProvider({
+            url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+        });
+        // ** END NEW CESIUM IMAGERY PROVIDERS **
+
 
         // --- Cesium Setup (3D) ---
         function initCesium() {
             if(viewer) return;
+
+            // Use the initial selected base layer when initializing
+            const initialProvider = cesiumBaseLayer === 'nolabels' ? CARTO_IMAGERY_PROVIDER : ESRI_IMAGERY_PROVIDER;
 
             viewer = new Cesium.Viewer('cesiumContainer', {
                 animation: false,
@@ -1548,10 +1565,16 @@
                 selectionIndicator: true,
                 timeline: false,
                 navigationHelpButton: false,
-                imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-                    url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
-                })
+                imageryProvider: initialProvider // Use CARTO or ESRI
             });
+            
+            // Hide default Cesium base layer text (names) if CARTO is selected
+            if (cesiumBaseLayer === 'nolabels') {
+                 viewer.scene.globe.showGroundAtmosphere = false;
+            } else {
+                 viewer.scene.globe.showGroundAtmosphere = true;
+            }
+
 
             viewer.scene.globe.enableLighting = true;
             viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
@@ -1597,6 +1620,23 @@
 
             syncCameraTo2D();
         }
+        
+        // ** NEW: Function to switch Cesium Base Layer **
+        function switchCesiumBaseLayer(mode) {
+             if (!viewer) return;
+             
+             cesiumBaseLayer = mode;
+             viewer.scene.imageryLayers.removeAll();
+             
+             if (mode === 'nolabels') {
+                 viewer.scene.imageryLayers.addImageryProvider(CARTO_IMAGERY_PROVIDER);
+                 viewer.scene.globe.showGroundAtmosphere = false; // Hide names/labels from Cesium's default layer if present
+             } else { // 'sat' mode
+                 viewer.scene.imageryLayers.addImageryProvider(ESRI_IMAGERY_PROVIDER);
+                 viewer.scene.globe.showGroundAtmosphere = true;
+             }
+        }
+
 
         function syncCameraTo2D() {
             if(!map || !viewer) return;
@@ -1616,6 +1656,7 @@
                 body.classList.remove('mode-2d'); body.classList.add('mode-3d');
                 btnIcon.src = "https://api.iconify.design/noto:map-of-japan.svg";
                 if(!viewer) initCesium();
+                switchCesiumBaseLayer(cesiumBaseLayer); // Ensure the correct base layer is loaded
                 renderCesium();
                 viewer.scene.postRender.addEventListener(updateCompass3D);
             } else {
@@ -1641,15 +1682,21 @@
                 sb.classList.toggle('sidebar-collapsed');
                 toggleBtn.innerText = sb.classList.contains('sidebar-collapsed') ? '▶' : '◀';
             };
-
+            
+            // --- UPDATED MAP LAYER BUTTONS ---
             document.getElementById('btn-map-nolabels').onclick = (e) => { 
                 map.removeLayer(mapLayers.sat); map.addLayer(mapLayers.nolabels);
+                cesiumBaseLayer = 'nolabels';
+                if(is3DMode) switchCesiumBaseLayer('nolabels');
                 updateLayerBtnStyle(e.target, document.getElementById('btn-map-sat'));
             };
             document.getElementById('btn-map-sat').onclick = (e) => { 
                 map.removeLayer(mapLayers.nolabels); map.addLayer(mapLayers.sat); 
+                cesiumBaseLayer = 'sat';
+                if(is3DMode) switchCesiumBaseLayer('sat');
                 updateLayerBtnStyle(e.target, document.getElementById('btn-map-nolabels'));
             };
+            // --- END UPDATED MAP LAYER BUTTONS ---
 
             function updateLayerBtnStyle(active, inactive) {
                 active.className = "flex-1 text-xs py-1.5 rounded-lg bg-white text-[#5D4037] shadow-sm font-bold";
@@ -1742,9 +1789,8 @@
             
             // Setup merge/elevate level select (full hierarchy)
             const mergeLevelSelect = document.getElementById('merge-level');
-            const elevateLevelSelect = document.getElementById('elevate-level');
             
-            [mergeLevelSelect, elevateLevelSelect].forEach(select => {
+            [mergeLevelSelect].forEach(select => {
                 select.innerHTML = '';
                 HIERARCHY.sort((a, b) => b.rank - a.rank).forEach(h => {
                     const opt = document.createElement('option');
@@ -1984,6 +2030,7 @@
                         });
                         markerEnt.entityDataId = ent.id;
                         
+                        // ** REQ 2: Remove rank check for labels in 3D (rely on distanceDisplayCondition) **
                         if(showLabels) {
                             markerEnt.label = {
                                 text: ent.name,
@@ -2065,7 +2112,8 @@
                                 const center = turf.centerOfMass(geoJson);
                                 polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1]);
 
-                                if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
+                                // ** REQ 2: Remove rank check for labels in 3D (rely on distanceDisplayCondition) **
+                                if (showLabels && !ent.isWater) { 
                                     let labelText = ent.name;
                                     if (ent.isAnnexed) labelText = ent.annexedByName; // Main name becomes conqueror
                                     if (ent.isColony) labelText += ` (อาณานิคมของ ${ent.annexedByName})`;
@@ -2228,15 +2276,10 @@
 
 
                             // REQ 2 & Label Placement: ใช้ turf.centerOfMass เพื่อหาจุดศูนย์กลางมวล และเช็คไม่ให้ล้น
-                            if (showLabels && !ent.isWater && getRank(ent.level) >= 3) {
+                            // ** REQ 2: Update rank check to allow all ranks (rank >= 1) **
+                            if (showLabels && !ent.isWater && getRank(ent.level) >= 1) {
                                 let centerLatlng = l.getBounds().getCenter(); // Fallback to Leaflet center
-                                let areaSize = turf.area(geoJson); // ตารางเมตร
                                 
-                                // ถ้าพื้นที่เล็กกว่า 500 ตารางกิโลเมตร (500,000,000 ตร.ม.) อาจจะไม่แสดง
-                                if (areaSize < 500000000) { 
-                                     // ปรับเกณฑ์ตามความเหมาะสม
-                                }
-
                                 try {
                                     const center = turf.centerOfMass(geoJson);
                                     // โค้ด Turf ใช้ [lon, lat] แต่ Leaflet L.latLng ใช้ (lat, lon)
@@ -2307,24 +2350,28 @@
         }
 
         window.openUnionModal = () => {
-            if (selectedIds.size < 2) {
+            const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
+
+            if (selectedIds.size < 2 || selectedEnts.length < 2) {
                 showConfirmModal("แจ้งเตือน", "กรุณาเลือกอย่างน้อย 2 พื้นที่เพื่อดำเนินการ", null, true);
                 return;
             }
             
-            // Filter selected entities for validation
-            const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
-            const firstRank = getRankObject(selectedEnts[0].level);
+            const firstRankId = selectedEnts[0].level;
+            const selectedRank = getRank(firstRankId);
+            const sameRank = selectedEnts.every(e => e.level === firstRankId);
+
             let canElevate = false;
             
-            // Check if all selected entities are 'muban' (village) and have the same parent or are all independent (Req 3)
-            if (firstRank.id === 'muban') {
+            // ** REQ 3: Check if all selected entities are the same rank and share the same parent (or are all independent) **
+            if (sameRank) {
                 const uniqueParents = new Set(selectedEnts.map(e => e.parentId || 'independent'));
                 if (uniqueParents.size === 1) {
                     canElevate = true;
                 }
             }
             
+            // Show/Hide Elevate Tab
             document.getElementById('tab-elevate').style.display = canElevate ? 'flex' : 'none';
 
             const modal = document.getElementById('modal-union');
@@ -2336,11 +2383,23 @@
             document.getElementById('merge-color').value = selectedEnts[0].color;
             document.getElementById('merge-ruler').value = selectedEnts[0].ruler;
             
-            // Setup Tab 2: Elevate Level Dropdown (set to khwaeng by default)
+            // Setup Tab 2: Elevate Level Dropdown (Only ranks higher than selected)
             const elevateLevelSelect = document.getElementById('elevate-level');
-            elevateLevelSelect.value = 'khwaeng';
-            document.getElementById('elevate-color').value = getRankObject('khwaeng').defaultColor;
+            elevateLevelSelect.innerHTML = '';
+            
+            const higherRanks = HIERARCHY.filter(h => h.rank > selectedRank && !h.promoted).sort((a, b) => a.rank - b.rank); // Only allow elevation to base ranks for simplicity
+            
+            higherRanks.forEach(h => {
+                const opt = document.createElement('option');
+                opt.value = h.id;
+                opt.text = h.name;
+                elevateLevelSelect.appendChild(opt);
+            });
+            
+            elevateLevelSelect.value = higherRanks[0] ? higherRanks[0].id : ''; 
+            document.getElementById('elevate-color').value = higherRanks[0] ? higherRanks[0].defaultColor : selectedEnts[0].color;
             document.getElementById('elevate-ruler').value = selectedEnts[0].ruler;
+
 
             // Setup Tab 3: Annex Leader Selector
             const leaderSelect = document.getElementById('annex-leader-select');
@@ -2366,15 +2425,18 @@
                 const btn = document.getElementById(`tab-${t}`);
                 const content = document.getElementById(`content-${t}`);
                 if (t === tab) {
-                    btn.className = `flex-1 py-4 text-sm font-bold text-[#5D4037] border-b-2 border-green-500 bg-white transition flex items-center justify-center gap-2`;
-                    content.classList.remove('hidden');
+                    // Update button styling for the active tab
+                    let borderColor = '#5D4037';
+                    let textColorClass = 'text-[#5D4037]';
                     
-                    if (t === 'annex') btn.classList.remove('text-[#5D4037]'); btn.classList.add('text-red-600'); btn.classList.remove('border-green-500'); btn.classList.add('border-red-600');
-                    if (t === 'elevate') btn.classList.remove('text-[#5D4037]'); btn.classList.add('text-blue-600'); btn.classList.remove('border-green-500'); btn.classList.add('border-blue-600');
-                    if (t === 'merge') btn.classList.add('text-amber-600'); btn.classList.remove('border-green-500'); btn.classList.add('border-amber-600');
+                    if (t === 'annex') { borderColor = 'red-600'; textColorClass = 'text-red-600'; }
+                    else if (t === 'elevate') { borderColor = 'blue-600'; textColorClass = 'text-blue-600'; }
+                    else if (t === 'merge') { borderColor = 'amber-600'; textColorClass = 'text-amber-600'; }
+
+                    btn.className = `flex-1 py-4 text-sm font-bold bg-white transition flex items-center justify-center gap-2 border-b-2 border-${borderColor} ${textColorClass}`;
+                    content.classList.remove('hidden');
                 } else {
                     btn.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:bg-gray-100 transition flex items-center justify-center gap-2";
-                    btn.classList.remove('text-red-600', 'text-blue-600', 'text-amber-600');
                     content.classList.add('hidden');
                 }
             });
@@ -2440,13 +2502,13 @@
             }
         };
         
-        // --- NEW: NON-DESTRUCTIVE ELEVATION (Req 3: หมู่บ้าน → แขวง) ---
+        // --- NEW: NON-DESTRUCTIVE ELEVATION (REQ 4) ---
         window.executeAreaElevation = async (e) => {
              e.preventDefault();
              if(!window.userId || !currentMapSheetId) { showConfirmModal("Error", "กรุณาเลือกกระดาษแผนที่ก่อนดำเนินการ", null, true); return; }
 
              const selectedEnts = entities.filter(ent => selectedIds.has(ent.id));
-             if (selectedEnts.length < 2) return; // Should be checked in openUnionModal
+             if (selectedEnts.length < 2) return; 
 
              try {
                 const polys = selectedEnts.map(ent => JSON.parse(ent.geoJson));
@@ -2458,12 +2520,14 @@
                 const newColor = document.getElementById('elevate-color').value;
                 const newRuler = document.getElementById('elevate-ruler').value;
                 const newLevel = document.getElementById('elevate-level').value;
-                const originalParentId = selectedEnts[0].parentId || null;
+                
+                // Use the parentId of the first selected entity (they must all be the same/independent)
+                const originalParentId = selectedEnts[0].parentId || null; 
                 
                 const colRef = getEntityCollectionRef();
                 const batch = writeBatch(db);
 
-                // 1. Create new Parent Entity (the Khwaeng/Elevated Area)
+                // 1. Create new Parent Entity (the Elevated Area)
                 const newRef = doc(colRef); 
                 const newParentId = newRef.id;
 
@@ -2479,8 +2543,8 @@
                     originalName: newName,
                     originalRuler: newRuler,
                     originalColor: newColor,
-                    parentId: originalParentId, // New parent inherits the old children's parent
-                    isSubLayer: true // Flag to potentially manage drawing Z-index later (for simplicity, only used for status check now)
+                    parentId: originalParentId, 
+                    isSubLayer: true // Flag to potentially manage drawing Z-index later
                 };
                 batch.set(newRef, newDoc);
 
@@ -2518,15 +2582,16 @@
                 if(id === leaderId) return;
 
                 const entRef = doc(colRef, id);
+                const target = entities.find(e => e.id === id); // Get target entity for original values
+                
                 const updates = {
                     isAnnexed: false, isVassal: false, isColony: false,
                     occupiedBy: leader.id,
                     annexedByName: leader.name,
                     ruler: leader.ruler, 
                     // Important: Store original color/ruler if not already set, before applying conqueror's color/ruler
-                    originalColor: entities.find(e => e.id === id)?.originalColor || entities.find(e => e.id === id)?.color,
-                    originalRuler: entities.find(e => e.id === id)?.originalRuler || entities.find(e => e.id === id)?.ruler,
-                    
+                    originalColor: target.originalColor || target.color,
+                    originalRuler: target.originalRuler || target.ruler,
                 };
 
                 if(type === 'annex') {
@@ -2723,7 +2788,7 @@
             return { visibleEntities: result };
         }
         
-        // --- PROMOTION HELPER FUNCTIONS (Req 4) ---
+        // --- PROMOTION HELPER FUNCTIONS (Req 3) ---
         
         /**
          * Checks if an area entity meets the requirements to be promoted.
@@ -3176,8 +3241,10 @@
             const checkRestrictions = () => {
                 const aid = attackerSelect.value;
                 const attacker = entities.find(e => e.id === aid);
+                // Check if attacker exists and is 'nakorn'
                 const isNakorn = attacker && attacker.level === 'nakorn';
 
+                // Nakorn can only 'ผนวกดินแดน' (Annex) - Must hide Vassal, Colony, and Geometric Merge
                 document.getElementById('btn-vassal').style.display = isNakorn ? 'none' : 'flex';
                 document.getElementById('btn-colony').style.display = isNakorn ? 'none' : 'flex';
                 document.getElementById('btn-geom-merge').style.display = isNakorn ? 'none' : 'flex';
