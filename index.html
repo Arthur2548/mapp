@@ -507,7 +507,7 @@
             border: 2px solid #FFD700 !important;
         }
 
-        /* --- THAI DECREE MODAL STYLES --- */
+        /* --- THAI DECREE MODAL STYLING --- */
         .decree-overlay {
             background-color: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(5px);
@@ -678,6 +678,12 @@
                         <input type="checkbox" id="toggle-created-labels" checked class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
                         <label for="toggle-created-labels" class="text-sm cursor-pointer select-none text-gray-600">ชื่อเขตที่สร้าง</label>
                     </div>
+                     <!-- NEW RANK LABEL TOGGLE -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="toggle-created-rank" checked class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
+                        <label for="toggle-created-rank" class="text-sm cursor-pointer select-none text-gray-600">แสดงชื่อศักดิ์ (ระดับชั้น)</label>
+                    </div>
+                     <!-- END NEW RANK LABEL TOGGLE -->
                     <div class="flex items-center">
                         <input type="checkbox" id="toggle-compass" checked class="accent-[#5D4037] mr-2 h-4 w-4 rounded cursor-pointer">
                         <label for="toggle-compass" class="text-sm cursor-pointer select-none text-gray-600">แสดงเข็มทิศ</label>
@@ -1678,6 +1684,7 @@
                     if (position) {
                         const canvasPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, position);
                         if (canvasPosition) {
+                            // Calculate position based on popup size
                             popupDiv.style.top = (canvasPosition.y - popupDiv.offsetHeight - 20) + 'px';
                             popupDiv.style.left = (canvasPosition.x - popupDiv.offsetWidth / 2) + 'px';
                         }
@@ -1783,6 +1790,7 @@
 
 
             document.getElementById('toggle-created-labels')?.addEventListener('change', renderMap);
+            document.getElementById('toggle-created-rank')?.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); }); // NEW: Rank Toggle Listener
             document.getElementById('toggle-roads')?.addEventListener('change', () => { renderMap(); if(is3DMode) renderCesium(); });
             document.getElementById('toggle-compass')?.addEventListener('change', (e) => {
                 const compass = document.getElementById('compass');
@@ -2070,6 +2078,7 @@
             const { visibleEntities } = filterEntities();
             const showRoads = document.getElementById('toggle-roads').checked;
             const showLabels = document.getElementById('toggle-created-labels').checked;
+            const showRank = document.getElementById('toggle-created-rank').checked; // NEW: Rank Toggle Check
             
             visibleEntities.forEach(ent => {
                 try {
@@ -2117,7 +2126,7 @@
                         });
                         markerEnt.entityDataId = ent.id;
                         
-                        // ** REQ 2: Remove rank check for labels in 3D (rely on distanceDisplayCondition) **
+                        // Marker Label
                         if(showLabels) {
                             markerEnt.label = {
                                 text: ent.name,
@@ -2202,9 +2211,18 @@
                                 const center = turf.centerOfMass(geoJson);
                                 polyEnt.centerPosition = Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1]);
 
-                                // ** REQ 2: Remove rank check for labels in 3D (rely on distanceDisplayCondition) **
+                                // Area Label
                                 if (showLabels && !ent.isWater) { 
+                                    const rankName = getHierarchyName(ent.level);
                                     let labelText = ent.name;
+                                    let offset = 0;
+                                    
+                                    // NEW: Conditionally add rank name to the label
+                                    if (showRank) {
+                                         labelText = `${rankName}\n${labelText}`;
+                                         offset = -15; // Shift label up for 2 lines
+                                    }
+
                                     if (ent.isAnnexed) labelText = ent.annexedByName; // Main name becomes conqueror
                                     if (ent.isColony) labelText += ` (อาณานิคมของ ${ent.annexedByName})`;
                                     
@@ -2218,15 +2236,15 @@
                                             outlineColor: Cesium.Color.WHITE,
                                             outlineWidth: 3,
                                             verticalOrigin: Cesium.VerticalOrigin.TOP,
-                                            pixelOffset: new Cesium.Cartesian2(0, 5),
+                                            pixelOffset: new Cesium.Cartesian2(0, offset), // Adjusted offset
                                             distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2000000)
                                         }
                                     });
                                 }
-                             } catch(e) {}
+                             } catch(e) { console.error("Cesium label error:", e); }
                          }
                     }
-                } catch(e) { console.error("Cesium render error", e); }
+                } catch(e) { console.error("Cesium render error for entity:", e); }
             });
         }
 
@@ -2238,6 +2256,7 @@
             const { visibleEntities } = filterEntities();
             const showRoads = document.getElementById('toggle-roads').checked;
             const showLabels = document.getElementById('toggle-created-labels').checked;
+            const showRank = document.getElementById('toggle-created-rank').checked; // NEW: Rank Toggle Check
             
             // Render the temporary split line if in splitting mode
             if (splitLineLayer) {
@@ -2437,12 +2456,13 @@
                                     labelHtml += `<div class="text-[9px] font-bold mt-0 text-red-600">(ประเทศราชของ ${ent.annexedByName})</div>`;
                                 } 
                                 
-                                // REQ: Add ruler title to the label if it's high enough rank
-                                // *** DELETED: The user requested to remove the ruler title from the main label ***
-                                
-                                // ** ADD RANK NAME FOR CLARITY ON MAP **
-                                const rankName = getHierarchyName(ent.level);
-                                labelHtml = `<div class="text-[9px] text-amber-800">${rankName}</div>${labelHtml}`;
+                                // ** NEW: Conditionally add rank name to the label **
+                                let rankLabelHtml = '';
+                                if (showRank) {
+                                     const rankName = getHierarchyName(ent.level);
+                                     rankLabelHtml = `<div class="text-[9px] text-amber-800">${rankName}</div>`;
+                                }
+                                labelHtml = rankLabelHtml + labelHtml;
 
 
                                 drawnItems.addLayer(L.marker(centerLatlng, { icon: L.divIcon({ className: 'text-center pointer-events-none', html: `<span class="text-[10px] sm:text-xs font-bold drop-shadow-md whitespace-nowrap block" style="color:${ent.labelColor || '#4E342E'}; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${labelHtml}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }) }));
@@ -2688,7 +2708,7 @@
             
             isSplitting = false; // Disable splitting mode
             document.getElementById('map').classList.remove('cursor-knife');
-            map.off(L.Draw.Event.CREATED, onSplitLineDrawn);
+            map.off(L.Draw.Event.CREATED, onDrawCreated);
         }
         
         /**
