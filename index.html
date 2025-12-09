@@ -990,7 +990,14 @@
             <div class="space-y-4">
                 <div class="bg-red-50 p-3 rounded-xl border border-red-100"><label class="text-xs font-bold text-red-700 block mb-1">เป้าหมาย</label><div id="war-target-name" class="font-bold text-gray-800 text-lg">---</div><input type="hidden" id="war-target-id"></div>
                 <div class="text-center text-gray-300 font-bold text-xl my-1">VS</div>
-                <div><label class="text-xs font-bold text-[#5D4037] block mb-1 ml-2">ฝ่ายรุก (เลือกดินแดนของคุณ)</label><select id="war-attacker-select" class="input-cute w-full bg-white cursor-pointer"></select></div>
+                <div>
+                    <label class="text-xs font-bold text-[#5D4037] block mb-1 ml-2">ฝ่ายรุก (เลือกดินแดนของคุณ)</label>
+                    <div class="input-group mb-2">
+                        <span class="material-icons-round icon">search</span>
+                        <input type="text" id="war-attacker-search" oninput="filterAttackerOptions()" placeholder="ค้นหาชื่อผู้รุกราน..." class="input-cute py-2 text-sm">
+                    </div>
+                    <select id="war-attacker-select" class="input-cute w-full bg-white cursor-pointer"></select>
+                </div>
             </div>
             <div class="mt-6">
                 <label class="text-xs font-bold text-gray-500 block mb-2 text-center">ผลลัพธ์</label>
@@ -1135,8 +1142,7 @@
             <div class="decree-text text-center text-sm space-y-4 px-4 overflow-y-auto max-h-80 custom-scrollbar">
                 <div class="text-base font-bold text-[#FFB74D]">
                     โดยราชโองการแห่งแผ่นดิน
-                </div>
-                <p>
+                </divย<p>
                     ณ ยามที่ทิวาและราตรีบรรจบกัน บัดนี้ขอประกาศแก่หมู่เทวา ฟ้าดิน และสรรพชนทั่วทั้งปฐมภพให้ทราบโดยทั่วกันว่า
                 </p>
                 <p>
@@ -1149,7 +1155,7 @@
                     เส้นพรมแดนที่เคยแบ่งแยกบัดนี้เลือนหายดังหมอกในอรุณรุ่ง
                 </p>
                 <p>
-                    นับแต่นี้แผ่นดินใหม่จักเป็นสุวรรณปฐพีเดียวกันสืบไป
+                    นับแต่นี้แผ่นดินใหม่จักเป็นสุวรรณปฐวีเดียวกันสืบไป
                 </p>
             </div>
             
@@ -1247,6 +1253,10 @@
             gov: { 'ประชาธิปไตย': '#2ECC71', 'คอมมิวนิสต์': '#E74C3C', 'สมบูรณาญาสิทธิราชย์': '#8E44AD', 'ปริมิตาญาสิทธิราชย์': '#F39C12' },
             rank: RANK_COLORS
         };
+        
+        // Allowed attacker ranks: nakorn, prathet, anachak, mahaAnachak
+        const ATTACK_RANKS = ['nakorn', 'prathet', 'anachak', 'mahaAnachak'];
+        const ATTACK_RANK_VALUES = new Set(ATTACK_RANKS.map(id => getRank(id)));
 
         const IMPORTANT_ICONS = {
             "สิ่งปลูกสร้าง": ['twemoji:house', 'twemoji:castle', 'twemoji:japanese-castle', 'twemoji:classical-building', 'twemoji:derelict-house', 'twemoji:hut', 'twemoji:tent', 'twemoji:stadium', 'twemoji:factory', 'twemoji:hospital', 'twemoji:school', 'twemoji:place-of-worship', 'twemoji:shinto-shrine'],
@@ -2075,8 +2085,11 @@
                              if (flat.length < 6) return;
 
                              let outlineColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
-                             // REQ 1: สีเส้นขอบ ตอนกด ผนวกดินแดน(เฉพาะผนวกดินแดน) เป็นสีเดียวกันกับผู้รุกราน
-                             if (ent.isAnnexed) outlineColor = visuals.fillColor; 
+                             
+                             // UPDATED REQ: สีเส้นเมื่อผนวกดินแดนจะเป็นสีดำ
+                             if (ent.isAnnexed) outlineColor = '#000000';
+                             // Retain previous logic for others, Vassal stroke color remains conqueror's color (visuals.fillColor in old logic)
+                             else if (ent.isVassal) outlineColor = visuals.fillColor;
     
                              const hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
 
@@ -2186,8 +2199,11 @@
 
                     // --- AREA LOGIC ---
                     let strokeColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
-                    // REQ 1: สีเส้นขอบ ตอนกด ผนวกดินแดน(เฉพาะผนวกดินแดน) เป็นสีเดียวกันกับผู้รุกราน
-                    if (ent.isAnnexed) strokeColor = visuals.fillColor; 
+                    
+                    // UPDATED REQ: สีเส้นเมื่อผนวกดินแดนจะเป็นสีดำ
+                    if (ent.isAnnexed) strokeColor = '#000000'; 
+                    // Vassal stroke color remains conqueror's color (visuals.fillColor in old logic)
+                    else if (ent.isVassal) strokeColor = visuals.fillColor; 
                     
                     // Logic for Selection Highlight (Used for Multi-Select Mode)
                     const isSelected = selectedIds.has(ent.id);
@@ -2278,6 +2294,29 @@
                             // REQ 2 & Label Placement: ใช้ turf.centerOfMass เพื่อหาจุดศูนย์กลางมวล และเช็คไม่ให้ล้น
                             // ** REQ 2: Update rank check to allow all ranks (rank >= 1) **
                             if (showLabels && !ent.isWater && getRank(ent.level) >= 1) {
+                                
+                                let skipLabel = false;
+                                
+                                // NEW: Label Visibility Hierarchy Logic (Parent hides label if children are visible)
+                                // This applies to entities that ARE parents (have children)
+                                const children = entities.filter(e => e.parentId === ent.id && e.type === 'area' && !e.isWater);
+                                
+                                if (children.length > 0) {
+                                    const filterLevels = Array.from(document.querySelectorAll('.filter-level:checked')).map(cb => cb.value);
+                                    
+                                    // If ANY direct child is currently visible (i.e., its level is in the active filter list), hide the parent's label.
+                                    const anyChildVisible = children.some(child => {
+                                        return filterLevels.includes(child.level);
+                                    });
+
+                                    if (anyChildVisible) {
+                                        skipLabel = true;
+                                    }
+                                }
+                                
+                                if(skipLabel) return;
+                                
+                                
                                 let centerLatlng = l.getBounds().getCenter(); // Fallback to Leaflet center
                                 
                                 try {
@@ -3224,44 +3263,83 @@
                 else await addDoc(colRef, data);
             } catch(e) { showConfirmModal("Error", e.message, null, true); }
         }
+        
+        // Function to filter options in the attacker select dropdown
+        window.filterAttackerOptions = () => {
+             const searchInput = document.getElementById('war-attacker-search').value.toLowerCase();
+             const select = document.getElementById('war-attacker-select');
+             
+             // Get the target entity ID to exclude it
+             const tid = document.getElementById('war-target-id').value;
+             
+             // 1. Get all allowed attackers (re-filter from all entities)
+             const allowedAttackers = entities.filter(e => 
+                !e.isWater && 
+                e.type === 'area' && 
+                e.id !== tid && 
+                ATTACK_RANK_VALUES.has(getRank(e.level))
+             );
+             
+             // 2. Filter by search input
+             const filteredAttackers = allowedAttackers.filter(e => 
+                 e.name.toLowerCase().includes(searchInput) || 
+                 e.ruler.toLowerCase().includes(searchInput)
+             );
+
+             // 3. Update the select element
+             select.innerHTML = '';
+             filteredAttackers.forEach(e => {
+                const opt = document.createElement('option');
+                opt.value = e.id;
+                opt.text = `${e.name} (${getHierarchyName(e.level)}) - ผู้ปกครอง: ${e.ruler}`;
+                select.appendChild(opt);
+             });
+             
+             // Re-check restrictions after filtering
+             checkWarActionRestrictions(select.value);
+        }
 
         window.openWarModal = (tid) => {
             const t = entities.find(e => e.id === tid);
             document.getElementById('war-target-id').value = tid;
             document.getElementById('war-target-name').innerText = t.name; 
-            const sel = document.getElementById('war-attacker-select'); sel.innerHTML = '';
+            document.getElementById('war-attacker-search').value = ''; // Clear search field
             
-            entities.filter(e => !e.isWater && e.type === 'area' && e.id !== tid).forEach(e => {
-                const opt = document.createElement('option'); opt.value = e.id; opt.text = e.name; sel.appendChild(opt);
-            });
+            // 1. Initial population and filtering of the attacker select dropdown
+            window.filterAttackerOptions();
             
-            // REQ 5: Restrictions for 'นคร' (Nakorn) attacker
-            const attackerSelect = document.getElementById('war-attacker-select');
+            // 2. Set event listener for attacker selection to check restrictions
+            document.getElementById('war-attacker-select').onchange = (e) => checkWarActionRestrictions(e.target.value);
             
-            const checkRestrictions = () => {
-                const aid = attackerSelect.value;
-                const attacker = entities.find(e => e.id === aid);
-                // Check if attacker exists and is 'nakorn'
-                const isNakorn = attacker && attacker.level === 'nakorn';
-
-                // Nakorn can only 'ผนวกดินแดน' (Annex) - Must hide Vassal, Colony, and Geometric Merge
-                document.getElementById('btn-vassal').style.display = isNakorn ? 'none' : 'flex';
-                document.getElementById('btn-colony').style.display = isNakorn ? 'none' : 'flex';
-                document.getElementById('btn-geom-merge').style.display = isNakorn ? 'none' : 'flex';
-                document.getElementById('btn-annex').style.display = 'flex'; // Annex is always allowed
-            }
-            
-            attackerSelect.onchange = checkRestrictions;
-            checkRestrictions();
+            // 3. Check restrictions for the first element
+            checkWarActionRestrictions(document.getElementById('war-attacker-select').value);
 
             document.getElementById('modal-war').classList.remove('hidden');
         }
+        
+        function checkWarActionRestrictions(aid) {
+             const attacker = entities.find(e => e.id === aid);
+             const isNakorn = attacker && attacker.level === 'nakorn';
+
+             // Nakorn can only 'ผนวกดินแดน' (Annex)
+             document.getElementById('btn-vassal').style.display = isNakorn ? 'none' : 'flex';
+             document.getElementById('btn-colony').style.display = isNakorn ? 'none' : 'flex';
+             document.getElementById('btn-geom-merge').style.display = isNakorn ? 'none' : 'flex';
+             document.getElementById('btn-annex').style.display = 'flex'; // Annex is always allowed
+        }
+
 
         window.confirmWarAction = async (type) => {
             const tid = document.getElementById('war-target-id').value;
             const aid = document.getElementById('war-attacker-select').value;
             const attacker = entities.find(e => e.id === aid);
             const target = entities.find(e => e.id === tid);
+            
+            // Reinforce restriction check before execution
+            if (attacker && attacker.level === 'nakorn' && type !== 'annex') {
+                showConfirmModal("ข้อจำกัดนคร", "นครสามารถทำได้แค่ 'ผนวกดินแดน' เท่านั้น", null, true);
+                return;
+            }
             
             const updates = { isAnnexed: false, isVassal: false, isColony: false };
             
@@ -3291,11 +3369,14 @@
         window.declareIndependence = (id) => {
             showConfirmModal("กู้เอกราช", "ต้องการประกาศอิสรภาพหรือไม่? พื้นที่จะกลับสู่สถานะเดิม", async () => {
                 const ent = entities.find(e => e.id === id);
+                
+                // Reset parentId, independence status, and affiliation
                 await setDoc(doc(getEntityCollectionRef(), id), {
                     isAnnexed: false, isVassal: false, isColony: false,
                     color: ent.originalColor || ent.color, 
                     ruler: ent.originalRuler || ent.ruler,
-                    occupiedBy: null, annexedByName: null
+                    occupiedBy: null, annexedByName: null,
+                    parentId: null // Ensure it breaks free from all layers of control
                 }, {merge: true});
             });
         }
