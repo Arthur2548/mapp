@@ -1053,12 +1053,14 @@
             </div>
             <div class="mt-6">
                 <label class="text-xs font-bold text-gray-500 block mb-2 text-center">ผลลัพธ์</label>
-                <div class="grid grid-cols-3 gap-2" id="war-actions-container">
-                    <!-- Updated to 3 columns, removing Split Territory button -->
+                <div class="grid grid-cols-4 gap-2" id="war-actions-container">
+                    <!-- Buttons will be dynamically loaded/hidden based on attacker rank -->
                     <button id="btn-annex" onclick="confirmWarAction('annex')" class="py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">flag</span> ผนวก</button>
                     <button id="btn-vassal" onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
                     <button id="btn-colony" onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
-                    
+                    <!-- NEW: Split Territory Button -->
+                    <button id="btn-split-territory" onclick="startSplitTerritoryMode()" class="py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700 shadow transition flex flex-col items-center gap-1" title="วาดเส้นตัดแบ่งดินแดน"><span class="material-icons-round text-base">content_cut</span> แบ่งแยกดินแดน</button>
+                    <!-- Removed Merge button from War Modal, moved to Union Modal -->
                 </div>
             </div>
         </div>
@@ -1210,6 +1212,24 @@
     </div>
     <!-- END DECREE MODAL -->
 
+    <!-- NEW MODAL: Split Territory Form -->
+    <div id="modal-split-territory" class="fixed inset-0 modal-overlay hidden z-[2200] flex items-center justify-center">
+        <div class="modal-paper w-full max-w-3xl p-6 relative max-h-[95vh] overflow-y-auto">
+            <button onclick="cancelSplit()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition border-2 border-transparent hover:border-red-200 rounded-full w-8 h-8 flex items-center justify-center" title="ยกเลิกการแบ่งแยก"><span class="material-icons-round text-2xl">close</span></button>
+            <h2 class="text-2xl text-[#5D4037] font-bold mb-2 flex items-center gap-2 border-b border-dashed border-[#E0E0E0] pb-3 cute-font"><span class="material-icons-round text-3xl text-cyan-600">content_cut</span> กำหนดดินแดนที่แยกใหม่</h2>
+            <div class="text-sm text-gray-600 mb-4">ดินแดนเป้าหมาย **<span id="split-target-name-display" class="font-bold text-red-600"></span>** ถูกตัดออกเป็น <span id="split-count" class="font-bold text-cyan-600"></span> ส่วน</div>
+            
+            <form id="form-split" onsubmit="saveSplitTerritory(event)" class="space-y-6">
+                <div id="split-area-forms" class="space-y-6">
+                    <!-- Dynamic forms for each new piece will be injected here -->
+                </div>
+                <div class="flex justify-end pt-4 border-t border-dashed border-[#E0E0E0]">
+                    <button type="submit" class="btn-cute bg-gradient-to-r from-cyan-600 to-teal-600 text-white"><span class="material-icons-round text-sm">save</span> บันทึกและสถาปนา</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Firebase SDK & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1264,8 +1284,13 @@
         let mapSheets = [];           // Array of all map sheets for the current user
         let unsubscribeMapListener = null; // To manage the dynamic map data listener
         
-        // --- Split Territory Globals REMOVED ---
-        // Removed: isSplitting, splitTargetId, splitLineLayer, cutPiecesGeoJsons, tempSplitLayers
+        // --- NEW GLOBALS for Split Territory ---
+        let isSplitting = false;
+        let splitTargetId = null;
+        let splitLineLayer = null; 
+        let cutPiecesGeoJsons = [];
+        let tempSplitLayers = L.featureGroup(); // Temporarily hold the cut pieces for visualization
+
 
         // --- UPDATED HIERARCHY ARRAY (Comprehensive list based on user specs) ---
         // เพิ่ม 'title' สำหรับตำแหน่งผู้ปกครองตามศักดิ์
@@ -1351,7 +1376,7 @@
             setupUI();
             
             // Add temp layer for split pieces visualization
-            // Removed: tempSplitLayers.addTo(map);
+            tempSplitLayers.addTo(map);
 
             if (location.hostname !== 'localhost' && !firebaseConfig.apiKey) {
                  showConfirmModal("การตั้งค่าไม่สมบูรณ์", "กรุณาใส่ API Key ในโค้ด", null, true);
@@ -1461,7 +1486,7 @@
             currentMapSheetId = newId;
             // Clear map visuals immediately
             drawnItems.clearLayers();
-            // Removed: tempSplitLayers.clearLayers();
+            tempSplitLayers.clearLayers();
             entities = [];
             
             // Re-subscribe to the new map's data
@@ -1579,8 +1604,7 @@
 
             mapLayers = { nolabels: noLabelsLayer, sat: satLayer };
             drawnItems = L.featureGroup().addTo(map);
-            
-            // NOTE: Leaflet.Draw is required for L.Draw.Event.EDITED/CREATED, even if we manually trigger draw modes.
+
             map.addControl(new L.Control.Draw({
                 edit: { featureGroup: drawnItems },
                 draw: { polygon: true, polyline: true, marker: true, rectangle: false, circle: false, circlemarker: false }
@@ -1686,7 +1710,6 @@
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
             // Post-Render Listener to update Popup position
-            // REQ 2: This listener ensures the custom HTML popup follows the 3D entity center
             viewer.scene.postRender.addEventListener(() => {
                 if (selectedCesiumEntity && !popupDiv.classList.contains('hidden')) {
                     let position;
@@ -2128,13 +2151,7 @@
                             polyline: {
                                 positions: Cesium.Cartesian3.fromDegreesArray(flatCoords),
                                 width: parseInt(ent.weight) || 4,
-                                // Use Dash Material for 'army' type roads
-                                material: ent.roadType === 'army' 
-                                          ? new Cesium.PolylineDashMaterialProperty({
-                                                color: Cesium.Color.fromCssColorString(ent.color),
-                                                dashLength: 8.0
-                                            })
-                                          : Cesium.Color.fromCssColorString(ent.color)
+                                material: Cesium.Color.fromCssColorString(ent.color)
                             },
                             name: ent.name
                         });
@@ -2206,30 +2223,28 @@
 
                              let outlineColor = ent.isWater ? '#29B6F6' : globalStrokeColor;
                              
-                             // REQ 1: กำหนดสีเส้นขอบตามสถานะ
-                             if (ent.isAnnexed) outlineColor = '#000000'; // ถูกผนวก: เส้นดำ
-                             else if (ent.isVassal) outlineColor = visuals.fillColor; // ประเทศราช: เส้นสีผู้รุกราน
+                             // UPDATED REQ: สีเส้นเมื่อผนวกดินแดนจะเป็นสีดำ
+                             if (ent.isAnnexed) outlineColor = '#000000';
+                             // Retain previous logic for others, Vassal stroke color remains conqueror's color (visuals.fillColor in old logic)
+                             else if (ent.isVassal) outlineColor = visuals.fillColor;
     
                              const hierarchy = Cesium.Cartesian3.fromDegreesArray(flat);
 
-                             // REQ 1: วาดพื้นที่ (Polygon) และเส้นขอบ (Outline)
                              const polyEnt = viewer.entities.add({
                                 polygon: {
                                     hierarchy: hierarchy,
-                                    // REQ 1: สีถมตามสีที่คำนวณจากโหมดสี และความเข้มตาม Opacity slider
                                     material: Cesium.Color.fromCssColorString(visuals.fillColor).withAlpha(ent.isWater ? 0.5 : globalOpacity),
-                                    outline: !ent.isColony, // อาณานิคมใช้เส้นประแยก
+                                    outline: !ent.isColony,
                                     outlineColor: Cesium.Color.fromCssColorString(outlineColor),
                                     outlineWidth: 2,
-                                    height: 0, // พื้นผิวโลก
-                                    extrudedHeight: 0.1 // ให้มองเห็นชัดเจน
+                                    height: 0, // Ensure it sits on the globe
+                                    extrudedHeight: 0.1 // Small height to ensure visibility
                                 },
                                 name: ent.name
                              });
-                             // REQ 2: เก็บ ID ไว้สำหรับ Pop-up
-                             polyEnt.entityDataId = ent.id; 
+                             polyEnt.entityDataId = ent.id; // Store ID for click handling
 
-                             // Colony Dashed Line Fix (สำหรับอาณานิคม)
+                             // Colony Dashed Line Fix
                              if (ent.isColony) {
                                  viewer.entities.add({
                                      polyline: {
@@ -2298,8 +2313,24 @@
             const showLabels = document.getElementById('toggle-created-labels').checked;
             const showRank = document.getElementById('toggle-created-rank').checked; // NEW: Rank Toggle Check
             
-            // Removed: Render the temporary split line if in splitting mode
-            // Removed: Render temporary cut pieces if in the modal
+            // Render the temporary split line if in splitting mode
+            if (splitLineLayer) {
+                drawnItems.addLayer(splitLineLayer);
+            }
+            
+            // Render temporary cut pieces if in the modal
+            if(cutPiecesGeoJsons.length > 0) {
+                 tempSplitLayers.clearLayers();
+                 cutPiecesGeoJsons.forEach((geo, index) => {
+                     // Temporary random colors for new pieces
+                     const tempColor = ["#00BCD4", "#80DEEA", "#4DD0E1"][index % 3]; 
+                     L.geoJSON(geo, {
+                         style: { color: tempColor, weight: 3, fillOpacity: 0.8, dashArray: '5, 5' }
+                     }).addTo(tempSplitLayers);
+                 });
+            } else {
+                 tempSplitLayers.clearLayers();
+            }
 
 
             visibleEntities.forEach(ent => {
@@ -2596,16 +2627,341 @@
             document.getElementById('modal-decree').classList.remove('hidden');
         }
 
-        // Removed: showSplitDecreeModal function
+        /**
+         * Shows the dramatic ancient Thai decree modal for split territory.
+         * @param {Object} originalEnt - The entity that was cut.
+         * @param {Array<Object>} newPieces - Array of new entities created from the split.
+         */
+        function showSplitDecreeModal(originalEnt, newPieces) {
+            const originalRankName = getHierarchyName(originalEnt.level);
+            
+            // Use the name of the first new piece for the decree text
+            const newEnt = newPieces[0];
+            const newRankName = getHierarchyName(newEnt.level);
+            const newName = newEnt.name;
+
+            // Set classes for decree (gold/black theme)
+            document.getElementById('decree-paper').className = 'decree-paper w-full max-w-lg p-8 relative gold-mist';
+
+            // 1. Set dynamic text content
+            document.getElementById('decree-title-text').innerText = `ประกาศแบ่งแยกดินแดน`;
+            document.getElementById('decree-intro').innerText = `โดยราชโองการแห่งแผ่นดิน`;
+            document.getElementById('decree-emblem').innerHTML = `<span class="material-icons-round text-6xl text-cyan-400 opacity-80" style="text-shadow: 0 0 10px #00BCD4;">content_cut</span>`;
+
+
+            const content = `
+                <p>
+                    ณ ยามที่ดวงดาราโคจร บัดนี้ขอประกาศแก่หมู่เทวา ฟ้าดิน และสรรพชนทั่วทั้งปฐมภพให้ทราบโดยทั่วกันว่า
+                </p>
+                <p>
+                    <b class="decree-title">${newRankName}${newName}</b> ได้แยกจาก
+                    <b class="decree-title text-red-400">${originalRankName}${originalEnt.name}</b>
+                    หาได้รวมกันเป็นผืนสุวรรณปฐพีเดียวกันดังแต่ก่อนไม่
+                </p>
+                <p>
+                    ขอความสุขสวัสดีจงมีแต่ <b class="decree-title">${newRankName}${newName}</b>
+                    ด้วยเทอญ (และอีก ${newPieces.length - 1} ส่วนที่แยกจากกัน)
+                </p>
+                <div class="text-xs text-gray-500 mt-4">
+                    พื้นที่ ${originalEnt.name} ถูกแบ่งออกเป็น ${newPieces.length} ส่วน และได้ลบพื้นที่เดิมทิ้งแล้ว
+                </div>
+            `;
+            document.getElementById('decree-main-content').innerHTML = content;
+            
+            // 2. Display modal
+            document.getElementById('modal-decree').classList.remove('hidden');
+        }
+
 
         // --- War Room / Split Territory Logic (UPDATED FOR SPLIT CURSOR) ---
 
-        // Removed: startSplitTerritoryMode function
-        // Removed: cancelSplit function
-        // Removed: onSplitLineDrawn function
-        // Removed: performPolygonSplit function
-        // Removed: openSplitModal function
-        // Removed: saveSplitTerritory function
+        window.startSplitTerritoryMode = () => {
+            if (!validateAuth()) return;
+            // ** REQ: สลับไป 2D ถ้าอยู่ใน 3D **
+            if (is3DMode) {
+                toggleGlobeMode(); // Switch to 2D
+                // This function will be called again after the user confirms the switch
+                showConfirmModal("สลับโหมด", "ระบบสลับมายังแผนที่ 2 มิติเพื่อความแม่นยำในการวาด กรุณากดปุ่ม 'แบ่งแยกดินแดน' อีกครั้ง", null, true);
+                return;
+            }
+            
+            const tid = document.getElementById('war-target-id').value;
+            const target = entities.find(e => e.id === tid);
+
+            if (!target || target.type !== 'area' || target.isWater) {
+                showConfirmModal("ข้อจำกัด", "การแบ่งแยกดินแดนใช้ได้เฉพาะกับเขตพื้นที่ (Area) ที่ไม่ใช่ผืนน้ำเท่านั้น", null, true);
+                return;
+            }
+
+            isSplitting = true;
+            splitTargetId = tid;
+            
+            closeModal('modal-war');
+            map.closePopup();
+
+            // ** REQ: Set special cursor (ปากกา) - ใช้ cursor-knife แทนเพื่อให้สอดคล้องกับเครื่องมือตัด **
+            document.getElementById('map').classList.add('cursor-knife');
+            
+            // Start drawing a polyline
+            const splitDrawer = new L.Draw.Polyline(map, {
+                shapeOptions: { color: '#00BCD4', weight: 4, dashArray: '10, 5' },
+                metric: false,
+                repeatMode: false,
+                drawError: { color: '#B00020', message: 'กรุณาวาดเส้นยาวขึ้น' }
+            });
+            splitDrawer.enable();
+            
+            showToast("กรุณาวาดเส้นแบ่งเขต (ดับเบิลคลิกเพื่อจบ)");
+            
+            // Remove the default draw listener and add a specific one for splitting
+            map.off(L.Draw.Event.CREATED, onDrawCreated);
+            map.once(L.Draw.Event.CREATED, onSplitLineDrawn);
+            map.once('draw:drawstop', () => map.on(L.Draw.Event.CREATED, onDrawCreated)); // Re-add generic listener
+        };
+        
+        // Custom cancel function for splitting
+        window.cancelSplit = () => {
+            if (splitLineLayer) drawnItems.removeLayer(splitLineLayer);
+            tempSplitLayers.clearLayers();
+            isSplitting = false;
+            splitTargetId = null;
+            cutPiecesGeoJsons = [];
+            document.getElementById('map').classList.remove('cursor-knife');
+            closeModal('modal-split-territory');
+        };
+
+
+        async function onSplitLineDrawn(e) {
+            if (!splitTargetId) {
+                if (e.layer) drawnItems.removeLayer(e.layer);
+                showToast("ยกเลิกการแบ่งแยกเนื่องจากไม่พบพื้นที่เป้าหมาย");
+                return;
+            }
+
+            splitLineLayer = e.layer;
+            const target = entities.find(e => e.id === splitTargetId);
+            
+            if (!target || target.type !== 'area') {
+                 if (e.layer) drawnItems.removeLayer(e.layer);
+                 showToast("ยกเลิก: พื้นที่เป้าหมายไม่ถูกต้อง");
+                 return;
+            }
+
+            // Must use a temporary layer to get its GeoJSON correctly (Leaflet layer)
+            const lineLayerForGeoJson = L.polyline(splitLineLayer.getLatLngs());
+            const lineGeoJson = lineLayerForGeoJson.toGeoJSON();
+            const targetGeoJson = JSON.parse(target.geoJson);
+            
+            // Add the line layer to drawnItems for visualization until modal opens
+            // Note: splitLineLayer is the actual L.Draw object, adding it here will keep it visible.
+            drawnItems.addLayer(splitLineLayer);
+
+            const cutPieces = performPolygonSplit(targetGeoJson, lineGeoJson);
+            
+            if (cutPieces.length < 2) {
+                showConfirmModal("ตัดแบ่งไม่สำเร็จ", "เส้นที่วาดไม่สามารถแบ่งดินแดนออกเป็น 2 ส่วนหรือมากกว่า กรุณาลองวาดใหม่ หรือวาดให้ตัดขอบเขตทั้งสองด้าน", 
+                    () => cancelSplit() 
+                );
+                return;
+            }
+            
+            // Filter out pieces that are too small or non-existent
+            // Use turf.area to ensure pieces have meaningful size (area is in square meters)
+            cutPiecesGeoJsons = cutPieces.filter(p => p && turf.area(p) > 100); 
+            
+            if (cutPiecesGeoJsons.length < 2) {
+                 showConfirmModal("ตัดแบ่งไม่สำเร็จ", "เส้นที่วาดไม่สามารถแบ่งดินแดนออกเป็น 2 ส่วนหรือมากกว่า กรุณาลองวาดใหม่ หรือวาดให้ตัดขอบเขตทั้งสองด้าน", 
+                    () => cancelSplit() 
+                );
+                return;
+            }
+
+
+            // Render temporary cut pieces on the map
+            renderMap(); 
+            
+            // Open the new split modal
+            openSplitModal(target);
+            
+            document.getElementById('map').classList.remove('cursor-knife');
+            // Do NOT re-add the generic listener here, L.Draw.Event.CREATED is re-added in startSplitTerritoryMode cleanup
+        }
+        
+        /**
+         * Core logic for polygon splitting using Turf.js approximation.
+         * The implementation uses the line to create two large cutting polygons (half-planes)
+         * and intersects the target with them.
+         * @param {Object} targetPolygon - GeoJSON Polygon/MultiPolygon of the entity to cut.
+         * @param {Object} splitLine - GeoJSON LineString for the cutting line.
+         */
+        function performPolygonSplit(targetPolygon, splitLine) {
+            const results = [];
+            try {
+                const lineCoords = splitLine.geometry.coordinates;
+                const startPoint = lineCoords[0];
+                const endPoint = lineCoords[lineCoords.length - 1];
+                
+                // Use a distance larger than any map feature (20,000 km)
+                const offsetDistance = 20000; 
+                const units = 'kilometers';
+                
+                // Calculate the bearing of the line
+                const bearing = turf.bearing(turf.point(startPoint), turf.point(endPoint));
+                
+                // --- Cutting Polygon 1 (Right Side / Bearing + 90) ---
+                const lineStartOffset1 = turf.rhumbDestination(turf.point(startPoint), offsetDistance, bearing + 90, { units }).geometry.coordinates;
+                const lineEndOffset1 = turf.rhumbDestination(turf.point(endPoint), offsetDistance, bearing + 90, { units }).geometry.coordinates;
+                // Create a polygon by connecting the original endpoints to their offset points
+                const cutPoly1 = turf.polygon([[
+                    startPoint, lineStartOffset1, lineEndOffset1, endPoint, startPoint
+                ]]);
+                
+                // --- Cutting Polygon 2 (Left Side / Bearing - 90) ---
+                const lineStartOffset2 = turf.rhumbDestination(turf.point(startPoint), offsetDistance, bearing - 90, { units }).geometry.coordinates;
+                const lineEndOffset2 = turf.rhumbDestination(turf.point(endPoint), offsetDistance, bearing - 90, { units }).geometry.coordinates;
+                // Create the second cutting polygon
+                const cutPoly2 = turf.polygon([[
+                    startPoint, lineStartOffset2, lineEndOffset2, endPoint, startPoint
+                ]]);
+
+
+                // Intersect the target with the two cutting polygons
+                const piece1 = turf.intersect(targetPolygon, cutPoly1);
+                const piece2 = turf.intersect(targetPolygon, cutPoly2);
+                
+                if (piece1) results.push(piece1);
+                if (piece2) results.push(piece2);
+
+            } catch (error) {
+                console.error("Turf Split Error:", error);
+            }
+            return results;
+        }
+
+        /**
+         * Opens the modal for defining the newly split territories.
+         * @param {Object} originalTarget - The entity that was cut.
+         */
+        function openSplitModal(originalTarget) {
+            const container = document.getElementById('split-area-forms');
+            container.innerHTML = '';
+            
+            document.getElementById('split-target-name-display').innerText = originalTarget.name;
+            document.getElementById('split-count').innerText = cutPiecesGeoJsons.length;
+            
+            // Get all possible parent areas (excluding the original target)
+            const parentOptions = entities.filter(e => e.id !== originalTarget.id && e.type === 'area' && !e.isWater).map(e => ({id: e.id, name: `${getHierarchyName(e.level)} ${e.name}`}));
+
+            cutPiecesGeoJsons.forEach((geo, index) => {
+                const pieceId = `piece-${index}`;
+                // Use Original Entity's properties as default for the new pieces
+                const defaultName = `${originalTarget.name}-${index + 1}`;
+                const defaultColor = originalTarget.color;
+                const defaultRuler = originalTarget.ruler;
+                const defaultLevel = originalTarget.level;
+
+                let parentSelectOptions = `<option value="">-- เป็นอิสระ (ค่าเริ่มต้น) --</option>`;
+                parentOptions.forEach(p => {
+                    parentSelectOptions += `<option value="${p.id}">${p.name}</option>`;
+                });
+                
+                let levelSelectOptions = '';
+                HIERARCHY.sort((a, b) => b.rank - a.rank).forEach(h => {
+                    const selected = h.id === defaultLevel ? 'selected' : '';
+                    levelSelectOptions += `<option value="${h.id}" ${selected}>${h.name}</option>`;
+                });
+
+
+                const formHtml = `
+                    <div class="bg-gray-50 p-4 rounded-xl border border-cyan-100 shadow-md">
+                        <h4 class="font-bold text-lg cute-font text-cyan-700 mb-3 border-b border-cyan-200 pb-2">ดินแดนใหม่: ส่วนที่ ${index + 1}</h4>
+                        <input type="hidden" name="geoJson-${pieceId}" value='${JSON.stringify(geo)}'>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ชื่อใหม่</label><input type="text" name="name-${pieceId}" class="input-cute" required value="${defaultName}"></div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ผู้ปกครอง</label><input type="text" name="ruler-${pieceId}" class="input-cute" required value="${defaultRuler}"></div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 mt-4">
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">ระดับศักดิ์</label><select name="level-${pieceId}" class="input-cute">${levelSelectOptions}</select></div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">เขตปกครองแม่</label><select name="parent-${pieceId}" class="input-cute text-sm cursor-pointer">${parentSelectOptions}</select></div>
+                            <div><label class="text-xs font-bold text-[#8D6E63] ml-2 mb-1 block">สีประจำเขต</label><input type="color" name="color-${pieceId}" value="${defaultColor}" class="w-full h-10 rounded-lg cursor-pointer border-2 border-white shadow-sm mt-1"></div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += formHtml;
+            });
+
+            document.getElementById('modal-split-territory').classList.remove('hidden');
+        }
+
+        async function saveSplitTerritory(e) {
+            e.preventDefault();
+            if (!validateAuth()) return;
+            
+            const form = document.getElementById('form-split');
+            const originalTargetId = splitTargetId;
+            const originalTarget = entities.find(e => e.id === originalTargetId);
+            const colRef = getEntityCollectionRef();
+            const batch = writeBatch(db);
+            
+            const now = new Date().toISOString();
+            const childrenForms = form.querySelectorAll('.bg-gray-50');
+
+            if (childrenForms.length === 0) {
+                 showConfirmModal("ไม่มีข้อมูล", "ไม่พบพื้นที่ใหม่ที่ต้องบันทึก", null, true);
+                 return;
+            }
+            
+            const newPiecesData = []; // To store created data for decree modal
+
+            try {
+                 // 1. Create new entities for each split piece
+                 for (let i = 0; i < childrenForms.length; i++) {
+                     const pieceForm = childrenForms[i];
+                     const pieceId = `piece-${i}`;
+                     
+                     // Read values from dynamically generated input names
+                     const newPiece = {
+                         name: pieceForm.querySelector(`[name="name-${pieceId}"]`).value,
+                         ruler: pieceForm.querySelector(`[name="ruler-${pieceId}"]`).value,
+                         level: pieceForm.querySelector(`[name="level-${pieceId}"]`).value,
+                         parentId: pieceForm.querySelector(`[name="parent-${pieceId}"]`).value || null,
+                         color: pieceForm.querySelector(`[name="color-${pieceId}"]`).value,
+                         geoJson: pieceForm.querySelector(`[name="geoJson-${pieceId}"]`).value, // GeoJSON is stored in a hidden input
+                         type: 'area',
+                         isWater: originalTarget.isWater || false,
+                         
+                         // Inheritance of Original/Status
+                         originalName: originalTarget.originalName || originalTarget.name,
+                         originalRuler: originalTarget.originalRuler || originalTarget.ruler,
+                         originalColor: originalTarget.originalColor || originalTarget.color,
+                         
+                         government: originalTarget.government || 'สมบูรณาญาสิทธิราชย์', // Inherit
+                         religion: originalTarget.religion || 'พุทธ', // Inherit
+                         createdAt: now,
+                         // Clean new areas from old annexation status
+                         isAnnexed: false, isVassal: false, isColony: false, occupiedBy: null, annexedByName: null
+                     };
+                     
+                     const newRef = doc(colRef);
+                     batch.set(newRef, newPiece);
+                     newPiecesData.push(newPiece); // Store for the decree
+                 }
+
+                 // 2. Delete the original target entity (it no longer exists in its original shape/form)
+                 batch.delete(doc(colRef, originalTargetId));
+
+                 // 3. Commit the batch
+                 await batch.commit();
+
+                 // 4. Show Decree and cleanup
+                 showSplitDecreeModal(originalTarget, newPiecesData);
+                 cancelSplit(); // Clears temporary layers and modal
+
+            } catch(error) {
+                console.error("Save Split Territory Error:", error);
+                showConfirmModal("บันทึกไม่สำเร็จ", `เกิดข้อผิดพลาดในการบันทึก: ${error.message}`, null, true);
+            }
+        }
 
 
         // --- Map Display and General Logic ---
@@ -3650,7 +4006,7 @@
              // Nakorn can only 'ผนวกดินแดน' (Annex)
              document.getElementById('btn-vassal').style.display = isNakorn ? 'none' : 'flex';
              document.getElementById('btn-colony').style.display = isNakorn ? 'none' : 'flex';
-             // Removed: document.getElementById('btn-split-territory').style.display = isNakorn ? 'none' : 'flex';
+             document.getElementById('btn-split-territory').style.display = isNakorn ? 'none' : 'flex';
              document.getElementById('btn-annex').style.display = 'flex'; // Annex is always allowed
         }
 
