@@ -4252,40 +4252,45 @@ window.viewDynasty = (entityId, kingdomName) => {
     );
 };
 
-// --- 2. ฟังก์ชันกลืนกินดินแดนในหน้าสงคราม (แยกจากระบบจัดการดินแดน) ---
-window.executeWarAbsorption = () => {
-    const tid = document.getElementById('war-target-id').value;
-    const aid = document.getElementById('war-attacker-select').value;
-    
-    if(!aid) return showToast("⚠️ กรุณาเลือกฝ่ายรุกราน");
 
-    const attacker = entities.find(e => e.id === aid);
-    const target = entities.find(e => e.id === tid);
+// ตรรกะการประมวลผลการกลืนกิน (Update ตัวเดิม ไม่สร้าง Entity ใหม่)
+async function performWarAbsorption(attacker, target) {
+    try {
+        const attackerGeo = JSON.parse(attacker.geoJson);
+        const targetGeo = JSON.parse(target.geoJson);
+        
+        // รวม Polygon ด้วย Turf.js
+        let mergedGeo = turf.union(attackerGeo, targetGeo);
 
-    showConfirmModal("ยืนยันการหลอมรวม", `ฝ่ายรุก (${attacker.name}) จะกลืนกินพื้นที่ของ ${target.name} เข้าเป็นเนื้อเดียวกัน`, async () => {
-        try {
-            // ใช้ Turf.js รวมพื้นที่
-            const mergedGeo = turf.union(JSON.parse(attacker.geoJson), JSON.parse(target.geoJson));
-            if (!mergedGeo) return showConfirmModal("ผิดพลาด", "พื้นที่ไม่เชื่อมต่อกัน", null, true);
-
-            const batch = writeBatch(db);
-            const colRef = getEntityCollectionRef();
-            
-            // อัปเดตฝ่ายชนะ (ใช้ ID เดิม ไม่สร้าง Entity ใหม่)
-            batch.update(doc(colRef, attacker.id), { geoJson: JSON.stringify(mergedGeo) });
-            // ลบฝ่ายแพ้
-            batch.delete(doc(colRef, target.id));
-            
-            await batch.commit();
-            closeModal('modal-war');
-            showFusionDecreeModal(attacker, target); // แสดงกฤษฎีกาสีทอง
-            showToast(`✨ ${attacker.name} ขยายอาณาเขตครอบคลุมพื้นที่แล้ว`);
-        } catch (e) {
-            console.error(e);
-            showToast("เกิดข้อผิดพลาดในการหลอมรวม");
+        if (!mergedGeo) {
+            showConfirmModal("เกิดข้อผิดพลาด", "พื้นที่ไม่เชื่อมต่อกันหรือโครงสร้างซับซ้อนเกินไป", null, true);
+            return;
         }
-    });
-};
+
+        const batch = writeBatch(db); // เรียกใช้ batch จาก Firebase ที่ import ไว้แล้ว
+        const colRef = getEntityCollectionRef();
+        
+        // 1. อัปเดตฝ่ายรุก (ID เดิม) ให้มีพื้นที่ใหม่ที่รวมแล้ว
+        batch.update(doc(colRef, attacker.id), {
+            geoJson: JSON.stringify(mergedGeo),
+            lastExpanded: new Date().toISOString()
+        });
+
+        // 2. ลบฝ่ายที่แพ้ออกไปจากระบบ
+        batch.delete(doc(colRef, target.id));
+
+        await batch.commit();
+        
+        closeModal('modal-war');
+        // เรียกใช้ฟังก์ชันแสดงกฤษฎีกาที่มีอยู่แล้วในเครื่อง
+        showFusionDecreeModal(attacker, target);
+        showToast(`✨ ${attacker.name} แผ่ขยายอาณาเขตครอบคลุม ${target.name} แล้ว`);
+
+    } catch (err) {
+        console.error("War Absorption Error:", err);
+        showConfirmModal("ผิดพลาด", "ไม่สามารถหลอมรวมได้: " + err.message, null, true);
+    }
+}
         function updateParentSelect(rank) {
             const s = document.getElementById('inp-parent'); s.innerHTML = '<option value="">-- เป็นอิสระ --</option>';
             // Filter out promoted ranks and only allow higher rank selection
