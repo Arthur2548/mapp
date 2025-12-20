@@ -1059,9 +1059,8 @@
                     <button id="btn-vassal" onclick="confirmWarAction('vassal')" class="py-2 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">security</span> ประเทศราช</button>
                     <button id="btn-colony" onclick="confirmWarAction('colony')" class="py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 shadow transition flex flex-col items-center gap-1"><span class="material-icons-round text-base">public</span> อาณานิคม</button>
                     <!-- NEW: Split Territory Button -->
-               <button id="btn-war-absorption" onclick="executeWarAbsorption()" class="py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 shadow transition flex flex-col items-center gap-1" title="ฝ่ายชนะกลืนกินพื้นที่ฝ่ายแพ้">
-    <span class="material-icons-round text-base">auto_awesome</span> หลอมรวมดินแดน
-</button>
+                    <button id="btn-split-territory" onclick="startSplitTerritoryMode()" class="py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700 shadow transition flex flex-col items-center gap-1" title="วาดเส้นตัดแบ่งดินแดน"><span class="material-icons-round text-base">content_cut</span> แบ่งแยกดินแดน</button>
+                    <!-- Removed Merge button from War Modal, moved to Union Modal -->
                 </div>
             </div>
         </div>
@@ -3966,7 +3965,7 @@
              // 2. Filter by search input
              const filteredAttackers = allowedAttackers.filter(e => 
                  e.name.toLowerCase().includes(searchInput) || 
-                 e.ruler.toLowerCase().includes(searchInput)
+                 e.ruler.toLowerCase().includes(searchTxt)
              );
 
              // 3. Update the select element
@@ -4191,68 +4190,6 @@
             }
         };
         
-        // --- วางต่อจากฟังก์ชัน openWarModal ---
-
-// ฟังก์ชันสำหรับหน้าสงคราม (War Room) โดยเฉพาะ
-window.executeWarAbsorption = () => {
-    const tid = document.getElementById('war-target-id').value;
-    const aid = document.getElementById('war-attacker-select').value;
-    
-    if(!aid) {
-        showToast("⚠️ กรุณาเลือกฝ่ายรุกราน");
-        return;
-    }
-
-    const attacker = entities.find(e => e.id === aid);
-    const target = entities.find(e => e.id === tid);
-
-    showConfirmModal(
-        "ยืนยันการกลืนกินดินแดน", 
-        `ฝ่ายรุก (${attacker.name}) จะทำการกลืนกินพื้นที่ของ ${target.name} เข้าเป็นเนื้อเดียวกัน ท่านจะเสียข้อมูลชื่อและผู้ปกครองของ ${target.name} ไป`, 
-        async () => {
-            await performWarAbsorption(attacker, target);
-        }
-    );
-};
-
-// ตรรกะการประมวลผลการกลืนกิน (Update ตัวเดิม ไม่สร้าง Entity ใหม่)
-async function performWarAbsorption(attacker, target) {
-    try {
-        const attackerGeo = JSON.parse(attacker.geoJson);
-        const targetGeo = JSON.parse(target.geoJson);
-        
-        // รวม Polygon ด้วย Turf.js
-        let mergedGeo = turf.union(attackerGeo, targetGeo);
-
-        if (!mergedGeo) {
-            showConfirmModal("เกิดข้อผิดพลาด", "พื้นที่ไม่เชื่อมต่อกันหรือโครงสร้างซับซ้อนเกินไป", null, true);
-            return;
-        }
-
-        const batch = writeBatch(db); // เรียกใช้ batch จาก Firebase ที่ import ไว้แล้ว
-        const colRef = getEntityCollectionRef();
-        
-        // 1. อัปเดตฝ่ายรุก (ID เดิม) ให้มีพื้นที่ใหม่ที่รวมแล้ว
-        batch.update(doc(colRef, attacker.id), {
-            geoJson: JSON.stringify(mergedGeo),
-            lastExpanded: new Date().toISOString()
-        });
-
-        // 2. ลบฝ่ายที่แพ้ออกไปจากระบบ
-        batch.delete(doc(colRef, target.id));
-
-        await batch.commit();
-        
-        closeModal('modal-war');
-        // เรียกใช้ฟังก์ชันแสดงกฤษฎีกาที่มีอยู่แล้วในเครื่อง
-        showFusionDecreeModal(attacker, target);
-        showToast(`✨ ${attacker.name} แผ่ขยายอาณาเขตครอบคลุม ${target.name} แล้ว`);
-
-    } catch (err) {
-        console.error("War Absorption Error:", err);
-        showConfirmModal("ผิดพลาด", "ไม่สามารถหลอมรวมได้: " + err.message, null, true);
-    }
-}
         function updateParentSelect(rank) {
             const s = document.getElementById('inp-parent'); s.innerHTML = '<option value="">-- เป็นอิสระ --</option>';
             // Filter out promoted ranks and only allow higher rank selection
