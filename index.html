@@ -3575,32 +3575,7 @@
             
             // --- UPDATED: REQ 2 - Get Ruler Title and use it as the section header ---
             const rulerTitle = getRulerTitle(ent.level, ent.government);
-// ค้นหาภายในฟังก์ชัน createPopupContent
-// เพิ่มตัวแปร dynastyButton ก่อนที่จะ Return HTML
 
-let dynastyButton = '';
-// ตรวจสอบเงื่อนไข Rank 9 (ประเทศ), 10 (อาณาจักร), 11 (มหาอาณาจักร)
-if (getRank(ent.level) >= 9) {
-    dynastyButton = `
-        <button onclick="window.viewDynasty('${ent.id}', '${ent.name}')" 
-            class="px-3 h-8 rounded-full bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-[10px] hover:from-amber-600 hover:to-yellow-700 flex items-center gap-1 transition shadow-md hover:scale-105 border border-white/20">
-            <span class="material-icons-round text-sm">account_tree</span> ดูราชวงศ์
-        </button>
-    `;
-}
-
-// นำตัวแปร dynastyButton ไปแทรกในส่วนปุ่มกด (ประมาณบรรทัดที่ 1340)
-return `
-    ...
-    <div class="mt-5 flex flex-wrap gap-2 justify-center pt-2">
-        ${(!ent.isWater && ent.type === 'area') ? `
-            <button onclick="window.openEditModal('${ent.id}')" ...>...</button>
-        ` : ''}
-
-        ${dynastyButton} ${(!ent.isWater && ent.type === 'area') ? `<button onclick="window.openWarModal('${ent.id}')" ...>⚔️ ยุทธการ</button>` : ''}
-    </div>
-    ...
-`;
 
             return `
                 <div class="relative font-sans overflow-visible group">
@@ -3655,7 +3630,6 @@ return `
                             
                             ${promotionButton}
                             ${undoMergeButton}
-                           ${dynastyButton} // เพิ่มบรรทัดนี้ต่อท้ายปุ่มที่มีอยู่  
                         </div>
                     </div>
                 </div>
@@ -4240,18 +4214,6 @@ window.executeWarAbsorption = () => {
         }
     );
 };
-
-// --- 1. ฟังก์ชันสำหรับเปิดดูข้อมูลพงศาวลี (เพิ่มตามที่คุณขอ) ---
-window.viewDynasty = (entityId, kingdomName) => {
-    showToast(`👑 กำลังเปิดพงศาวลีแห่ง ${kingdomName}...`);
-    showConfirmModal(
-        "หอจดหมายเหตุราชวงศ์", 
-        `ท่านกำลังเข้าสู่ระบบพงศาวลีเพื่อตรวจสอบลำดับโปเจียมและสายพระโลหิตแห่ง ${kingdomName}`, 
-        null, 
-        true
-    );
-};
-
 
 // ตรรกะการประมวลผลการกลืนกิน (Update ตัวเดิม ไม่สร้าง Entity ใหม่)
 async function performWarAbsorption(attacker, target) {
